@@ -12,12 +12,13 @@
 <body>
   <main>
     <h1>Scoring Options</h1>
-<div id="banner"></div>
+    <div id="banner"></div>
+
+    <!-- SCORES -->
     <div class="row">
       <label>Our score</label>
       <input id="ourScore" type="number" inputmode="numeric" value="0" />
     </div>
-
     <div class="row">
       <label>Their score</label>
       <input id="oppScore" type="number" inputmode="numeric" value="0" />
@@ -42,14 +43,91 @@
     <button id="calc">Calculate</button>
     <p id="status" class="muted"></p>
 
+    <!-- GAME CLOCK + TOs -->
+    <div class="card section">
+      <div class="section-head">
+        <h2>Game Clock & Timeouts</h2>
+        <button id="resetGame" class="ghost">Reset Game</button>
+      </div>
+
+      <div class="row toggles">
+        <label><input type="radio" name="half" id="half1" checked> 1st Half</label>
+        <label><input type="radio" name="half" id="half2"> 2nd Half</label>
+      </div>
+
+      <div class="row">
+        <label>Time left</label>
+        <div style="flex:1">
+          <input id="timeSlider" type="range" min="0" max="1440" step="1" value="1440" />
+          <div class="muted" id="timeLabel">24:00</div>
+        </div>
+        <div class="tinyBtns">
+          <button class="mini" data-dt="-10">-10s</button>
+          <button class="mini" data-dt="+10">+10s</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="to-card">
+          <div class="to-title">Our TOs — 1st</div>
+          <div class="to-controls">
+            <button class="to-btn" data-target="ourToH1" data-delta="-1">−</button>
+            <input id="ourToH1" type="number" min="0" max="3" value="3">
+            <button class="to-btn" data-target="ourToH1" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="to-card">
+          <div class="to-title">Their TOs — 1st</div>
+          <div class="to-controls">
+            <button class="to-btn" data-target="oppToH1" data-delta="-1">−</button>
+            <input id="oppToH1" type="number" min="0" max="3" value="3">
+            <button class="to-btn" data-target="oppToH1" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="to-card">
+          <div class="to-title">Our TOs — 2nd</div>
+          <div class="to-controls">
+            <button class="to-btn" data-target="ourToH2" data-delta="-1">−</button>
+            <input id="ourToH2" type="number" min="0" max="3" value="3">
+            <button class="to-btn" data-target="ourToH2" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="to-card">
+          <div class="to-title">Their TOs — 2nd</div>
+          <div class="to-controls">
+            <button class="to-btn" data-target="oppToH2" data-delta="-1">−</button>
+            <input id="oppToH2" type="number" min="0" max="3" value="3">
+            <button class="to-btn" data-target="oppToH2" data-delta="1">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="subhead">Clock Helper</div>
+      <div class="row toggles">
+        <label><input type="radio" name="ball" id="ballUs" checked> We have ball</label>
+        <label><input type="radio" name="ball" id="ballThem"> They have ball</label>
+      </div>
+      <div class="row">
+        <label>Snaps this series</label>
+        <input id="snaps" type="number" min="1" max="4" value="3" />
+      </div>
+      <div class="row">
+        <label>Play clock</label>
+        <input id="playClock" type="number" min="20" max="45" value="40" />
+      </div>
+      <div class="row">
+        <label>Avg play time</label>
+        <input id="playTime" type="number" min="1" max="15" value="6" />
+      </div>
+      <div id="clockResult" class="muted"></div>
+    </div>
+
     <div id="output"></div>
   </main>
 
   <script src="app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js');
-    }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
   </script>
 </body>
 </html>
