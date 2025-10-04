@@ -185,10 +185,14 @@ function run() {
   const tieTarget  = diff;       // exact points to tie
   const leadTarget = diff + 1;   // exact points to take the lead
 
+  // NEW: behind amounts for both sides
+  const usBehind  = Math.max(0, opp - our);
+  const oppBehind = Math.max(0, our - opp);
+
   const teamLabel = teamNeeding === 'us' ? 'We need' :
                     teamNeeding === 'opp' ? 'Opponent needs' : 'Either team needs';
 
-  // If it's 'either' and scores are equal, we still show both sections for clarity.
+  // Build sections
   const tieRes  = buildItems(tieTarget,  cap);
   const leadRes = buildItems(leadTarget, cap);
 
@@ -196,5 +200,7 @@ function run() {
   renderSection(`${titlePrefix} Tie`, tieRes);
   renderSection(`${titlePrefix} Take the Lead`, leadRes);
 
-  elStatus.textContent = `Score: Us ${our} — Them ${opp}. Showing exact-point combos.`;
+  // UPDATED status line shows behind info
+  elStatus.textContent =
+    `Score: Us ${our} — Them ${opp} • Us behind: ${usBehind} • Opp behind: ${oppBehind}. Showing exact-point combos.`;
 }
