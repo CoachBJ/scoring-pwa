@@ -15,9 +15,12 @@ const toMMSS = (s) => {
   return `${String(m).padStart(1,'0')}:${String(ss).padStart(2,'0')}`;
 };
 const fromMMSS = (txt) => {
-  const [m, s] = (txt||'0:00').split(':').map(n=>parseInt(n||'0',10));
-  return (m||0)*60 + (s||0);
+  const m = String(txt || '').trim().match(/^(\d{1,2}):([0-5]?\d)$/);
+  if (!m) return null;                 // invalid
+  const secs = (parseInt(m[1],10)*60) + parseInt(m[2],10);
+  return clamp(secs, 0, 1440);         // cap to 24:00
 };
+
 
 // ===== Scoring core =====
 function scoreCombos(target) {
