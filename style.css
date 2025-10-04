@@ -1,0 +1,23 @@
+:root { --bg:#0f1115; --card:#151a22; --text:#eaeef5; --muted:#9aa3b2; --accent:#3b82f6; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+main{max-width:720px;margin:0 auto;padding:20px}
+h1{font-size:22px;margin:6px 0 16px}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0}
+.row label{min-width:90px}
+input{flex:1;background:#0b0e13;color:var(--text);border:1px solid #2a3342;border-radius:8px;padding:10px}
+button{width:100%;padding:12px 16px;border:0;border-radius:10px;background:var(--accent);color:white;font-weight:600}
+.muted{color:var(--muted);font-size:13px}
+#output{margin-top:16px}
+.card{background:var(--card);border:1px solid #242c39;border-radius:12px;padding:12px;margin:10px 0}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px;border-bottom:1px solid #253044;text-align:left}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#1f2633;border:1px solid #2b3648;font-size:12px}
+.segment{padding:2px 6px;border-radius:6px;margin-right:6px;display:inline-block}
+.segment:nth-child(1){background:#1a73e8; color:#fff}
+.segment:nth-child(2){background:#ea4335; color:#fff}
+.segment:nth-child(3){background:#188038; color:#fff}
+.segment:nth-child(4){background:#fbbc05; color:#000}
+.segment:nth-child(5){background:#a142f4; color:#fff}
+.segment:nth-child(6){background:#ff6d00; color:#000}
+.toggles label{display:inline-flex;gap:8px;margin-right:14px}

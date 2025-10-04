@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Scoring Options</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Scoring Options</h1>
+
+    <div class="row">
+      <label>Deficit</label>
+      <input id="deficit" type="number" inputmode="numeric" placeholder="e.g. 11" />
+    </div>
+
+    <div class="row">
+      <label>Max results</label>
+      <input id="cap" type="number" inputmode="numeric" value="200" />
+    </div>
+
+    <div class="row toggles">
+      <label><input id="view-table" type="radio" name="view" checked> Table</label>
+      <label><input id="view-row"   type="radio" name="view"> One Row</label>
+    </div>
+
+    <button id="calc">Calculate</button>
+    <p id="status" class="muted"></p>
+
+    <div id="output"></div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+</body>
+</html>
