@@ -6,58 +6,72 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest">
-  <title>Scoring Options</title>
+  <title>Charlotte Christian — Game Manager</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main>
-    <h1>Scoring Options</h1>
+    <header class="appbar">
+      <div class="brand">
+        <div class="brand-mark">CC</div>
+        <div class="brand-text">
+          <div class="brand-title">Charlotte Christian</div>
+          <div class="brand-sub">Game Manager</div>
+        </div>
+      </div>
+      <button id="resetGame" class="btn btn-ghost">Reset Game</button>
+    </header>
+
     <div id="banner"></div>
 
-    <!-- SCORES -->
-    <div class="row">
-      <label>Our score</label>
-      <input id="ourScore" type="number" inputmode="numeric" value="0" />
-    </div>
-    <div class="row">
-      <label>Their score</label>
-      <input id="oppScore" type="number" inputmode="numeric" value="0" />
-    </div>
-
-    <div class="row toggles">
-      <label><input id="who-auto" name="who" type="radio" checked> Auto</label>
-      <label><input id="who-us"   name="who" type="radio"> We need</label>
-      <label><input id="who-opp"  name="who" type="radio"> Opponent needs</label>
-    </div>
-
-    <div class="row">
-      <label>Max results</label>
-      <input id="cap" type="number" inputmode="numeric" value="200" />
-    </div>
-
-    <div class="row toggles">
-      <label><input id="view-table" type="radio" name="view" checked> Table</label>
-      <label><input id="view-row"   type="radio" name="view"> One Row</label>
-    </div>
-
-    <button id="calc">Calculate</button>
-    <p id="status" class="muted"></p>
-
-    <!-- GAME CLOCK + TOs -->
-    <div class="card section">
-      <div class="section-head">
-        <h2>Game Clock & Timeouts</h2>
-        <button id="resetGame" class="ghost">Reset Game</button>
+    <!-- SCOREBOARD INPUTS -->
+    <section class="card">
+      <h2 class="section-title">Scoreboard</h2>
+      <div class="score-grid">
+        <div class="score-card">
+          <div class="score-label">Charlotte Christian</div>
+          <input id="ourScore" type="number" inputmode="numeric" value="0" class="score-input" />
+        </div>
+        <div class="score-card">
+          <div class="score-label">Opponent</div>
+          <input id="oppScore" type="number" inputmode="numeric" value="0" class="score-input" />
+        </div>
       </div>
 
-      <div class="row toggles">
+      <div class="row toggles compact">
+        <label><input id="who-auto" name="who" type="radio" checked> Auto</label>
+        <label><input id="who-us"   name="who" type="radio"> Charlotte Christian needs</label>
+        <label><input id="who-opp"  name="who" type="radio"> Opponent needs</label>
+      </div>
+
+      <div class="row compact">
+        <label>Max results</label>
+        <input id="cap" type="number" inputmode="numeric" value="200" />
+      </div>
+
+      <div class="row toggles compact">
+        <label><input id="view-table" type="radio" name="view" checked> Table</label>
+        <label><input id="view-row"   type="radio" name="view"> One Row</label>
+      </div>
+
+      <button id="calc" class="btn btn-primary">Calculate</button>
+      <p id="status" class="muted"></p>
+    </section>
+
+    <!-- GAME CLOCK + TIMEOUTS -->
+    <section class="card">
+      <div class="section-head">
+        <h2 class="section-title">Game Clock & Timeouts</h2>
+      </div>
+
+      <div class="row toggles compact">
         <label><input type="radio" name="half" id="half1" checked> 1st Half</label>
         <label><input type="radio" name="half" id="half2"> 2nd Half</label>
       </div>
 
-      <div class="row">
+      <div class="row time-row">
         <label>Time left</label>
-        <div style="flex:1">
+        <div class="time-flex">
           <input id="timeSlider" type="range" min="0" max="1440" step="1" value="1440" />
           <div class="muted" id="timeLabel">24:00</div>
         </div>
@@ -70,10 +84,9 @@
         </div>
       </div>
 
-
       <div class="grid2">
         <div class="to-card">
-          <div class="to-title">Our TOs — 1st</div>
+          <div class="to-title">Charlotte Christian TOs — 1st</div>
           <div class="to-controls">
             <button class="to-btn" data-target="ourToH1" data-delta="-1">−</button>
             <input id="ourToH1" type="number" min="0" max="3" value="3">
@@ -81,7 +94,7 @@
           </div>
         </div>
         <div class="to-card">
-          <div class="to-title">Their TOs — 1st</div>
+          <div class="to-title">Opponent TOs — 1st</div>
           <div class="to-controls">
             <button class="to-btn" data-target="oppToH1" data-delta="-1">−</button>
             <input id="oppToH1" type="number" min="0" max="3" value="3">
@@ -89,7 +102,7 @@
           </div>
         </div>
         <div class="to-card">
-          <div class="to-title">Our TOs — 2nd</div>
+          <div class="to-title">Charlotte Christian TOs — 2nd</div>
           <div class="to-controls">
             <button class="to-btn" data-target="ourToH2" data-delta="-1">−</button>
             <input id="ourToH2" type="number" min="0" max="3" value="3">
@@ -97,7 +110,7 @@
           </div>
         </div>
         <div class="to-card">
-          <div class="to-title">Their TOs — 2nd</div>
+          <div class="to-title">Opponent TOs — 2nd</div>
           <div class="to-controls">
             <button class="to-btn" data-target="oppToH2" data-delta="-1">−</button>
             <input id="oppToH2" type="number" min="0" max="3" value="3">
@@ -107,26 +120,26 @@
       </div>
 
       <div class="subhead">Clock Helper</div>
-      <div class="row toggles">
-        <label><input type="radio" name="ball" id="ballUs" checked> We have ball</label>
-        <label><input type="radio" name="ball" id="ballThem"> They have ball</label>
+      <div class="row toggles compact">
+        <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
+        <label><input type="radio" name="ball" id="ballThem"> Opponent has ball</label>
       </div>
-      <div class="row">
+      <div class="row compact">
         <label>Snaps this series</label>
         <input id="snaps" type="number" min="1" max="4" value="3" />
       </div>
-      <div class="row">
+      <div class="row compact">
         <label>Play clock</label>
         <input id="playClock" type="number" min="20" max="45" value="40" />
       </div>
-      <div class="row">
+      <div class="row compact">
         <label>Avg play time</label>
         <input id="playTime" type="number" min="1" max="15" value="6" />
       </div>
       <div id="clockResult" class="muted"></div>
-    </div>
+    </section>
 
-    <div id="output"></div>
+    <section id="output"></section>
   </main>
 
   <script src="app.js"></script>
