@@ -23,6 +23,23 @@ function scoreCombos(target) {
   return combos;
 }
 
+function renderBanner(our, opp){
+  const el = document.getElementById('banner');
+  const usBehind  = Math.max(0, opp - our);
+  const oppBehind = Math.max(0, our - opp);
+
+  let cls = 'neutral';
+  let title = 'Game is tied';
+  if (our < opp) { cls = 'bad';  title = `We trail by ${usBehind}`; }
+  if (our > opp) { cls = 'good'; title = `Opponent trails by ${oppBehind}`; }
+
+  el.className = `banner ${cls}`;
+  el.innerHTML = `
+    <div class="title">${title}</div>
+    <div class="sub">Us ${our} — Them ${opp} • Us behind: ${usBehind} • Opp behind: ${oppBehind}</div>
+  `;
+}
+
 function rankKey(counts) {
   const totalPlays = counts.reduce((a,b)=>a+b,0);
   return [ totalPlays, -counts[0], -counts[1], -counts[2], counts[3], counts[4] ];
