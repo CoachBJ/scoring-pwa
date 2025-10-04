@@ -19,7 +19,7 @@ function scoreCombos(target) {
       counts[i]++; dfs(rem - plays[i].pts, i); counts[i]--;
     }
   }
-  dfs(target, 0);
+  if (target > 0) dfs(target, 0);
   return combos;
 }
 
@@ -39,38 +39,34 @@ function formatCombo(counts) {
   return parts.join(" + ");
 }
 
-function validateDeficit(d) {
-  if (d === "" || d == null) return { ok:false, msg:"" };
-  const n = Math.floor(Number(d));
-  if (Number.isNaN(n)) return { ok:false, msg:"#VALUE!" };
-  if (n <= 0) return { ok:false, msg:"Tied or Ahead" };
-  return { ok:true, n };
-}
-
-// ----- UI -----
-const elDeficit = document.querySelector('#deficit');
-const elCap = document.querySelector('#cap');
+// ----- UI elems -----
+const elOur  = document.querySelector('#ourScore');
+const elOpp  = document.querySelector('#oppScore');
+const elCap  = document.querySelector('#cap');
 const elCalc = document.querySelector('#calc');
-const elOutput = document.querySelector('#output');
+const elOut  = document.querySelector('#output');
 const elStatus = document.querySelector('#status');
 const viewTable = document.querySelector('#view-table');
 const viewRow   = document.querySelector('#view-row');
+const whoAuto = document.querySelector('#who-auto');
+const whoUs   = document.querySelector('#who-us');
+const whoOpp  = document.querySelector('#who-opp');
 
 elCalc.addEventListener('click', run);
-elDeficit.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+[elOur, elOpp].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') run(); }));
 
-function run() {
-  elOutput.innerHTML = '';
-  elStatus.textContent = '';
+function validateInt(v) {
+  if (v === "" || v == null) return null;
+  const n = Math.floor(Number(v));
+  return Number.isNaN(n) ? null : n;
+}
 
-  const v = validateDeficit(elDeficit.value.trim());
-  if (!v.ok) {
-    if (v.msg) elStatus.textContent = v.msg;
-    return;
+function buildItems(target, cap) {
+  if (target <= 0) {
+    return { msg: target === 0 ? "Already tied." : "No points needed." };
   }
-  const cap = Math.max(1, Number(elCap.value || 200));
-  const combos = scoreCombos(v.n);
-  if (!combos.length) { elStatus.textContent = "Not reachable with standard scoring"; return; }
+  const combos = scoreCombos(target);
+  if (!combos.length) return { msg: "Not reachable with standard scoring." };
 
   const items = combos
     .map(cs => ({ cs, key: rankKey(cs), txt: formatCombo(cs), plays: cs.reduce((a,b)=>a+b,0) }))
@@ -80,77 +76,125 @@ function run() {
     });
 
   const seen = new Set();
-  const filtered = [];
+  const out = [];
   for (const it of items) {
     if (seen.has(it.txt)) continue;
     seen.add(it.txt);
-    filtered.push(it);
-    if (filtered.length >= cap) break;
+    out.push(it);
+    if (out.length >= cap) break;
+  }
+  return { list: out };
+}
+
+function renderList(list) {
+  if (viewTable.checked) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const table = document.createElement('table');
+    table.className = 'table';
+    table.innerHTML = `<thead><tr><th>Possessions</th><th>Option</th></tr></thead>`;
+    const tb = document.createElement('tbody');
+
+    list.forEach(it => {
+      const tr = document.createElement('tr');
+
+      const tdA = document.createElement('td');
+      tdA.innerHTML = `<span class="badge">${it.plays}</span>`;
+      tr.appendChild(tdA);
+
+      const tdB = document.createElement('td');
+      const segments = it.txt.split(' + ');
+      segments.forEach(seg => {
+        const s = document.createElement('span');
+        s.className = 'segment';
+        s.textContent = seg;
+        tdB.appendChild(s);
+      });
+      tr.appendChild(tdB);
+
+      tb.appendChild(tr);
+    });
+
+    table.appendChild(tb);
+    card.appendChild(table);
+    elOut.appendChild(card);
+  } else {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const row = document.createElement('div');
+    list.forEach((it, idx) => {
+      const wrap = document.createElement('span');
+      wrap.className = 'wrap';
+      const segments = it.txt.split(' + ');
+      segments.forEach(seg => {
+        const span = document.createElement('span');
+        span.className = 'segment';
+        span.textContent = seg;
+        wrap.appendChild(span);
+      });
+      row.appendChild(wrap);
+      if (idx < list.length - 1) {
+        const sep = document.createElement('span');
+        sep.textContent = '   |   ';
+        sep.className = 'muted';
+        row.appendChild(sep);
+      }
+    });
+    card.appendChild(row);
+    elOut.appendChild(card);
+  }
+}
+
+function renderSection(title, resultObj) {
+  const header = document.createElement('div');
+  header.className = 'card';
+  header.innerHTML = `<strong>${title}</strong>`;
+  elOut.appendChild(header);
+
+  if (resultObj.msg) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<span class="muted">${resultObj.msg}</span>`;
+    elOut.appendChild(card);
+  } else {
+    renderList(resultObj.list);
+  }
+}
+
+function run() {
+  elOut.innerHTML = '';
+  elStatus.textContent = '';
+
+  const our = validateInt(elOur.value.trim());
+  const opp = validateInt(elOpp.value.trim());
+  if (our == null || opp == null) { elStatus.textContent = "Enter both scores."; return; }
+
+  const cap = Math.max(1, Number(elCap.value || 200));
+
+  // Who needs points?
+  let who = 'auto';
+  if (whoUs.checked)  who = 'us';
+  if (whoOpp.checked) who = 'opp';
+
+  let teamNeeding = who;
+  if (who === 'auto') {
+    teamNeeding = (our > opp) ? 'opp' : (our < opp) ? 'us' : 'either';
   }
 
-  if (viewTable.checked) renderTable(filtered);
-  else renderRow(filtered);
+  const diff = Math.abs(our - opp);
+  const tieTarget  = diff;       // exact points to tie
+  const leadTarget = diff + 1;   // exact points to take the lead
 
-  elStatus.textContent = `Found ${filtered.length} option${filtered.length===1?'':'s'}.`;
-}
+  const teamLabel = teamNeeding === 'us' ? 'We need' :
+                    teamNeeding === 'opp' ? 'Opponent needs' : 'Either team needs';
 
-function renderRow(list) {
-  const card = document.createElement('div');
-  card.className = 'card';
-  const row = document.createElement('div');
+  // If it's 'either' and scores are equal, we still show both sections for clarity.
+  const tieRes  = buildItems(tieTarget,  cap);
+  const leadRes = buildItems(leadTarget, cap);
 
-  list.forEach((it, idx) => {
-    const wrap = document.createElement('span');
-    wrap.className = 'wrap';
-    const segments = it.txt.split(' + ');
-    segments.forEach(seg => {
-      const span = document.createElement('span');
-      span.className = 'segment';
-      span.textContent = seg;
-      wrap.appendChild(span);
-    });
-    row.appendChild(wrap);
-    if (idx < list.length - 1) {
-      const sep = document.createElement('span');
-      sep.textContent = '   |   ';
-      sep.className = 'muted';
-      row.appendChild(sep);
-    }
-  });
+  const titlePrefix = `${teamLabel} to…`;
+  renderSection(`${titlePrefix} Tie`, tieRes);
+  renderSection(`${titlePrefix} Take the Lead`, leadRes);
 
-  card.appendChild(row);
-  document.getElementById('output').appendChild(card);
-}
-
-function renderTable(list) {
-  const card = document.createElement('div');
-  card.className = 'card';
-  const table = document.createElement('table');
-  table.className = 'table';
-  table.innerHTML = `<thead><tr><th>Possessions</th><th>Option</th></tr></thead>`;
-  const tb = document.createElement('tbody');
-
-  list.forEach(it => {
-    const tr = document.createElement('tr');
-
-    const tdA = document.createElement('td');
-    tdA.innerHTML = `<span class="badge">${it.plays}</span>`;
-    tr.appendChild(tdA);
-
-    const tdB = document.createElement('td');
-    const segments = it.txt.split(' + ');
-    segments.forEach(seg => {
-      const s = document.createElement('span');
-      s.className = 'segment';
-      s.textContent = seg;
-      tdB.appendChild(s);
-    });
-    tr.appendChild(tdB);
-
-    tb.appendChild(tr);
-  });
-
-  table.appendChild(tb);
-  card.appendChild(table);
-  document.getElementById('output').appendChild(card);
+  elStatus.textContent = `Score: Us ${our} — Them ${opp}. Showing exact-point combos.`;
 }
