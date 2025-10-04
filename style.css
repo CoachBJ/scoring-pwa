@@ -21,3 +21,17 @@ button{width:100%;padding:12px 16px;border:0;border-radius:10px;background:var(-
 .segment:nth-child(5){background:#a142f4; color:#fff}
 .segment:nth-child(6){background:#ff6d00; color:#000}
 .toggles label{display:inline-flex;gap:8px;margin-right:14px}
+
+.banner{
+  background:#151a22;
+  border:1px solid #242c39;
+  border-left-width:6px;
+  border-radius:12px;
+  padding:12px 14px;
+  margin:12px 0;
+}
+.banner.good   { border-left-color:#22c55e; } /* we lead */
+.banner.bad    { border-left-color:#ef4444; } /* we trail */
+.banner.neutral{ border-left-color:#9aa3b2; } /* tied */
+.banner .title{ font-weight:700; font-size:16px; margin-bottom:4px }
+.banner .sub{ color:var(--muted); font-size:13px }
