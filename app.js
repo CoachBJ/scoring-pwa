@@ -186,6 +186,9 @@ function run() {
   const opp = validateInt(elOpp.value.trim());
   if (our == null || opp == null) { elStatus.textContent = "Enter both scores."; return; }
 
+  // NEW: show banner summary up top
+  renderBanner(our, opp);
+
   const cap = Math.max(1, Number(elCap.value || 200));
 
   // Who needs points?
@@ -202,14 +205,12 @@ function run() {
   const tieTarget  = diff;       // exact points to tie
   const leadTarget = diff + 1;   // exact points to take the lead
 
-  // NEW: behind amounts for both sides
   const usBehind  = Math.max(0, opp - our);
   const oppBehind = Math.max(0, our - opp);
 
   const teamLabel = teamNeeding === 'us' ? 'We need' :
                     teamNeeding === 'opp' ? 'Opponent needs' : 'Either team needs';
 
-  // Build sections
   const tieRes  = buildItems(tieTarget,  cap);
   const leadRes = buildItems(leadTarget, cap);
 
@@ -217,7 +218,6 @@ function run() {
   renderSection(`${titlePrefix} Tie`, tieRes);
   renderSection(`${titlePrefix} Take the Lead`, leadRes);
 
-  // UPDATED status line shows behind info
   elStatus.textContent =
     `Score: Us ${our} — Them ${opp} • Us behind: ${usBehind} • Opp behind: ${oppBehind}. Showing exact-point combos.`;
 }
