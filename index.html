@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <title>Scoring Options</title>
   <link rel="stylesheet" href="style.css">
@@ -15,8 +14,19 @@
     <h1>Scoring Options</h1>
 
     <div class="row">
-      <label>Deficit</label>
-      <input id="deficit" type="number" inputmode="numeric" placeholder="e.g. 11" />
+      <label>Our score</label>
+      <input id="ourScore" type="number" inputmode="numeric" value="0" />
+    </div>
+
+    <div class="row">
+      <label>Their score</label>
+      <input id="oppScore" type="number" inputmode="numeric" value="0" />
+    </div>
+
+    <div class="row toggles">
+      <label><input id="who-auto" name="who" type="radio" checked> Auto</label>
+      <label><input id="who-us"   name="who" type="radio"> We need</label>
+      <label><input id="who-opp"  name="who" type="radio"> Opponent needs</label>
     </div>
 
     <div class="row">
