@@ -27,14 +27,8 @@ function scoreCombos(target){
     for(let i=start;i<SCORING_PLAYS.length;i++){ const p=SCORING_PLAYS[i].pts; if(p>rem) continue; counts[i]++; dfs(rem-p,i); counts[i]--; } }
   if(target>0) dfs(target,0); return combos;
 }
-// app.js
-
-function rankKey(counts){
-  const total=counts.reduce((a,b)=>a+b,0);
-  // OLD version: [total,-counts[0],-counts[1],-counts[2],counts[3],counts[4]]
-  // NEW version consistently prioritizes higher value scores (TDs > FG > Safety)
-  return [total, -counts[0], -counts[1], -counts[2], -counts[3], -counts[4]];
-}function formatCombo(counts){ const parts=[]; for(let i=0;i<counts.length;i++){const c=counts[i]; if(!c) continue; parts.push(c>1?`${c}x ${SCORING_PLAYS[i].label}`:SCORING_PLAYS[i].label);} return parts.join(JOINER); }
+function rankKey(counts){ const total=counts.reduce((a,b)=>a+b,0); return [total,-counts[0],-counts[1],-counts[2],counts[3],counts[4]]; }
+function formatCombo(counts){ const parts=[]; for(let i=0;i<counts.length;i++){const c=counts[i]; if(!c) continue; parts.push(c>1?`${c}x ${SCORING_PLAYS[i].label}`:SCORING_PLAYS[i].label);} return parts.join(JOINER); }
 function validateInt(v){ if(v===""||v==null) return null; const n=Math.floor(Number(v)); return Number.isNaN(n)?null:n; }
 function buildItems(target, cap){
   if(target<=0) return { msg: target===0 ? "Already tied." : "No points needed." };
@@ -80,17 +74,13 @@ function renderBanner(our, opp, oppName){
 // ----- Renderers -----
 function renderRow(list){
   const card=document.createElement("div"); card.className="card";
-  const row=document.createElement("div");
+  const row=document.createElement("div"); row.className = "score-options-cell"; // Use the same styling
   list.forEach((it,idx)=>{
-    const wrap=document.createElement("span"); wrap.className="wrap";
-    it.txt.split(JOINER).forEach(seg=>{ const span=document.createElement("span"); span.className="segment"; span.textContent=seg; wrap.appendChild(span); });
-    row.appendChild(wrap);
-    if(idx<list.length-1){ const sep=document.createElement("span"); sep.textContent="   |   "; sep.className="muted"; row.appendChild(sep); }
+    it.txt.split(JOINER).forEach(seg=>{ const span=document.createElement("span"); span.className="segment"; span.textContent=seg; row.appendChild(span); });
+    if(idx<list.length-1){ const sep=document.createElement("span"); sep.textContent="|"; sep.className="muted"; row.appendChild(sep); }
   });
   card.appendChild(row); elOut.appendChild(card);
 }
-// app.js
-
 function renderTable(list){
   const card=document.createElement("div"); card.className="card";
   const table=document.createElement("table"); table.className="table";
@@ -99,14 +89,11 @@ function renderTable(list){
   list.forEach(it=>{
     const tr=document.createElement("tr");
     const tdA=document.createElement("td"); tdA.innerHTML=`<span class="badge">${it.plays}</span>`;
-    const tdB=document.createElement("td");
-    // This is the line to change:
-    it.txt.split(JOINER).forEach(seg=>{ const s=document.createElement("span"); s.className="play-tag"; s.textContent=seg; tdB.appendChild(s); });
+    const tdB=document.createElement("td"); tdB.className = 'score-options-cell'; // Assign class for flex layout
+    it.txt.split(JOINER).forEach(seg=>{ const s=document.createElement("span"); s.className="segment"; s.textContent=seg; tdB.appendChild(s); });
     tr.appendChild(tdA); tr.appendChild(tdB); tb.appendChild(tr);
   });
   table.appendChild(tb); card.appendChild(table); elOut.appendChild(card);
-}
-
 }
 function renderSection(title, resultObj){
   const header=document.createElement("h2"); header.className="section-title"; header.style.marginTop = '20px'; header.textContent = title; elOut.appendChild(header);
@@ -238,7 +225,7 @@ function loadState(){
 
     if(s.to){ Object.keys(s.to).forEach(k=> setTOState(k, s.to[k])); }
     else { ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true])); }
-    
+
     STATE.collapsedTO = s.collapsedTO || {};
     Object.keys(STATE.collapsedTO).forEach(key => {
         const card = document.querySelector(`.to-card[data-key="${key}"]`);
@@ -302,7 +289,7 @@ function run(){
      // If scores are tied, don't show the output section, the banner handles it.
      elOut.innerHTML = "";
   }
-  
+
   saveState();
 }
 
@@ -320,8 +307,8 @@ document.getElementById("resetGame").addEventListener("click", ()=>{
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
     STATE.collapsedTO = {};
     document.querySelectorAll('.to-card.collapsed').forEach(c => c.classList.remove('collapsed'));
-    saveState(); 
-    run(); 
+    saveState();
+    run();
     updateClockHelper();
   }
 });
