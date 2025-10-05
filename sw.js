@@ -1,4 +1,4 @@
-const CACHE = 'scoring-v19';
+const CACHE = 'scoring-v20';
 const ASSETS = [
   './',
   './index.html',
