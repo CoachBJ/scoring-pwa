@@ -95,70 +95,21 @@ input[type="color"]{width:44px;height:36px;border:1px solid #2a3342;border-radiu
 .log-team{font-weight:700}
 
 /* iPhone layout on ALL devices */
-.layout{display:grid;gap:14px;grid-template-columns:1fr;grid-template-areas:"score" "clock" "math" "output" "log"}
+.layout{display:grid;gap:14px;grid-template-columns:1fr;grid-template-areas:"score" "clock" "output" "log"}
 .area-score{grid-area:score}.area-clock{grid-area:clock}.area-output{grid-area:output}.area-log{grid-area:log}
 
 
-/* ===== Editable Scoreboard Layout ===== */
-.board-flex{
-  display:grid;
-  gap:14px;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 700px){
-  .board-flex{ grid-template-columns: 1.2fr 1fr; align-items: start; }
-}
-.board-left .score-card{
-  background: radial-gradient(100% 100% at 50% 0%, #0e1422 0%, #0a0f1a 100%);
-  box-shadow: inset 0 0 0 1px #253044, 0 10px 30px rgba(0,0,0,.35);
-}
-.score-input{
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: clamp(46px, 12vw, 108px);
-  line-height: 1;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background:#000; color:#35a8ff;
-  border:1px solid #2a3342;
-  letter-spacing: 2px;
-}
+/* ===== Large touch targets ===== */
+.btn{font-size:18px; padding:14px 18px; border-radius:12px}
+.btn.btn-primary{font-weight:800}
+.chip{font-size:18px; padding:10px 18px}
+.mini{font-size:16px; padding:8px 12px; border-radius:12px}
+.tinyBtns .mini{min-width:64px}
 
-/* Score labels look like real board tags */
-.score-label{
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-}
+.to-checks input[type="checkbox"]{width:22px;height:22px}
+.to-checks label span{font-size:16px; padding:8px 12px}
 
-/* Right-side clock & TOs */
-.board-right .section-head{ display:none; }
-.scoreboard-clock{
-  background: #0b0e13;
-  border:1px solid #2a3342;
-  border-radius:14px;
-  padding:12px;
-}
-.time-row label{ display:block; font-size:12px; color:var(--muted); margin-bottom:4px;}
-.time-manual input#timeInput{
-  width:100%;
-  text-align:center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: clamp(36px, 8vw, 80px);
-  line-height:1;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background:#000; color:#ff5135;
-  border:1px solid #2a3342;
-  letter-spacing: 2px;
-}
+.pct-wrap input[type="number"]{font-size:18px; padding:8px 10px}
 
-/* Timeouts inside the right card */
-.scoreboard-clock .grid2{ grid-template-columns: 1fr 1fr; }
-@media (max-width: 420px){ .scoreboard-clock .grid2{ grid-template-columns: 1fr; } }
-
-/* Make the entire top scoreboard take the stage on iPad landscape */
-@media (min-width: 1024px) and (orientation: landscape){
-  .area-score{ position: sticky; top: calc(env(safe-area-inset-top) + 8px); z-index: 40; }
-}
-
-.area-math{grid-area:math}
+/* Score quick row spacing */
+.quick-row{gap:12px}
