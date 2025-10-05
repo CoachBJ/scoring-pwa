@@ -1,5 +1,5 @@
 // =======================
-// Charlotte Christian Game Manager (Pro)
+// Charlotte Christian Game Manager — Voice + iPhone layout
 // =======================
 
 const TEAM_NAME = "Charlotte Christian";
@@ -12,7 +12,7 @@ const SCORING_PLAYS = [
   { pts: 3, label: "FG" },
   { pts: 2, label: "Safety" },
 ];
-const JOINER = " • "; // keep "TD + PAT" intact; separate different plays with dot
+const JOINER = " • ";
 
 // ----- Utils -----
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -143,13 +143,11 @@ function commitManualTime(){
   setTimeSecs(secs); saveState(); updateClockHelper();
 }
 
-// ===== Log =====
+// ----- Log -----
 const elLogList=document.getElementById("logList");
 const elUndoLog=document.getElementById("undoLog");
 const elClearLog=document.getElementById("clearLog");
 const elExportLog=document.getElementById("exportLog");
-
-function nowStamp(){ return `${toMMSS(getTimeSecs())} ${elHalf2.checked?'2H':'1H'}`; }
 function addLog(type, text, team){
   const entry = { t: Date.now(), clock: toMMSS(getTimeSecs()), half: elHalf2.checked?2:1, type, text, team };
   LOG.push(entry); renderLog(); saveState();
@@ -181,24 +179,21 @@ function useTO(side){
   const key = `${side}-${half2?'h2':'h1'}`;
   const g = getGroupEl(key); if(!g) return;
   const boxes=[...g.querySelectorAll('input[type="checkbox"]')];
-  const idx = boxes.lastIndexOf(boxes.findLast ? boxes.findLast(b=>b.checked) : boxes.slice().reverse().find(b=>b.checked));
-  // Fallback if findLast unsupported:
-  let i = -1; for(let j=boxes.length-1;j>=0;j--){ if(boxes[j].checked){ i=j; break; } }
-  const useIdx = idx>=0?idx:i;
-  if(useIdx<0){ addLog('TO','(No TO left)', side); return; }
-  boxes[useIdx].checked = false;
-  addLog('TO', 'timeout used', side);
+  let idx=-1; for(let j=boxes.length-1;j>=0;j--){ if(boxes[j].checked){ idx=j; break; } }
+  if(idx<0){ addLog('TO','(No TO left)', side); return; }
+  boxes[idx].checked = false;
+  addLog('TO','timeout used', side);
   saveState(); updateClockHelper();
 }
 
-// ----- Quick score buttons -----
+// Quick score buttons
 document.querySelectorAll('.chip').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const team = btn.dataset.team; const delta = Number(btn.dataset.delta||0);
     const our = Number(elOur.value||0), opp = Number(elOpp.value||0);
     if(team==='our'){ elOur.value = our + delta; addLog('SCORE', `+${delta} (${labelForDelta(delta)})`, 'our'); }
     else { elOpp.value = opp + delta; addLog('SCORE', `+${delta} (${labelForDelta(delta)})`, 'opp'); }
-    saveState(); run(); // refresh banner + options
+    saveState(); run();
   });
 });
 function labelForDelta(d){
@@ -210,7 +205,7 @@ function labelForDelta(d){
   return `+${d}`;
 }
 
-// ----- Clock helper model -----
+// ----- Clock helper -----
 const elBallUs=document.getElementById("ballUs");
 const elBallThem=document.getElementById("ballThem");
 const elSnaps=document.getElementById("snaps");
@@ -255,44 +250,30 @@ function updateClockHelper(){
 function updatePatAdvice(){
   const xp = clamp(Number(elXp.value||0),0,100)/100;
   const tw = clamp(Number(elTwo.value||0),0,100)/100;
-  const breakEven = (xp/2);
   const pick = (2*tw > xp) ? "Go for 2" : "Kick PAT";
-  elPatAdvice.innerHTML = `<b>${pick}</b> • XP E[pts]=${(xp).toFixed(2)}, 2-pt E[pts]=${(2*tw).toFixed(2)} • Break-even 2-pt ≈ ${(breakEven*100).toFixed(1)}%`;
+  elPatAdvice.innerHTML = `<b>${pick}</b> • XP E[pts]=${(xp).toFixed(2)}, 2-pt E[pts]=${(2*tw).toFixed(2)} • Break-even 2-pt ≈ ${(xp/2*100).toFixed(1)}%`;
   STATE.xpPct = Math.round(xp*100); STATE.twoPct = Math.round(tw*100); saveState();
 }
 elXp.addEventListener('input', updatePatAdvice);
 elTwo.addEventListener('input', updatePatAdvice);
 
 // ----- State -----
-const STATE_KEY="ccs-pro-state-v1";
-let LOG = []; // game log in-memory
-let STATE = {
-  oppName: "Opponent",
-  oppColor: "#9a9a9a",
-  xpPct: 95,
-  twoPct: 45
-};
+const STATE_KEY="ccs-voice-state-v1";
+let LOG = [];
+let STATE = { oppName:"Opponent", oppColor:"#9a9a9a", xpPct:95, twoPct:45 };
 
 function saveState(){
   const s={
     our:Number(elOur.value||0), opp:Number(elOpp.value||0),
     half: elHalf2.checked?2:1,
     time: getTimeSecs(),
-    to: {
-      "our-h1": getTOState("our-h1"),
-      "opp-h1": getTOState("opp-h1"),
-      "our-h2": getTOState("our-h2"),
-      "opp-h2": getTOState("opp-h2"),
-    },
-    oppName: STATE.oppName,
-    oppColor: STATE.oppColor,
-    xpPct: STATE.xpPct,
-    twoPct: STATE.twoPct,
+    to: { "our-h1": getTOState("our-h1"), "opp-h1": getTOState("opp-h1"), "our-h2": getTOState("our-h2"), "opp-h2": getTOState("opp-h2") },
+    oppName: STATE.oppName, oppColor: STATE.oppColor,
+    xpPct: STATE.xpPct, twoPct: STATE.twoPct,
     log: LOG
   };
   localStorage.setItem(STATE_KEY, JSON.stringify(s));
 }
-
 function loadState(){
   try{
     const s=JSON.parse(localStorage.getItem(STATE_KEY)||"{}");
@@ -301,22 +282,18 @@ function loadState(){
     (s.half===2?elHalf2:elHalf1).checked=true;
     setTimeSecs(typeof s.time==="number"? s.time : 1440);
 
-    // TOs
     if(s.to){ Object.keys(s.to).forEach(k=> setTOState(k, s.to[k])); }
     else { ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true])); }
 
-    // Opponent + theme
     STATE.oppName = s.oppName || "Opponent";
     STATE.oppColor = s.oppColor || "#9a9a9a";
     applyOpponentProfile();
 
-    // PAT prefs
     STATE.xpPct = typeof s.xpPct==="number" ? s.xpPct : 95;
     STATE.twoPct = typeof s.twoPct==="number" ? s.twoPct : 45;
     elXp.value = STATE.xpPct; elTwo.value = STATE.twoPct;
     updatePatAdvice();
 
-    // Log
     LOG = Array.isArray(s.log) ? s.log : [];
     renderLog();
   }catch(e){
@@ -325,23 +302,165 @@ function loadState(){
   }
 }
 
-// Opponent profile apply
+// Opponent profile
 function applyOpponentProfile(){
   elOppName.value = STATE.oppName;
   elOppColor.value = STATE.oppColor;
   document.documentElement.style.setProperty('--opp', STATE.oppColor);
   elOppLabel.textContent = STATE.oppName;
 }
+elOppName.addEventListener('input', ()=>{ STATE.oppName = elOppName.value.trim() || "Opponent"; applyOpponentProfile(); saveState(); run(); });
+elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; applyOpponentProfile(); saveState(); });
 
-// Opponent profile events
-elOppName.addEventListener('input', ()=>{
-  STATE.oppName = elOppName.value.trim() || "Opponent";
-  applyOpponentProfile(); saveState(); run();
-});
-elOppColor.addEventListener('input', ()=>{
-  STATE.oppColor = elOppColor.value;
-  applyOpponentProfile(); saveState();
-});
+// ----- Voice recognition -----
+const micBtn = document.getElementById('micBtn');
+const micStatus = document.getElementById('micStatus');
+const micIcon = document.getElementById('micIcon');
+const micText = document.getElementById('micText');
+
+let recognition = null;
+let listening = false;
+
+function supportsVoice(){
+  return ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+}
+function setupVoice(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    micBtn.disabled = true;
+    micStatus.textContent = 'Voice not supported on this browser/device.';
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    listening = true;
+    micBtn.classList.add('on');
+    micStatus.textContent = 'Listening…';
+    micStatus.classList.add('listening');
+    micText.textContent = 'Stop';
+  };
+  recognition.onend = () => {
+    listening = false;
+    micBtn.classList.remove('on');
+    micStatus.classList.remove('listening');
+    micText.textContent = 'Start';
+  };
+  recognition.onerror = (e) => {
+    micStatus.textContent = `Voice error: ${e.error || 'unknown'}`;
+  };
+  recognition.onresult = (event) => {
+    let final = '';
+    for (let i=event.resultIndex; i<event.results.length; i++){
+      const res = event.results[i];
+      if (res.isFinal) final += res[0].transcript + ' ';
+    }
+    final = final.trim();
+    if(final){
+      const out = handleVoice(final);
+      micStatus.textContent = out;
+    }
+  };
+
+  micBtn.addEventListener('click', ()=>{
+    if(!listening){ try{ recognition.start(); }catch(_){} }
+    else { try{ recognition.stop(); }catch(_){} }
+  });
+}
+
+// Parse helpers
+const WORD_NUM = { two:2, three:3, six:6, seven:7, eight:8 };
+function numFromWordOrDigit(s){
+  s=s.toLowerCase();
+  if(WORD_NUM[s] != null) return WORD_NUM[s];
+  const n = parseInt(s,10); return Number.isNaN(n)?null:n;
+}
+function parseTimeUtterance(t){
+  t = t.toLowerCase().replace(/\./g,'').replace(/seconds?/g,' sec').replace(/minutes?/g,' min').replace(/for /,'').trim();
+  // 2:11
+  const c = t.match(/(\d{1,2})\s*[:]\s*([0-5]?\d)/);
+  if(c) return clamp(parseInt(c[1],10)*60 + parseInt(c[2],10), 0, 1440);
+  // "2 min 11 sec" or "2 min" or "131 sec"
+  const m = t.match(/(?:(\d{1,2})\s*min)?\s*(?:(\d{1,2})\s*sec)?/);
+  if(m && (m[1] || m[2])){
+    const mm = parseInt(m[1]||'0',10), ss=parseInt(m[2]||'0',10);
+    return clamp(mm*60 + ss, 0, 1440);
+  }
+  // "2 11"
+  const sp = t.match(/^\s*(\d{1,2})\s+([0-5]?\d)\s*$/);
+  if(sp) return clamp(parseInt(sp[1],10)*60 + parseInt(sp[2],10),0,1440);
+  // single number => minutes
+  const only = t.match(/^\d{1,3}$/);
+  if(only) return clamp(parseInt(only[0],10)*60, 0, 1440);
+  return null;
+}
+
+// Voice command router
+function handleVoice(raw){
+  const text = raw.toLowerCase().trim();
+
+  // Set clock
+  let m = text.match(/^(set|adjust)\s*(the\s*)?(game\s*)?clock\s*(to|for|at)?\s*(.+)$/);
+  if(m){
+    const secs = parseTimeUtterance(m[5] || '');
+    if(secs==null) return `Heard “${raw}” — invalid time. Say “set clock to 2:11”.`;
+    setTimeSecs(secs); saveState(); updateClockHelper();
+    addLog('CLOCK', `clock set to ${toMMSS(secs)}`); return `Clock set to ${toMMSS(secs)}`;
+  }
+
+  // Timeout
+  if(/^(our|charlotte christian)\s*(time\s*out|timeout)$/.test(text) || /^timeout$/.test(text)){
+    useTO('our'); return 'Used Charlotte Christian timeout';
+  }
+  if(/^(their|opponent|them)\s*(time\s*out|timeout)$/.test(text) || /^opponent timeout$/.test(text)){
+    useTO('opp'); return 'Used opponent timeout';
+  }
+
+  // Add score: "add seven [team]" / "touchdown ... with pat / go for two"
+  m = text.match(/^(add|plus|\+)\s*(two|three|six|seven|eight|2|3|6|7|8)\s*(for\s*)?(charlotte christian|us|we|our|opponent|them|they)?/);
+  if(m){
+    const pts = numFromWordOrDigit(m[2]);
+    const teamWord = (m[4]||'').trim();
+    const team = /opponent|them|they/.test(teamWord) ? 'opp' : 'our';
+    addPoints(team, pts);
+    return `Added ${pts} to ${team==='our'?TEAM_NAME:STATE.oppName}`;
+  }
+
+  // Touchdown intent
+  m = text.match(/^touchdown(?:\s+(charlotte christian|us|we|our|opponent|them|they))?(?:.*\b(pat|extra point|kick)\b|.*\b(two|2)\b)?/);
+  if(m){
+    const team = /opponent|them|they/.test(m[1]||'') ? 'opp' : 'our';
+    const want2 = !!m[3];
+    const wantPat = !!m[2];
+    const pts = want2 ? 8 : wantPat ? 7 : 6;
+    addPoints(team, pts);
+    return `Touchdown: +${pts} to ${team==='our'?TEAM_NAME:STATE.oppName}`;
+  }
+
+  // Calculate
+  if(/^calculate|recalculate|compute$/.test(text)){
+    run(); return 'Updated options';
+  }
+
+  // Opponent name
+  m = text.match(/^(set\s+)?opponent\s+(name\s+to|is)\s+(.+)$/);
+  if(m){
+    STATE.oppName = m[3].trim();
+    applyOpponentProfile(); saveState(); run();
+    return `Opponent set to ${STATE.oppName}`;
+  }
+
+  return `Heard “${raw}” — command not recognized. Try “set clock to 2:11”, “timeout”, or “add seven Charlotte Christian”.`;
+}
+function addPoints(team, delta){
+  const our = Number(elOur.value||0), opp = Number(elOpp.value||0);
+  if(team==='our'){ elOur.value = our + delta; addLog('SCORE', `+${delta} (${labelForDelta(delta)})`, 'our'); }
+  else { elOpp.value = opp + delta; addLog('SCORE', `+${delta} (${labelForDelta(delta)})`, 'opp'); }
+  saveState(); run();
+}
 
 // ----- Main scoring run -----
 elCalc.addEventListener("click", run);
@@ -364,8 +483,7 @@ function run(){
   let teamNeeding = who==="auto" ? (our>opp?"opp":our<opp?"us":"either") : who;
 
   const diff=Math.abs(our-opp);
-  const tieTarget=diff;
-  const leadTarget=diff+1;
+  const tieTarget=diff, leadTarget=diff+1;
 
   const teamLabel = teamNeeding==="us" ? `${TEAM_NAME} needs` :
                     teamNeeding==="opp"? `${STATE.oppName} needs` : `Either team needs`;
@@ -377,9 +495,7 @@ function run(){
   renderSection(`${titlePrefix} Tie`, tieRes);
   renderSection(`${titlePrefix} Take the Lead`, leadRes);
 
-  // Status
-  const usBehind=Math.max(0, opp-our);
-  const oppBehind=Math.max(0, our-opp);
+  const usBehind=Math.max(0, opp-our), oppBehind=Math.max(0, our-opp);
   elStatus.textContent =
     `Score: ${TEAM_NAME} ${our} — ${STATE.oppName} ${opp} • ${TEAM_NAME} behind: ${usBehind} • ${STATE.oppName} behind: ${oppBehind}. Showing exact-point combos.`;
 
@@ -390,6 +506,10 @@ function run(){
 loadState();
 updateClockHelper();
 run();
+if (supportsVoice()) setupVoice(); else {
+  const ms = document.getElementById('micStatus');
+  ms.textContent = 'Voice not supported on this browser/device.';
+}
 
 // Reset
 document.getElementById("resetGame").addEventListener("click", ()=>{
