@@ -1,9 +1,9 @@
 // =======================
-// Charlotte Christian Game Manager
+// Charlotte Christian Game Manager (checkbox TOs + manual time only)
 // =======================
 
 const TEAM_NAME = "Charlotte Christian";
-const OPP_NAME  = "Opponent";
+const OPP_NAME  = "Fuck Rabun Gap";
 
 // ----- Scoring definitions -----
 const SCORING_PLAYS = [
@@ -101,41 +101,45 @@ function renderSection(title, resultObj){
   else { (viewTable.checked?renderTable:renderRow)(resultObj.list); }
 }
 
-// ----- Game clock + TOs refs -----
+// ----- Game clock (manual only) + TO checkbox groups -----
 const elHalf1=document.getElementById("half1");
 const elHalf2=document.getElementById("half2");
 
-const elTime=document.getElementById("timeSlider");
-const elTimeLbl=document.getElementById("timeLabel");
 const elTimeInput=document.getElementById("timeInput");
-
-const elReset=document.getElementById("resetGame");
 const elMiniBtns=document.querySelectorAll(".mini");
 
-const elOurToH1=document.getElementById("ourToH1");
-const elOppToH1=document.getElementById("oppToH1");
-const elOurToH2=document.getElementById("ourToH2");
-const elOppToH2=document.getElementById("oppToH2");
+const TO_KEYS = ["our-h1","opp-h1","our-h2","opp-h2"];
+function getGroupEl(key){ return document.querySelector(`.to-checks[data-key="${key}"]`) || document.getElementById(`group-${key}`); }
 
-const elBallUs=document.getElementById("ballUs");
-const elBallThem=document.getElementById("ballThem");
+function getTOState(key){
+  const group = getGroupEl(key);
+  const boxes = group ? [...group.querySelectorAll('input[type="checkbox"]')] : [];
+  return boxes.map(b=>b.checked);
+}
+function setTOState(key, arr){
+  const group = getGroupEl(key);
+  if(!group) return;
+  const boxes = [...group.querySelectorAll('input[type="checkbox"]')];
+  boxes.forEach((b,i)=>{ b.checked = (arr && typeof arr[i]==="boolean") ? arr[i] : true; });
+}
+function countTO(key){ return getTOState(key).filter(Boolean).length; }
 
-const elSnaps=document.getElementById("snaps");
-const elPlayClock=document.getElementById("playClock");
-const elPlayTime=document.getElementById("playTime");
-const elClockResult=document.getElementById("clockResult");
+function getTimeSecs(){ const s=fromMMSS(elTimeInput.value); return s==null?0:s; }
+function setTimeSecs(secs){ elTimeInput.value = toMMSS(clamp(secs,0,1440)); }
 
 // ----- State -----
-const STATE_KEY="ccs-game-state-v1";
+const STATE_KEY="ccs-game-state-v2";
 function saveState(){
   const s={
     our:Number(elOur.value||0), opp:Number(elOpp.value||0),
     half: elHalf2.checked?2:1,
-    time:Number(elTime.value),
-    ourToH1:Number(elOurToH1.value), oppToH1:Number(elOppToH1.value),
-    ourToH2:Number(elOurToH2.value), oppToH2:Number(elOppToH2.value),
-    ball: elBallThem.checked?'them':'us',
-    snaps:Number(elSnaps.value), pclk:Number(elPlayClock.value), ptime:Number(elPlayTime.value)
+    time: getTimeSecs(),
+    to: {
+      "our-h1": getTOState("our-h1"),
+      "opp-h1": getTOState("opp-h1"),
+      "our-h2": getTOState("our-h2"),
+      "opp-h2": getTOState("opp-h2"),
+    }
   };
   localStorage.setItem(STATE_KEY, JSON.stringify(s));
 }
@@ -145,88 +149,80 @@ function loadState(){
     if("our" in s) elOur.value=s.our;
     if("opp" in s) elOpp.value=s.opp;
     (s.half===2?elHalf2:elHalf1).checked=true;
-    if("time" in s) elTime.value=s.time;
-    if("ourToH1" in s) elOurToH1.value=s.ourToH1;
-    if("oppToH1" in s) elOppToH1.value=s.oppToH1;
-    if("ourToH2" in s) elOurToH2.value=s.ourToH2;
-    if("oppToH2" in s) elOppToH2.value=s.oppToH2;
-    (s.ball==='them'?elBallThem:elBallUs).checked=true;
-    if("snaps" in s) elSnaps.value=s.snaps;
-    if("pclk" in s) elPlayClock.value=s.pclk;
-    if("ptime" in s) elPlayTime.value=s.ptime;
-  }catch(e){}
-  updateTimeLabel();
+    setTimeSecs(typeof s.time==="number"? s.time : 1440);
+    // TOs
+    if(s.to){
+      TO_KEYS.forEach(k=> setTOState(k, s.to[k]));
+    } else {
+      TO_KEYS.forEach(k=> setTOState(k, [true,true,true])); // default 3 TOs
+    }
+  }catch(e){
+    setTimeSecs(1440);
+    TO_KEYS.forEach(k=> setTOState(k, [true,true,true]));
+  }
 }
 
-// ----- Time UI sync -----
-function updateTimeLabel(){ const secs=Number(elTime.value); const mmss=toMMSS(secs); elTimeLbl.textContent=mmss; if(document.activeElement!==elTimeInput) elTimeInput.value=mmss; }
-
-// TO +/- buttons
-function adjustTO(el,delta){ el.value = clamp(Number(el.value)+delta,0,3); saveState(); updateClockHelper(); }
-document.querySelectorAll(".to-btn").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    const target=document.getElementById(btn.dataset.target);
-    adjustTO(target, Number(btn.dataset.delta));
-  });
-});
-
-// Quick -10/+10
-elMiniBtns.forEach(b=>{
-  b.addEventListener("click", ()=>{
-    elTime.value = clamp(Number(elTime.value)+Number(b.dataset.dt), 0, 1440);
-    updateTimeLabel(); saveState(); updateClockHelper();
-  });
-});
-
-// Slider → label/input
-elTime.addEventListener("input", updateTimeLabel);
-elTime.addEventListener("change", ()=>{ saveState(); updateClockHelper(); });
-
-// Manual mm:ss → slider
+// Time input handlers
 function commitManualTime(){
   const secs = fromMMSS(elTimeInput.value);
   if(secs==null){ elTimeInput.classList.add("error"); return; }
   elTimeInput.classList.remove("error");
-  elTime.value = secs; updateTimeLabel(); saveState(); updateClockHelper();
+  setTimeSecs(secs); saveState(); updateClockHelper();
 }
 elTimeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") commitManualTime(); });
 elTimeInput.addEventListener("blur", commitManualTime);
 
+// Quick -10/+10 buttons
+elMiniBtns.forEach(b=>{
+  b.addEventListener("click", ()=>{
+    let secs = getTimeSecs();
+    secs = clamp(secs + Number(b.dataset.dt), 0, 1440);
+    setTimeSecs(secs); saveState(); updateClockHelper();
+  });
+});
+
+// TO checkbox listeners
+TO_KEYS.forEach(k=>{
+  const group = getGroupEl(k);
+  if(group){
+    group.addEventListener("change", ()=>{ saveState(); updateClockHelper(); });
+  }
+});
+
 // Half change
-[elHalf1,elHalf2].forEach(el=>el.addEventListener("change", ()=>{ saveState(); updateClockHelper(); }));
-
-// Clamp TO fields + persist
-[elOurToH1,elOppToH1,elOurToH2,elOppToH2].forEach(el=>{
-  el.addEventListener("change", ()=>{ el.value=clamp(Number(el.value),0,3); saveState(); updateClockHelper(); });
-});
-
-// Clock helper inputs
-[elBallUs, elBallThem, elSnaps, elPlayClock, elPlayTime].forEach(el=>{
-  el.addEventListener("change", ()=>{ saveState(); updateClockHelper(); });
-  el.addEventListener("input",  ()=>{ updateClockHelper(); });
-});
+[elHalf1,elHalf2].forEach(el=> el.addEventListener("change", ()=>{ saveState(); updateClockHelper(); }));
 
 // Reset
 document.getElementById("resetGame").addEventListener("click", ()=>{
   elOur.value=0; elOpp.value=0;
   elHalf1.checked=true;
-  elTime.value=1440; updateTimeLabel();
-  elOurToH1.value=3; elOppToH1.value=3; elOurToH2.value=3; elOppToH2.value=3;
-  elBallUs.checked=true;
-  elSnaps.value=3; elPlayClock.value=40; elPlayTime.value=6;
+  setTimeSecs(1440);
+  TO_KEYS.forEach(k=> setTOState(k, [true,true,true]));
   saveState(); run(); updateClockHelper();
 });
 
 // ----- Clock helper model -----
+const elBallUs=document.getElementById("ballUs");
+const elBallThem=document.getElementById("ballThem");
+const elSnaps=document.getElementById("snaps");
+const elPlayClock=document.getElementById("playClock");
+const elPlayTime=document.getElementById("playTime");
+const elClockResult=document.getElementById("clockResult");
+
+[elBallUs, elBallThem, elSnaps, elPlayClock, elPlayTime].forEach(el=>{
+  el.addEventListener("change", ()=>{ saveState(); updateClockHelper(); });
+  el.addEventListener("input",  ()=>{ updateClockHelper(); });
+});
+
 function updateClockHelper(){
-  const timeLeft=Number(elTime.value);
+  const timeLeft=getTimeSecs();
   const snaps=clamp(Number(elSnaps.value||3),1,4);
   const pclk =clamp(Number(elPlayClock.value||40),20,45);
   const ptime=clamp(Number(elPlayTime.value||6),1,15);
   const half2=elHalf2.checked;
 
-  const ourTO = half2 ? Number(elOurToH2.value) : Number(elOurToH1.value);
-  const oppTO = half2 ? Number(elOppToH2.value) : Number(elOppToH1.value);
+  const ourTO = half2 ? countTO("our-h2") : countTO("our-h1");
+  const oppTO = half2 ? countTO("opp-h2") : countTO("opp-h1");
 
   if(elBallUs.checked){
     const burn = snaps*ptime + Math.max(0, snaps - oppTO)*pclk;
@@ -234,7 +230,7 @@ function updateClockHelper(){
     const remain = Math.max(0, timeLeft - canBurn);
     elClockResult.innerHTML =
       `${TEAM_NAME} has ball. Opp TOs: <b>${oppTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b> (capped by time left). ` +
+      `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
       (remain===0 ? `<b>You can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
   } else {
     const drain = snaps*ptime + Math.max(0, snaps - ourTO)*pclk;
@@ -250,6 +246,14 @@ function updateClockHelper(){
 elCalc.addEventListener("click", run);
 [elOur,elOpp].forEach(el=>el.addEventListener("keydown", e=>{ if(e.key==="Enter") run(); }));
 
+function renderBannerAndStatus(our, opp){
+  renderBanner(our, opp);
+  const usBehind=Math.max(0, opp-our);
+  const oppBehind=Math.max(0, our-opp);
+  elStatus.textContent =
+    `Score: ${TEAM_NAME} ${our} — ${OPP_NAME} ${opp} • ${TEAM_NAME} behind: ${usBehind} • ${OPP_NAME} behind: ${oppBehind}. Showing exact-point combos.`;
+}
+
 function run(){
   elOut.innerHTML=""; elStatus.textContent="";
 
@@ -257,7 +261,7 @@ function run(){
   const opp=validateInt(elOpp.value.trim());
   if(our==null || opp==null){ elStatus.textContent="Enter both scores."; return; }
 
-  renderBanner(our, opp);
+  renderBannerAndStatus(our, opp);
 
   const cap=Math.max(1, Number(elCap.value||200));
 
@@ -269,9 +273,6 @@ function run(){
   const tieTarget=diff;
   const leadTarget=diff+1;
 
-  const usBehind=Math.max(0, opp-our);
-  const oppBehind=Math.max(0, our-opp);
-
   const teamLabel = teamNeeding==="us" ? `${TEAM_NAME} needs` :
                     teamNeeding==="opp"? `${OPP_NAME} needs` : `Either team needs`;
 
@@ -281,9 +282,6 @@ function run(){
   const titlePrefix = `${teamLabel} to…`;
   renderSection(`${titlePrefix} Tie`, tieRes);
   renderSection(`${titlePrefix} Take the Lead`, leadRes);
-
-  elStatus.textContent =
-    `Score: ${TEAM_NAME} ${our} — ${OPP_NAME} ${opp} • ${TEAM_NAME} behind: ${usBehind} • ${OPP_NAME} behind: ${oppBehind}. Showing exact-point combos.`;
 
   saveState();
 }
