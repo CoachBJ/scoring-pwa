@@ -326,6 +326,15 @@ document.querySelectorAll('.to-title').forEach(title => {
   });
 });
 
+// *** FIX: Add event listeners for manual timeout checkbox changes ***
+document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+        saveState();
+        updateClockHelper();
+    });
+});
+
+
 loadState();
 updateClockHelper();
 run();
