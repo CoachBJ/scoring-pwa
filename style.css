@@ -13,7 +13,7 @@ body{
   color:var(--text);font:16px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial
 }
 /* iPhone-like width everywhere */
-main{max-width:560px;margin:0 auto;padding:16px 16px 64px}
+main{max-width:600px;margin:0 auto;padding:16px 16px 64px}
 
 .appbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0 10px}
 .brand{display:flex;gap:12px;align-items:center}
@@ -97,3 +97,23 @@ input[type="color"]{width:44px;height:36px;border:1px solid #2a3342;border-radiu
 /* iPhone layout on ALL devices */
 .layout{display:grid;gap:14px;grid-template-columns:1fr;grid-template-areas:"score" "clock" "output" "log"}
 .area-score{grid-area:score}.area-clock{grid-area:clock}.area-output{grid-area:output}.area-log{grid-area:log}
+
+
+/* -------- iOS Safe Area -------- */
+@supports(padding:max(0px)) {
+  body { padding-top: max(0px, env(safe-area-inset-top)); }
+  .appbar { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(6px); background: rgba(11,17,32,.72); }
+}
+
+/* -------- iPad / wide layout -------- */
+@media (min-width: 820px) {
+  main { max-width: 980px; }
+  .layout{
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "score clock"
+      "output output"
+      "log log";
+  }
+  .area-score, .area-clock { position: sticky; top: calc(8px + env(safe-area-inset-top)); align-self: start; }
+}
