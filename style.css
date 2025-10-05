@@ -43,7 +43,11 @@ input[type="color"]{width:44px;height:36px;border:1px solid #2a3342;border-radiu
 .btn{padding:10px 14px;border-radius:10px;border:1px solid transparent;cursor:pointer;font-size: 1rem; font-weight: bold;}
 .btn-primary{background:linear-gradient(180deg,var(--team),#2b69df);color:#fff;border-color:#295ac1}
 .btn-ghost{background:transparent;border:1px solid #2a3342;color:var(--text)}
-.btn:active{transform:translateY(1px)}
+
+/* Improved Interaction Feedback */
+.btn:active, .chip:active, .mini:active{transform:translateY(1px) brightness(0.95); transition: transform 0.05s;}
+input:focus-visible, button:focus-visible { outline: 2px solid var(--team-2); outline-offset: 2px; }
+
 .muted{color:var(--muted);font-size:13px}
 
 /* Table + pills */
@@ -73,7 +77,7 @@ input[type="color"]{width:44px;height:36px;border:1px solid #2a3342;border-radiu
 .score-label{font-size:12px;color:#a7b0c0;margin-bottom:6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 .score-input{font-size:20px;font-weight:800;text-align:center;width:100%;}
 .quick-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;justify-content: center;}
-.chip{border:1px solid #2a3342;background:var(--team);color:#fff;padding:6px 10px;border-radius:999px;cursor:pointer;}
+.chip{border:1px solid #2a3342;background:var(--team);color:#fff;padding:6px 10px;border-radius:999px;cursor:pointer;user-select:none;}
 .chip.opp{background:var(--opp);color:#000;border-color:#444}
 
 /* Timeouts (checkbox groups) */
@@ -83,7 +87,7 @@ input[type="color"]{width:44px;height:36px;border:1px solid #2a3342;border-radiu
 .to-checks{display:flex;gap:8px;flex-wrap:wrap}
 .to-checks label{display:inline-flex;align-items:center;gap:6px;background:#151a22;border:1px solid #2a3342;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none}
 .to-checks input[type="checkbox"]{width:18px;height:18px;accent-color:var(--team)}
-.mini{border:1px solid #2a3342;background:#151a22;color:var(--text);padding:8px 10px;border-radius:8px; cursor: pointer;}
+.mini{border:1px solid #2a3342;background:#151a22;color:var(--text);padding:8px 10px;border-radius:8px; cursor: pointer; user-select:none;}
 .mini.opp{background:#202022;border-color:#444}
 
 /* Time */
@@ -99,6 +103,52 @@ input[type="color"]{width:44px;height:36px;border:1px solid #2a3342;border-radiu
 
 
 /* --- RESPONSIVE TWEAKS --- */
+
+/* For smaller devices (phones, small tablets) */
+@media (max-width: 767px) {
+  body {
+    font-size: 17px; /* Slightly larger base font */
+  }
+  .btn {
+    padding: 14px 18px; /* Bigger buttons */
+    font-size: 1.1rem;
+  }
+  .chip {
+    padding: 12px 16px; /* Bigger quick-score buttons */
+    font-size: 1rem;
+    min-height: 48px; /* Ensure a large touch target */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mini {
+    padding: 12px 14px; /* Bigger timeout/clock buttons */
+  }
+  input[type="number"], input[type="text"] {
+    padding: 14px;
+    font-size: 1.1rem;
+  }
+  .score-input {
+    font-size: 28px; /* Make the score much easier to see */
+    padding: 8px;
+  }
+  .section-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  .toggles label {
+    padding: 6px; /* Larger tap area for radio buttons */
+  }
+  .to-checks label {
+    padding: 12px; /* Larger tap area for timeout checkboxes */
+    flex-grow: 1;
+    justify-content: center;
+  }
+  .to-checks input[type="checkbox"]{
+    width: 22px; /* Make the checkbox itself larger */
+    height: 22px;
+  }
+}
 
 /* For iPads (tablets) */
 @media (min-width: 768px) {
