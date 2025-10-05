@@ -70,18 +70,6 @@
           <label><input id="who-opp"  name="who" type="radio"> Opponent needs</label>
         </div>
 
-        <!-- PAT vs 2-pt helper -->
-        <div class="card-sub">
-          <div class="row compact">
-            <label>PAT vs 2-pt</label>
-            <div class="pct-wrap">
-              <span class="muted">XP%</span><input id="xpPct" type="number" min="0" max="100" value="95">
-              <span class="muted">2-pt%</span><input id="twoPct" type="number" min="0" max="100" value="45">
-            </div>
-          </div>
-          <div id="patAdvice" class="muted"></div>
-        </div>
-
         <div class="row compact">
           <label>Max results</label>
           <input id="cap" type="number" inputmode="numeric" value="200" />
@@ -115,17 +103,6 @@
           <div class="tinyBtns">
             <button class="mini" data-dt="-10">-10s</button>
             <button class="mini" data-dt="+10">+10s</button>
-          </div>
-        </div>
-
-        <!-- Voice control -->
-        <div class="row compact">
-          <label>Voice</label>
-          <div class="voice-wrap">
-            <button id="micBtn" class="btn btn-primary mic">
-              <span id="micIcon">🎤</span><span id="micText">Start</span>
-            </button>
-            <span id="micStatus" class="muted"></span>
           </div>
         </div>
 
@@ -192,16 +169,6 @@
       <!-- OUTPUT -->
       <section id="output" class="area-output"></section>
 
-      <!-- GAME LOG -->
-      <section class="card area-log">
-        <h2 class="section-title">Game Log</h2>
-        <div class="log-controls">
-          <button id="undoLog" class="btn btn-ghost">Undo last</button>
-          <button id="clearLog" class="btn btn-ghost">Clear</button>
-          <button id="exportLog" class="btn btn-ghost">Export CSV</button>
-        </div>
-        <div id="logList" class="log-list"></div>
-      </section>
     </div>
   </main>
 
