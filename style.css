@@ -80,21 +80,6 @@ main {
     margin-bottom: 12px;
 }
 
-
-/* style.css */
-
-/* Add this new rule */
-.play-tag {
-    display: inline-block;
-    background-color: #e9ecef; /* A light gray, matching the .chip style */
-    color: var(--text-color);
-    padding: 4px 10px;
-    border-radius: 16px; /* Makes it pill-shaped */
-    margin: 2px 4px 2px 0; /* Adds spacing between tags */
-    font-size: 0.9em;
-    font-weight: 500;
-}
-
 /* --- Scoreboard & Inputs --- */
 .score-grid {
     display: grid;
@@ -118,19 +103,19 @@ main {
     box-sizing: border-box;
 }
 
-/* --- Banner (New Position) --- */
+/* --- Banner --- */
 #banner {
     text-align: center;
     padding: 12px;
     border-radius: 8px;
-    margin-top: 20px; /* Gives space from the scoreboard */
+    margin-top: 20px;
 }
 #banner .title {
-    font-size: 1.4em; /* Larger text */
+    font-size: 1.4em;
     font-weight: 600;
 }
 #banner .sub {
-    font-size: 1em; /* Larger text */
+    font-size: 1em;
     margin-top: 4px;
     opacity: 0.8;
 }
@@ -254,6 +239,55 @@ main {
 .to-card.collapsed .to-content {
     max-height: 0;
     padding-top: 0;
+}
+
+/* --- NEW: Output Table & Segment Styling --- */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.table th, .table td {
+    padding: 12px 10px;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+.table th {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--muted-color);
+    white-space: nowrap;
+}
+.table tr:last-child td {
+    border-bottom: none;
+}
+.score-options-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px; /* Spacing between chips */
+    align-items: center;
+}
+.badge {
+    display: inline-block;
+    min-width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+.segment {
+    display: inline-block;
+    background-color: #e9ecef;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.9em;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    white-space: nowrap;
 }
 
 
