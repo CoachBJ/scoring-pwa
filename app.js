@@ -83,6 +83,8 @@ function renderRow(list){
   });
   card.appendChild(row); elOut.appendChild(card);
 }
+// app.js
+
 function renderTable(list){
   const card=document.createElement("div"); card.className="card";
   const table=document.createElement("table"); table.className="table";
@@ -92,10 +94,13 @@ function renderTable(list){
     const tr=document.createElement("tr");
     const tdA=document.createElement("td"); tdA.innerHTML=`<span class="badge">${it.plays}</span>`;
     const tdB=document.createElement("td");
-    it.txt.split(JOINER).forEach(seg=>{ const s=document.createElement("span"); s.className="segment"; s.textContent=seg; tdB.appendChild(s); });
+    // This is the line to change:
+    it.txt.split(JOINER).forEach(seg=>{ const s=document.createElement("span"); s.className="play-tag"; s.textContent=seg; tdB.appendChild(s); });
     tr.appendChild(tdA); tr.appendChild(tdB); tb.appendChild(tr);
   });
   table.appendChild(tb); card.appendChild(table); elOut.appendChild(card);
+}
+
 }
 function renderSection(title, resultObj){
   const header=document.createElement("h2"); header.className="section-title"; header.style.marginTop = '20px'; header.textContent = title; elOut.appendChild(header);
