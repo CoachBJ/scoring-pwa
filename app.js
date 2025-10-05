@@ -27,8 +27,14 @@ function scoreCombos(target){
     for(let i=start;i<SCORING_PLAYS.length;i++){ const p=SCORING_PLAYS[i].pts; if(p>rem) continue; counts[i]++; dfs(rem-p,i); counts[i]--; } }
   if(target>0) dfs(target,0); return combos;
 }
-function rankKey(counts){ const total=counts.reduce((a,b)=>a+b,0); return [total,-counts[0],-counts[1],-counts[2],counts[3],counts[4]]; }
-function formatCombo(counts){ const parts=[]; for(let i=0;i<counts.length;i++){const c=counts[i]; if(!c) continue; parts.push(c>1?`${c}x ${SCORING_PLAYS[i].label}`:SCORING_PLAYS[i].label);} return parts.join(JOINER); }
+// app.js
+
+function rankKey(counts){
+  const total=counts.reduce((a,b)=>a+b,0);
+  // OLD version: [total,-counts[0],-counts[1],-counts[2],counts[3],counts[4]]
+  // NEW version consistently prioritizes higher value scores (TDs > FG > Safety)
+  return [total, -counts[0], -counts[1], -counts[2], -counts[3], -counts[4]];
+}function formatCombo(counts){ const parts=[]; for(let i=0;i<counts.length;i++){const c=counts[i]; if(!c) continue; parts.push(c>1?`${c}x ${SCORING_PLAYS[i].label}`:SCORING_PLAYS[i].label);} return parts.join(JOINER); }
 function validateInt(v){ if(v===""||v==null) return null; const n=Math.floor(Number(v)); return Number.isNaN(n)?null:n; }
 function buildItems(target, cap){
   if(target<=0) return { msg: target===0 ? "Already tied." : "No points needed." };
