@@ -46,9 +46,6 @@ const elOut = document.querySelector("#output");
 const elStatus=document.querySelector("#status");
 const viewTable=document.querySelector("#view-table");
 const viewRow  =document.querySelector("#view-row");
-const whoAuto  =document.querySelector("#who-auto");
-const whoUs    =document.querySelector("#who-us");
-const whoOpp   =document.querySelector("#who-opp");
 const elOurLabel=document.querySelector("#ourLabel");
 const elOppLabel=document.querySelector("#oppLabel");
 
@@ -59,6 +56,7 @@ const elOppColor=document.getElementById("oppColor");
 // ----- Banner -----
 function renderBanner(our, opp, oppName){
   const el = document.getElementById("banner");
+  if (!el) return; // Guard against element not being found
   const usBehind  = Math.max(0, opp - our);
   const oppBehind = Math.max(0, our - opp);
 
@@ -263,7 +261,7 @@ elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; ap
 
 // ----- Main scoring run -----
 [elOur,elOpp].forEach(el=>el.addEventListener("input", run)); // Recalculate on score change
-[whoAuto, whoUs, whoOpp, viewTable, viewRow].forEach(el => el.addEventListener('change', run));
+[viewTable, viewRow].forEach(el => el.addEventListener('change', run));
 
 
 function run(){
@@ -275,8 +273,8 @@ function run(){
 
   renderBanner(our, opp, STATE.oppName);
 
-  let who="auto"; if(whoUs.checked) who="us"; if(whoOpp.checked) who="opp";
-  let teamNeeding = who==="auto" ? (our>opp?"opp":our<opp?"us":"either") : who;
+  // Simplified logic to always be "auto"
+  let teamNeeding = our > opp ? "opp" : our < opp ? "us" : "either";
 
   if (teamNeeding !== 'either') {
     const diff=Math.abs(our-opp);
@@ -290,7 +288,8 @@ function run(){
     renderSection(`${teamLabel} to Tie`, tieRes);
     renderSection(`${teamLabel} to Take the Lead`, leadRes);
   } else {
-     elOut.innerHTML = `<div class="card muted" style="text-align: center;">Scores are tied.</div>`
+     // If scores are tied, don't show the output section, the banner handles it.
+     elOut.innerHTML = "";
   }
   
   saveState();
