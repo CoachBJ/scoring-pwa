@@ -1,4 +1,5 @@
 // =======================
+// Charlotte Christian Game Manager — Voice + iPhone layout
 // =======================
 
 const TEAM_NAME = "Charlotte Christian";
@@ -205,12 +206,14 @@ function labelForDelta(d){
 }
 
 // ----- Clock helper -----
+const elBallUs=document.getElementById("ballUs");
+const elBallThem=document.getElementById("ballThem");
 const elSnaps=document.getElementById("snaps");
 const elPlayClock=document.getElementById("playClock");
 const elPlayTime=document.getElementById("playTime");
 const elClockResult=document.getElementById("clockResult");
 
-[elSnaps, elPlayClock, elPlayTime].forEach(el=>{
+[elBallUs, elBallThem, elSnaps, elPlayClock, elPlayTime].forEach(el=>{
   el.addEventListener("change", ()=>{ saveState(); updateClockHelper(); });
   el.addEventListener("input",  ()=>{ updateClockHelper(); });
 });
@@ -221,17 +224,16 @@ function updateClockHelper(){
   const pclk =clamp(Number(elPlayClock.value||40),20,45);
   const ptime=clamp(Number(elPlayTime.value||6),1,15);
   const half2=elHalf2.checked;
+
   const ourTO = half2 ? countTO("our-h2") : countTO("our-h1");
   const oppTO = half2 ? countTO("opp-h2") : countTO("opp-h1");
-  const burnA = snaps*ptime + Math.max(0, snaps - oppTO)*pclk;
-  const canBurnA = Math.min(timeLeft, burnA);
-  const remainA = Math.max(0, timeLeft - canBurnA);
-  const drainB = snaps*ptime + Math.max(0, snaps - ourTO)*pclk;
-  const canDrainB = Math.min(timeLeft, drainB);
-  const remainB = Math.max(0, timeLeft - canDrainB);
-  elClockResult.innerHTML = `<div><b>If CC has ball</b>: Opp TOs <b>${oppTO}</b> → burn ≈ <b>${toMMSS(canBurnA)}</b>${remainA===0?` • <b>Runs out the half.</b>`:` • ~<b>${toMMSS(remainA)}</b> left`}</div><div><b>If Opp has ball</b>: CC TOs <b>${ourTO}</b> → they drain ≈ <b>${toMMSS(canDrainB)}</b> • Use TOs to stop up to <b>${ourTO}</b> between-play bleeds.</div>`;
-}
- has ball. ${STATE.oppName} TOs: <b>${oppTO}</b>. ` +
+
+  if(elBallUs.checked){
+    const burn = snaps*ptime + Math.max(0, snaps - oppTO)*pclk;
+    const canBurn = Math.min(timeLeft, burn);
+    const remain = Math.max(0, timeLeft - canBurn);
+    elClockResult.innerHTML =
+      `${TEAM_NAME} has ball. ${STATE.oppName} TOs: <b>${oppTO}</b>. ` +
       `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
       (remain===0 ? `<b>You can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
   } else {
@@ -256,6 +258,7 @@ elXp.addEventListener('input', updatePatAdvice);
 elTwo.addEventListener('input', updatePatAdvice);
 
 // ----- State -----
+const STATE_KEY="ccs-voice-state-v1";
 let LOG = [];
 let STATE = { oppName:"Opponent", oppColor:"#9a9a9a", xpPct:95, twoPct:45 };
 
@@ -309,14 +312,23 @@ function applyOpponentProfile(){
 elOppName.addEventListener('input', ()=>{ STATE.oppName = elOppName.value.trim() || "Opponent"; applyOpponentProfile(); saveState(); run(); });
 elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; applyOpponentProfile(); saveState(); });
 
+// ----- Voice recognition -----
+const micBtn = document.getElementById('micBtn');
+const micStatus = document.getElementById('micStatus');
 const micIcon = document.getElementById('micIcon');
 const micText = document.getElementById('micText');
 
 let recognition = null;
 let listening = false;
 
+function supportsVoice(){
+  return ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
 }
+function setupVoice(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR){
+    micBtn.disabled = true;
+    micStatus.textContent = 'Voice not supported on this browser/device.';
     return;
   }
   recognition = new SR();
@@ -326,13 +338,19 @@ let listening = false;
 
   recognition.onstart = () => {
     listening = true;
+    micBtn.classList.add('on');
+    micStatus.textContent = 'Listening…';
+    micStatus.classList.add('listening');
     micText.textContent = 'Stop';
   };
   recognition.onend = () => {
     listening = false;
+    micBtn.classList.remove('on');
+    micStatus.classList.remove('listening');
     micText.textContent = 'Start';
   };
   recognition.onerror = (e) => {
+    micStatus.textContent = `Voice error: ${e.error || 'unknown'}`;
   };
   recognition.onresult = (event) => {
     let final = '';
@@ -342,9 +360,12 @@ let listening = false;
     }
     final = final.trim();
     if(final){
+      const out = handleVoice(final);
+      micStatus.textContent = out;
     }
   };
 
+  micBtn.addEventListener('click', ()=>{
     if(!listening){ try{ recognition.start(); }catch(_){} }
     else { try{ recognition.stop(); }catch(_){} }
   });
@@ -377,7 +398,9 @@ function parseTimeUtterance(t){
   return null;
 }
 
-
+// Voice command router
+function handleVoice(raw){
+  const text = raw.toLowerCase().trim();
 
   // Set clock
   let m = text.match(/^(set|adjust)\s*(the\s*)?(game\s*)?clock\s*(to|for|at)?\s*(.+)$/);
@@ -483,6 +506,9 @@ function run(){
 loadState();
 updateClockHelper();
 run();
+if (supportsVoice()) setupVoice(); else {
+  const ms = document.getElementById('micStatus');
+  ms.textContent = 'Voice not supported on this browser/device.';
 }
 
 // Reset
