@@ -24,7 +24,6 @@
 
     <div id="banner"></div>
 
-    <!-- RESPONSIVE LAYOUT WRAPPER -->
     <div class="layout">
       <!-- SCOREBOARD -->
       <section class="card area-score">
@@ -60,7 +59,7 @@
         <p id="status" class="muted"></p>
       </section>
 
-      <!-- CLOCK + TOs -->
+      <!-- CLOCK + TIMEOUTS -->
       <section class="card area-clock">
         <div class="section-head">
           <h2 class="section-title">Game Clock & Timeouts</h2>
@@ -73,10 +72,6 @@
 
         <div class="row time-row">
           <label>Time left</label>
-          <div class="time-flex">
-            <input id="timeSlider" type="range" min="0" max="1440" step="1" value="1440" />
-            <div class="muted" id="timeLabel">24:00</div>
-          </div>
           <div class="time-manual">
             <input id="timeInput" type="text" inputmode="numeric" placeholder="mm:ss" value="24:00" />
           </div>
@@ -89,34 +84,34 @@
         <div class="grid2">
           <div class="to-card">
             <div class="to-title">Charlotte Christian TOs — 1st</div>
-            <div class="to-controls">
-              <button class="to-btn" data-target="ourToH1" data-delta="-1">−</button>
-              <input id="ourToH1" type="number" min="0" max="3" value="3">
-              <button class="to-btn" data-target="ourToH1" data-delta="1">+</button>
+            <div class="to-checks" id="group-our-h1" data-key="our-h1">
+              <label><input type="checkbox" checked><span>TO</span></label>
+              <label><input type="checkbox" checked><span>TO</span></label>
+              <label><input type="checkbox" checked><span>TO</span></label>
             </div>
           </div>
           <div class="to-card">
             <div class="to-title">Opponent TOs — 1st</div>
-            <div class="to-controls">
-              <button class="to-btn" data-target="oppToH1" data-delta="-1">−</button>
-              <input id="oppToH1" type="number" min="0" max="3" value="3">
-              <button class="to-btn" data-target="oppToH1" data-delta="1">+</button>
+            <div class="to-checks" id="group-opp-h1" data-key="opp-h1">
+              <label><input type="checkbox" checked><span>TO</span></label>
+              <label><input type="checkbox" checked><span>TO</span></label>
+              <label><input type="checkbox" checked><span>TO</span></label>
             </div>
           </div>
           <div class="to-card">
             <div class="to-title">Charlotte Christian TOs — 2nd</div>
-            <div class="to-controls">
-              <button class="to-btn" data-target="ourToH2" data-delta="-1">−</button>
-              <input id="ourToH2" type="number" min="0" max="3" value="3">
-              <button class="to-btn" data-target="ourToH2" data-delta="1">+</button>
+            <div class="to-checks" id="group-our-h2" data-key="our-h2">
+              <label><input type="checkbox" checked><span>TO</span></label>
+              <label><input type="checkbox" checked><span>TO</span></label>
+              <label><input type="checkbox" checked><span>TO</span></label>
             </div>
           </div>
           <div class="to-card">
             <div class="to-title">Opponent TOs — 2nd</div>
-            <div class="to-controls">
-              <button class="to-btn" data-target="oppToH2" data-delta="-1">−</button>
-              <input id="oppToH2" type="number" min="0" max="3" value="3">
-              <button class="to-btn" data-target="oppToH2" data-delta="1">+</button>
+            <div class="to-checks" id="group-opp-h2" data-key="opp-h2">
+              <label><input type="checkbox" checked><span>TO</span></label>
+              <label><input type="checkbox" checked><span>TO</span></label>
+              <label><input type="checkbox" checked><span>TO</span></label>
             </div>
           </div>
         </div>
