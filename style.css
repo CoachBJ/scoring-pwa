@@ -80,6 +80,21 @@ main {
     margin-bottom: 12px;
 }
 
+
+/* style.css */
+
+/* Add this new rule */
+.play-tag {
+    display: inline-block;
+    background-color: #e9ecef; /* A light gray, matching the .chip style */
+    color: var(--text-color);
+    padding: 4px 10px;
+    border-radius: 16px; /* Makes it pill-shaped */
+    margin: 2px 4px 2px 0; /* Adds spacing between tags */
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
 /* --- Scoreboard & Inputs --- */
 .score-grid {
     display: grid;
