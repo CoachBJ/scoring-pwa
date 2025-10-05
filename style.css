@@ -80,7 +80,7 @@ main {
     margin-bottom: 12px;
 }
 
-/* --- Scoreboard & Time (YOUR REQUEST) --- */
+/* --- Scoreboard & Inputs --- */
 .score-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -92,7 +92,7 @@ main {
     margin-bottom: 8px;
 }
 .score-input {
-    font-size: 4em; /* <<< BIGGER SCORE FONT */
+    font-size: 4em;
     font-weight: bold;
     text-align: center;
     width: 100%;
@@ -102,8 +102,31 @@ main {
     line-height: 1.2;
     box-sizing: border-box;
 }
+
+/* --- Banner (New Position) --- */
+#banner {
+    text-align: center;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 20px; /* Gives space from the scoreboard */
+}
+#banner .title {
+    font-size: 1.4em; /* Larger text */
+    font-weight: 600;
+}
+#banner .sub {
+    font-size: 1em; /* Larger text */
+    margin-top: 4px;
+    opacity: 0.8;
+}
+#banner.good { background-color: #e7f5ff; color: var(--primary-color); }
+#banner.bad { background-color: #ffebee; color: var(--danger-color); }
+#banner.neutral { background-color: #f8f9fa; color: var(--muted-color); }
+
+
+/* --- Clock & Helper --- */
 #timeInput {
-    font-size: 2.5em; /* <<< BIGGER TIME FONT */
+    font-size: 2.5em;
     font-weight: bold;
     text-align: center;
     border: 2px solid var(--border-color);
@@ -113,7 +136,7 @@ main {
     box-sizing: border-box;
 }
 #clockResult {
-    font-size: 1.2em; /* <<< BIGGER SITUATION TEXT */
+    font-size: 1.2em;
     font-style: italic;
     color: var(--primary-color);
     margin-top: 16px;
