@@ -3,6 +3,7 @@
 // =======================
 
 const TEAM_NAME = "Charlotte Christian";
+const MAX_RESULTS = 200;
 
 // ----- Scoring definitions -----
 const SCORING_PLAYS = [
@@ -41,8 +42,6 @@ function buildItems(target, cap){
 // ----- DOM refs: scores/options -----
 const elOur = document.querySelector("#ourScore");
 const elOpp = document.querySelector("#oppScore");
-const elCap = document.querySelector("#cap");
-const elCalc= document.querySelector("#calc");
 const elOut = document.querySelector("#output");
 const elStatus=document.querySelector("#status");
 const viewTable=document.querySelector("#view-table");
@@ -112,7 +111,7 @@ const elHalf2=document.getElementById("half2");
 const elTimeInput=document.getElementById("timeInput");
 const elMiniBtns=document.querySelectorAll(".mini");
 
-function getGroupEl(key){ return document.querySelector(`.to-checks[data-key="${key}"]`); }
+function getGroupEl(key){ return document.querySelector(`.to-card[data-key="${key}"] .to-checks`); }
 function getTOState(key){ const g=getGroupEl(key); const boxes=g?[...g.querySelectorAll('input[type="checkbox"]')]:[]; return boxes.map(b=>b.checked); }
 function setTOState(key, arr){ const g=getGroupEl(key); if(!g) return; const boxes=[...g.querySelectorAll('input[type="checkbox"]')]; boxes.forEach((b,i)=>{ b.checked=(arr && typeof arr[i]==="boolean")?arr[i]:true; }); }
 function countTO(key){ return getTOState(key).filter(Boolean).length; }
@@ -204,15 +203,19 @@ function updateClockHelper(){
 
 // ----- State -----
 const STATE_KEY="ccs-gamemanager-state-v2"; // Changed key to avoid conflicts
-let STATE = { oppName:"Opponent", oppColor:"#9a9a9a" };
+let STATE = { oppName:"Opponent", oppColor:"#9a9a9a", collapsedTO: {} };
 
 function saveState(){
+  document.querySelectorAll('.to-card[data-key]').forEach(card => {
+    STATE.collapsedTO[card.dataset.key] = card.classList.contains('collapsed');
+  });
   const s={
     our:Number(elOur.value||0), opp:Number(elOpp.value||0),
     half: elHalf2.checked?2:1,
     time: getTimeSecs(),
     to: { "our-h1": getTOState("our-h1"), "opp-h1": getTOState("opp-h1"), "our-h2": getTOState("our-h2"), "opp-h2": getTOState("opp-h2") },
-    oppName: STATE.oppName, oppColor: STATE.oppColor
+    oppName: STATE.oppName, oppColor: STATE.oppColor,
+    collapsedTO: STATE.collapsedTO
   };
   localStorage.setItem(STATE_KEY, JSON.stringify(s));
 }
@@ -222,10 +225,18 @@ function loadState(){
     elOur.value = s.our || 0;
     elOpp.value = s.opp || 0;
     (s.half===2?elHalf2:elHalf1).checked=true;
-    setTimeSecs(typeof s.time==="number"? s.time : 1440);
+    setTimeSecs(typeof s.time==="number"? s.time : 300); // Default to 5:00
 
     if(s.to){ Object.keys(s.to).forEach(k=> setTOState(k, s.to[k])); }
     else { ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true])); }
+    
+    STATE.collapsedTO = s.collapsedTO || {};
+    Object.keys(STATE.collapsedTO).forEach(key => {
+        const card = document.querySelector(`.to-card[data-key="${key}"]`);
+        if (card && STATE.collapsedTO[key]) {
+            card.classList.add('collapsed');
+        }
+    });
 
     STATE.oppName = s.oppName || "Opponent";
     STATE.oppColor = s.oppColor || "#9a9a9a";
@@ -233,7 +244,7 @@ function loadState(){
 
   }catch(e){
     console.error("Failed to load state", e);
-    setTimeSecs(1440);
+    setTimeSecs(300); // Default to 5:00
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
   }
 }
@@ -251,7 +262,6 @@ elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; ap
 
 
 // ----- Main scoring run -----
-elCalc.addEventListener("click", run);
 [elOur,elOpp].forEach(el=>el.addEventListener("input", run)); // Recalculate on score change
 [whoAuto, whoUs, whoOpp, viewTable, viewRow].forEach(el => el.addEventListener('change', run));
 
@@ -265,8 +275,6 @@ function run(){
 
   renderBanner(our, opp, STATE.oppName);
 
-  const cap=Math.max(1, Number(elCap.value||200));
-
   let who="auto"; if(whoUs.checked) who="us"; if(whoOpp.checked) who="opp";
   let teamNeeding = who==="auto" ? (our>opp?"opp":our<opp?"us":"either") : who;
 
@@ -276,8 +284,8 @@ function run(){
 
     const teamLabel = teamNeeding==="us" ? `${TEAM_NAME} needs` : `${STATE.oppName} needs`;
 
-    const tieRes = buildItems(tieTarget, cap);
-    const leadRes= buildItems(leadTarget, cap);
+    const tieRes = buildItems(tieTarget, MAX_RESULTS);
+    const leadRes= buildItems(leadTarget, MAX_RESULTS);
 
     renderSection(`${teamLabel} to Tie`, tieRes);
     renderSection(`${teamLabel} to Take the Lead`, leadRes);
@@ -298,12 +306,25 @@ document.getElementById("resetGame").addEventListener("click", ()=>{
     STATE.oppColor = "#9a9a9a";
     applyOpponentProfile();
     document.getElementById("half1").checked=true;
-    setTimeSecs(1440);
+    setTimeSecs(300); // Reset to 5:00
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
+    STATE.collapsedTO = {};
+    document.querySelectorAll('.to-card.collapsed').forEach(c => c.classList.remove('collapsed'));
     saveState(); 
     run(); 
     updateClockHelper();
   }
+});
+
+// Event listeners for collapsible sections
+document.querySelectorAll('.to-title').forEach(title => {
+  title.addEventListener('click', () => {
+    const card = title.closest('.to-card[data-key]');
+    if (card) {
+        card.classList.toggle('collapsed');
+        saveState();
+    }
+  });
 });
 
 loadState();
