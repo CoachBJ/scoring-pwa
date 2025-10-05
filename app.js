@@ -251,7 +251,8 @@ function updatePatAdvice(){
   const xp = clamp(Number(elXp.value||0),0,100)/100;
   const tw = clamp(Number(elTwo.value||0),0,100)/100;
   const pick = (2*tw > xp) ? "Go for 2" : "Kick PAT";
-  elPatAdvice.innerHTML = `<b>${pick}</b> • XP E[pts]=${(xp).toFixed(2)}, 2-pt E[pts]=${(2*tw).toFixed(2)} • Break-even 2-pt ≈ ${(xp/2*100).toFixed(1)}%`;
+  elPatAdvice.innerHTML = `<b>${pick}</b> • Break-even 2-pt ≈ ${(xp/2*100).toFixed(1)}%`;
+  
   STATE.xpPct = Math.round(xp*100); STATE.twoPct = Math.round(tw*100); saveState();
 }
 elXp.addEventListener('input', updatePatAdvice);
