@@ -191,9 +191,11 @@ function updateClockHelper(){
   } else {
     const drain = snaps*ptime + Math.max(0, snaps - ourTO)*pclk;
     const canDrain = Math.min(timeLeft, drain);
+    const remain = Math.max(0, timeLeft - canDrain); // Calculate remaining time
     elClockResult.innerHTML =
       `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>.`;
+      `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
+      `Time left would be ≈ <b>${toMMSS(remain)}</b>.`; // Append the remaining time
   }
 }
 
