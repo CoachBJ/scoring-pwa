@@ -1,6 +1,10 @@
 :root{
-  --bg:#0b1120; --card:#0f172a; --text:#e5e7eb; --muted:#9aa3b2;
-  --line:#1f2937; --accent:#3b82f6; --accent-2:#60a5fa; --warn:#ef4444; --good:#22c55e;
+  /* Theme: Charlotte Christian blues + grays */
+  --team:#224DFF;           /* CC royal blue */
+  --team-2:#5F85FF;
+  --opp:#9a9a9a;            /* set at runtime */
+  --bg:#0b1120; --card:#0f172a; --text:#e5e7eb; --muted:#9aa3b2; --line:#1f2937;
+  --warn:#ef4444; --good:#22c55e;
 }
 
 *{box-sizing:border-box}
@@ -9,27 +13,31 @@ body{
   margin:0;background:linear-gradient(180deg,#0b1120 0%, #0b1224 70%, #0a1228 100%);
   color:var(--text);font:16px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial
 }
-main{max-width:820px;margin:0 auto;padding:16px 16px 64px}
+main{max-width:980px;margin:0 auto;padding:16px 16px 64px}
 
 /* App bar */
 .appbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0 10px}
 .brand{display:flex;gap:12px;align-items:center}
-.brand-mark{width:38px;height:38px;border-radius:10px;background:radial-gradient(100% 100% at 30% 20%,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#0a0f1d}
+.brand-mark{width:38px;height:38px;border-radius:10px;background:radial-gradient(100% 100% at 30% 20%,var(--team),var(--team-2));display:grid;place-items:center;font-weight:800;color:#0a0f1d}
 .brand-text .brand-title{font-weight:800;letter-spacing:.2px}
 .brand-text .brand-sub{font-size:12px;color:var(--muted)}
 
 .section-title{margin:0 0 8px;font-size:15px;color:#cbd5e1;text-transform:uppercase;letter-spacing:.8px}
 .card{background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;box-shadow:0 8px 20px rgba(0,0,0,.25)}
-.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.card-sub{background:#0b0e13;border:1px solid #2a3342;border-radius:10px;padding:10px;margin:10px 0}
 
 .row{display:flex;gap:10px;align-items:center;margin:12px 0}
 .row.compact{margin:8px 0}
 .row label{min-width:140px;color:#cbd5e1}
-input[type="number"],input[type="text"]{flex:1;background:#0b0e13;color:var(--text);border:1px solid #2a3342;border-radius:10px;padding:10px}
+input[type="number"], input[type="text"]{flex:1;background:#0b0e13;color:var(--text);border:1px solid #2a3342;border-radius:10px;padding:10px}
+input[type="color"]{width:44px;height:36px;border:1px solid #2a3342;border-radius:8px;background:#0b0e13}
+.color-pick{display:flex;gap:8px;align-items:center}
+
 .btn{padding:10px 14px;border-radius:10px;border:1px solid transparent;cursor:pointer}
-.btn-primary{background:linear-gradient(180deg,var(--accent),#2b69df);color:#fff;border-color:#295ac1}
+.btn-primary{background:linear-gradient(180deg,var(--team),#2b69df);color:#fff;border-color:#295ac1}
 .btn-ghost{background:transparent;border:1px solid #2a3342;color:var(--text)}
 .btn:active{transform:translateY(1px)}
+
 .muted{color:var(--muted);font-size:13px}
 
 /* Output table + pills */
@@ -38,12 +46,12 @@ input[type="number"],input[type="text"]{flex:1;background:#0b0e13;color:var(--te
 .table th,.table td{padding:10px;border-bottom:1px solid #233148;text-align:left}
 .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#1f2633;border:1px solid #2b3648;font-size:12px}
 .segment{padding:6px 10px;border-radius:999px;margin:0 6px 6px 0;display:inline-block;border:1px solid #26344d;background:#122033}
-.segment:nth-child(1){background:#1a73e8;color:#fff}
-.segment:nth-child(2){background:#ea4335;color:#fff}
-.segment:nth-child(3){background:#188038;color:#fff}
-.segment:nth-child(4){background:#fbbc05;color:#000}
-.segment:nth-child(5){background:#a142f4;color:#fff}
-.segment:nth-child(6){background:#ff6d00;color:#000}
+.segment:nth-child(1){background:var(--team); color:#fff}
+.segment:nth-child(2){background:#ea4335; color:#fff}
+.segment:nth-child(3){background:#188038; color:#fff}
+.segment:nth-child(4){background:#fbbc05; color:#000}
+.segment:nth-child(5){background:#a142f4; color:#fff}
+.segment:nth-child(6){background:#ff6d00; color:#000}
 
 /* Toggles */
 .toggles label{display:inline-flex;gap:8px;margin-right:14px}
@@ -54,42 +62,55 @@ input[type="number"],input[type="text"]{flex:1;background:#0b0e13;color:var(--te
 .banner .title{font-weight:800;font-size:18px;margin-bottom:6px}
 .banner .sub{color:var(--muted);font-size:13px}
 
+/* Score cards + quick buttons */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.score-card{background:#0b0e13;border:1px solid #2a3342;border-radius:12px;padding:12px}
+.score-label{font-size:12px;color:#a7b0c0;margin-bottom:6px}
+.score-input{font-size:20px;font-weight:800;text-align:center}
+.quick-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1px solid #2a3342;background:var(--team);color:#fff;padding:6px 10px;border-radius:999px}
+.chip.opp{background:var(--opp);color:#000;border-color:#444}
+
 /* TO groups as checkboxes */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .to-card{background:#0b0e13;border:1px solid #2a3342;border-radius:10px;padding:10px}
 .to-title{font-size:13px;color:#a7b0c0;margin-bottom:6px}
 .to-checks{display:flex;gap:8px;flex-wrap:wrap}
 .to-checks label{display:inline-flex;align-items:center;gap:6px;background:#151a22;border:1px solid #2a3342;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none}
-.to-checks input[type="checkbox"]{width:18px;height:18px;accent-color:var(--accent)}
+.to-checks input[type="checkbox"]{width:18px;height:18px;accent-color:var(--team)}
+.mini{border:1px solid #2a3342;background:#151a22;color:var(--text);padding:8px 10px;border-radius:8px}
+.mini.opp{background:#202022;border-color:#444}
 
 /* Time row */
 .time-manual input{width:92px;text-align:center;background:#0b0e13;color:var(--text);border:1px solid #2a3342;border-radius:8px;padding:10px}
 .time-manual input.error{border-color:var(--warn)}
 .tinyBtns{display:flex;gap:6px;margin-left:8px}
-.mini{border:1px solid #2a3342;background:#151a22;color:var(--text);padding:8px 10px;border-radius:8px}
 
-/* Score cards */
-.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.score-card{background:#0b0e13;border:1px solid #2a3342;border-radius:12px;padding:12px}
-.score-label{font-size:12px;color:#a7b0c0;margin-bottom:6px}
-.score-input{font-size:20px;font-weight:800;text-align:center}
+/* PAT helper */
+.pct-wrap{display:flex;gap:8px;align-items:center}
+.pct-wrap input{width:84px;text-align:center}
 
-/* Responsive layout */
-.layout{display:grid;gap:14px;grid-template-columns:1fr;grid-template-areas:"score" "clock" "output"}
-.area-score{grid-area:score}.area-clock{grid-area:clock}.area-output{grid-area:output}
+/* Log */
+.area-log .log-controls{display:flex;gap:8px;margin-bottom:8px}
+.log-list{display:flex;flex-direction:column;gap:6px}
+.log-item{background:#0b0e13;border:1px solid #2a3342;border-radius:10px;padding:8px 10px}
+.log-time{font-weight:700;margin-right:8px}
+.log-team{font-weight:700}
+
+/* Layout + sticky output */
+.layout{display:grid;gap:14px;grid-template-columns:1fr;grid-template-areas:"score" "clock" "output" "log"}
+.area-score{grid-area:score}.area-clock{grid-area:clock}.area-output{grid-area:output}.area-log{grid-area:log}
 
 @media (min-width:768px){
-  main{max-width:980px}
-  .layout{grid-template-columns:1fr 1fr;grid-template-areas:"score clock" "output output"}
+  main{max-width:1100px}
+  .layout{grid-template-columns:1fr 1fr;grid-template-areas:"score clock" "output log"}
   .row label{min-width:160px}
 }
-@media (min-width:1200px){
-  main{max-width:1200px}
-  .layout{grid-template-columns:1.1fr 0.9fr;grid-template-areas:"score clock" "output output"}
-  .score-input{font-size:22px}
+@media (min-width:1024px){
+  /* Sticky on iPad landscape + desktop */
+  .area-output, .area-log{align-self:start;max-height:calc(100vh - 220px);overflow:auto;position:sticky;top:12px}
 }
-@media (min-width:1440px){
+@media (min-width:1400px){
   main{max-width:1400px}
-  .layout{grid-template-columns:1fr 1fr 1fr;grid-template-areas:"score clock output" "score clock output"}
-  .area-output{align-self:start;max-height:calc(100vh - 220px);overflow:auto;position:sticky;top:12px}
+  .layout{grid-template-columns:1.1fr 0.9fr 1fr;grid-template-areas:"score clock output" "score clock log"}
 }
