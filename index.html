@@ -25,14 +25,12 @@
     <div id="banner"></div>
 
     <div class="layout">
-      <!-- SCOREBOARD -->
       <section class="card area-score">
         <h2 class="section-title">Scoreboard</h2>
 
-        <!-- Opponent profile / theme -->
         <div class="row compact">
           <label>Opponent</label>
-          <input id="oppName" type="text" value="Opponent" />
+          <input id="oppName" type="text" value="Opponent" autocomplete="off" />
           <div class="color-pick">
             <span class="muted">Color</span>
             <input id="oppColor" type="color" value="#9a9a9a" />
@@ -42,7 +40,7 @@
         <div class="score-grid">
           <div class="score-card">
             <div class="score-label"><span id="ourLabel">Charlotte Christian</span></div>
-            <input id="ourScore" type="number" inputmode="numeric" value="0" class="score-input" />
+            <input id="ourScore" type="number" inputmode="numeric" pattern="[0-9]*" value="0" class="score-input" autocomplete="off" />
             <div class="quick-row">
               <button class="chip" data-team="our" data-delta="2">+2</button>
               <button class="chip" data-team="our" data-delta="3">+3</button>
@@ -53,7 +51,7 @@
           </div>
           <div class="score-card">
             <div class="score-label"><span id="oppLabel">Opponent</span></div>
-            <input id="oppScore" type="number" inputmode="numeric" value="0" class="score-input" />
+            <input id="oppScore" type="number" inputmode="numeric" pattern="[0-9]*" value="0" class="score-input" autocomplete="off" />
             <div class="quick-row">
               <button class="chip opp" data-team="opp" data-delta="2">+2</button>
               <button class="chip opp" data-team="opp" data-delta="3">+3</button>
@@ -72,7 +70,7 @@
 
         <div class="row compact">
           <label>Max results</label>
-          <input id="cap" type="number" inputmode="numeric" value="200" />
+          <input id="cap" type="number" inputmode="numeric" pattern="[0-9]*" value="200" autocomplete="off" />
         </div>
 
         <div class="row toggles compact">
@@ -84,7 +82,6 @@
         <p id="status" class="muted"></p>
       </section>
 
-      <!-- CLOCK + TIMEOUTS -->
       <section class="card area-clock">
         <div class="section-head">
           <h2 class="section-title">Game Clock & Timeouts</h2>
@@ -98,7 +95,7 @@
         <div class="row time-row">
           <label>Time left</label>
           <div class="time-manual">
-            <input id="timeInput" type="text" inputmode="numeric" placeholder="mm:ss" value="24:00" />
+            <input id="timeInput" type="text" inputmode="numeric" placeholder="mm:ss" value="24:00" autocomplete="off" />
           </div>
           <div class="tinyBtns">
             <button class="mini" data-dt="-10">-10s</button>
@@ -153,20 +150,19 @@
         </div>
         <div class="row compact">
           <label>Snaps this series</label>
-          <input id="snaps" type="number" min="1" max="4" value="3" />
+          <input id="snaps" type="number" min="1" max="4" value="3" autocomplete="off" />
         </div>
         <div class="row compact">
           <label>Play clock</label>
-          <input id="playClock" type="number" min="20" max="45" value="40" />
+          <input id="playClock" type="number" min="20" max="45" value="40" autocomplete="off" />
         </div>
         <div class="row compact">
           <label>Avg play time</label>
-          <input id="playTime" type="number" min="1" max="15" value="6" />
+          <input id="playTime" type="number" min="1" max="15" value="6" autocomplete="off" />
         </div>
         <div id="clockResult" class="muted"></div>
       </section>
 
-      <!-- OUTPUT -->
       <section id="output" class="area-output"></section>
 
     </div>
