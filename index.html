@@ -28,14 +28,39 @@
       <!-- SCOREBOARD -->
       <section class="card area-score">
         <h2 class="section-title">Scoreboard</h2>
+
+        <!-- Opponent profile / theme -->
+        <div class="row compact">
+          <label>Opponent</label>
+          <input id="oppName" type="text" value="Opponent" />
+          <div class="color-pick">
+            <span class="muted">Color</span>
+            <input id="oppColor" type="color" value="#9a9a9a" />
+          </div>
+        </div>
+
         <div class="score-grid">
           <div class="score-card">
-            <div class="score-label">Charlotte Christian</div>
+            <div class="score-label"><span id="ourLabel">Charlotte Christian</span></div>
             <input id="ourScore" type="number" inputmode="numeric" value="0" class="score-input" />
+            <div class="quick-row">
+              <button class="chip" data-team="our" data-delta="2">+2</button>
+              <button class="chip" data-team="our" data-delta="3">+3</button>
+              <button class="chip" data-team="our" data-delta="6">+6</button>
+              <button class="chip" data-team="our" data-delta="7">+7</button>
+              <button class="chip" data-team="our" data-delta="8">+8</button>
+            </div>
           </div>
           <div class="score-card">
-            <div class="score-label">Opponent</div>
+            <div class="score-label"><span id="oppLabel">Opponent</span></div>
             <input id="oppScore" type="number" inputmode="numeric" value="0" class="score-input" />
+            <div class="quick-row">
+              <button class="chip opp" data-team="opp" data-delta="2">+2</button>
+              <button class="chip opp" data-team="opp" data-delta="3">+3</button>
+              <button class="chip opp" data-team="opp" data-delta="6">+6</button>
+              <button class="chip opp" data-team="opp" data-delta="7">+7</button>
+              <button class="chip opp" data-team="opp" data-delta="8">+8</button>
+            </div>
           </div>
         </div>
 
@@ -43,6 +68,18 @@
           <label><input id="who-auto" name="who" type="radio" checked> Auto</label>
           <label><input id="who-us"   name="who" type="radio"> Charlotte Christian needs</label>
           <label><input id="who-opp"  name="who" type="radio"> Opponent needs</label>
+        </div>
+
+        <!-- PAT vs 2-pt helper -->
+        <div class="card-sub">
+          <div class="row compact">
+            <label>PAT vs 2-pt</label>
+            <div class="pct-wrap">
+              <span class="muted">XP%</span><input id="xpPct" type="number" min="0" max="100" value="95">
+              <span class="muted">2-pt%</span><input id="twoPct" type="number" min="0" max="100" value="45">
+            </div>
+          </div>
+          <div id="patAdvice" class="muted"></div>
         </div>
 
         <div class="row compact">
@@ -116,6 +153,11 @@
           </div>
         </div>
 
+        <div class="tinyBtns">
+          <button id="useOurTO" class="mini">Use CC TO (current half)</button>
+          <button id="useOppTO" class="mini opp">Use Opp TO (current half)</button>
+        </div>
+
         <div class="subhead">Clock Helper</div>
         <div class="row toggles compact">
           <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
@@ -136,8 +178,19 @@
         <div id="clockResult" class="muted"></div>
       </section>
 
-      <!-- OUTPUT -->
+      <!-- OUTPUT (sticky on wide screens) -->
       <section id="output" class="area-output"></section>
+
+      <!-- GAME LOG -->
+      <section class="card area-log">
+        <h2 class="section-title">Game Log</h2>
+        <div class="log-controls">
+          <button id="undoLog" class="btn btn-ghost">Undo last</button>
+          <button id="clearLog" class="btn btn-ghost">Clear</button>
+          <button id="exportLog" class="btn btn-ghost">Export CSV</button>
+        </div>
+        <div id="logList" class="log-list"></div>
+      </section>
     </div>
   </main>
 
