@@ -1,53 +1,57 @@
-// PROD SW (dynamic base)
-const VERSION = 'v10';
-const CACHE = `ccs-gm-${VERSION}`;
-
-// Determine the base path from the SW scope (works on GitHub Pages and subfolders)
-const ROOT = new URL(self.registration.scope).pathname.replace(/\/$/, '');
-
+// sw.js
+const CACHE = 'scoring-v20';
 const ASSETS = [
-  `${ROOT}/`,
-  `${ROOT}/index.html`,
-  `${ROOT}/style.css`,
-  `${ROOT}/app.js`,
-  `${ROOT}/manifest.webmanifest`,
-  `${ROOT}/icon-192.png`,
-  `${ROOT}/icon-512.png`,
-  `${ROOT}/icon-180.png`,
+  './',
+  './index.html',
+  './style.css',
+  './app.js',
+  './manifest.webmanifest',
+  // keep these ONLY if the files exist at the app root:
+  './icon-192.png',
+  './icon-512.png',
+  './icon-180.png',
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
+// Install: precache app shell
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then(async (cache) => {
+      await cache.addAll(ASSETS);
+    })
+  );
+  self.skipWaiting(); // activate new SW immediately
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : null)))
+// Activate: clean old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (e) => {
-  // SPA navigation fallback
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      caches.match(`${ROOT}/index.html`).then(r => r || fetch(e.request))
+// Fetch: 
+// - Navigations: try network, fall back to cached index.html for offline routes
+// - Other requests: cache-first (your original behavior)
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // Only handle same-origin requests
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (request.mode === 'navigate') {
+    // SPA-style offline fallback
+    event.respondWith(
+      fetch(request).catch(() => caches.match('./index.html'))
     );
     return;
   }
 
-  // Cache-first, then update
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetchPromise = fetch(e.request).then(resp => {
-        const copy = resp.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
-        return resp;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
+  // Assets: cache-first
+  event.respondWith(
+    caches.match(request).then((cached) => cached || fetch(request))
   );
 });
