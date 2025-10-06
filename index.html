@@ -67,14 +67,13 @@
           <label><input id="view-row"   type="radio" name="view"> One Row</label>
         </div>
 
-        <!-- Opening Kickoff -->
+<!-- Opening Kickoff -->
 <div class="row toggles compact kickoff-row">
   <label><input id="weReceivedKO" type="radio" name="openingKO" value="we"> We received the opening kickoff</label>
   <label><input id="oppReceivedKO" type="radio" name="openingKO" value="opp">
     <span id="oppNameInline">Opponent</span> received the opening kickoff
   </label>
 </div>
-<div id="secondHalfInfo" class="muted tiny-info">2nd-half kickoff: —</div>
 
 <!-- Officials (inputs) -->
 <div class="subhead">Officials</div>
@@ -87,11 +86,20 @@
   <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
 </div>
 
-<!-- Officials (display) -->
-<div class="officials-display" id="officialsDisplay">
-  <div class="official-name" id="headRefDisplay"></div>
-  <div class="official-name" id="sideJudgeDisplay"></div>
+<!-- Sticky officials + 2nd-half info (single source of truth) -->
+<div class="sticky-officials" id="stickyOfficials">
+  <div id="secondHalfInfo" class="muted tiny-info">2nd-half kickoff: —</div>
+
+  <div class="officials-display" id="officialsDisplay" style="display:none">
+    <div class="official-name" id="headRefDisplay"></div>
+    <div class="official-name" id="sideJudgeDisplay"></div>
+  </div>
+
+  <button type="button" id="clearOfficials" class="link-btn small">Clear officials</button>
 </div>
+
+<p id="status" class="muted"></p>
+
 
 
         <p id="status" class="muted"></p>
