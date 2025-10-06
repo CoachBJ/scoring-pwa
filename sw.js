@@ -1,5 +1,5 @@
 // Simple PWA cache for offline use
-const CACHE = 'scoring-v32';
+const CACHE = 'scoring-v33';
 const ASSETS = [
   './',
   './index.html',
