@@ -96,6 +96,20 @@ const viewTable=document.querySelector("#view-table");
 const viewRow  =document.querySelector("#view-row");
 const elOurLabel=document.querySelector("#ourLabel");
 const elOppLabel=document.querySelector("#oppLabel");
+const elClearOfficials = document.getElementById("clearOfficials");
+
+// ----- New DOM refs: KO + Officials -----
+const elWeKO = document.getElementById("weReceivedKO");
+const elOppKO = document.getElementById("oppReceivedKO");
+const elSecondHalfInfo = document.getElementById("secondHalfInfo");
+const elOppNameInline = document.getElementById("oppNameInline");
+
+const elHeadRef = document.getElementById("headRef");
+const elSideJudge = document.getElementById("sideJudge");
+const elHeadRefDisplay = document.getElementById("headRefDisplay");
+const elSideJudgeDisplay = document.getElementById("sideJudgeDisplay");
+const elOfficialsDisplay = document.getElementById("officialsDisplay");
+
 
 // Opponent/theme inputs
 const elOppName=document.getElementById("oppName");
@@ -149,6 +163,22 @@ function renderSection(title, resultObj){
   else { (viewTable.checked?renderTable:renderRow)(resultObj.list); }
 }
 
+function updateSecondHalfInfo(){
+  let txt = "2nd-half kickoff: —";
+  if (STATE.openingKO === "we")  txt = "2nd-half kickoff: Opponent";
+  if (STATE.openingKO === "opp") txt = "2nd-half kickoff: Charlotte Christian";
+  elSecondHalfInfo.textContent = txt;
+}
+
+function renderOfficials(){
+  const hr = STATE.officials.headRef?.trim();
+  const sj = STATE.officials.sideJudge?.trim();
+  elHeadRefDisplay.textContent = hr ? `Head Ref: ${hr}` : "";
+  elSideJudgeDisplay.textContent = sj ? `Side Judge (our sideline): ${sj}` : "";
+  const any = !!(hr || sj);
+  elOfficialsDisplay.style.display = any ? "grid" : "none";
+}
+
 // ===== Game clock / TOs (checkbox groups) =====
 const elHalf1=document.getElementById("half1");
 const elHalf2=document.getElementById("half2");
@@ -193,6 +223,17 @@ function useTO(side){
   if(idx<0){ return; }
   boxes[idx].checked = false;
   saveState(); updateClockHelper();
+}
+
+if (elClearOfficials) {
+  elClearOfficials.addEventListener("click", () => {
+    elHeadRef.value = "";
+    elSideJudge.value = "";
+    STATE.officials.headRef = "";
+    STATE.officials.sideJudge = "";
+    renderOfficials();
+    saveState();
+  });
 }
 
 // Quick score buttons
@@ -251,22 +292,42 @@ function updateClockHelper(){
 
 // ----- State -----
 const STATE_KEY="ccs-gamemanager-state-v3"; // Incremented key to avoid old state issues
-let STATE = { oppName:"Opponent", oppColor:"#9a9a9a", collapsedTO: {} };
+let STATE = {
+  oppName: "Opponent",
+  oppColor: "#9a9a9a",
+  collapsedTO: {},
+  openingKO: null,                // "we" | "opp" | null
+  officials: { headRef: "", sideJudge: "" }
+};
 
 function saveState(){
   document.querySelectorAll('.to-card[data-key]').forEach(card => {
     STATE.collapsedTO[card.dataset.key] = card.classList.contains('collapsed');
   });
+
+  // derive openingKO from radios
+  STATE.openingKO = elWeKO.checked ? "we" : (elOppKO.checked ? "opp" : null);
+  // officials already in STATE via inputs
+
   const s={
     our:Number(elOur.value||0), opp:Number(elOpp.value||0),
     half: elHalf2.checked?2:1,
     time: getTimeSecs(),
-    to: { "our-h1": getTOState("our-h1"), "opp-h1": getTOState("opp-h1"), "our-h2": getTOState("our-h2"), "opp-h2": getTOState("opp-h2") },
+    to: {
+      "our-h1": getTOState("our-h1"),
+      "opp-h1": getTOState("opp-h1"),
+      "our-h2": getTOState("our-h2"),
+      "opp-h2": getTOState("opp-h2")
+    },
     oppName: STATE.oppName, oppColor: STATE.oppColor,
-    collapsedTO: STATE.collapsedTO
+    collapsedTO: STATE.collapsedTO,
+    openingKO: STATE.openingKO,
+    officials: STATE.officials
   };
   localStorage.setItem(STATE_KEY, JSON.stringify(s));
 }
+
+
 function loadState(){
   try{
     const s=JSON.parse(localStorage.getItem(STATE_KEY)||"{}");
@@ -280,15 +341,25 @@ function loadState(){
 
     STATE.collapsedTO = s.collapsedTO || {};
     Object.keys(STATE.collapsedTO).forEach(key => {
-        const card = document.querySelector(`.to-card[data-key="${key}"]`);
-        if (card && STATE.collapsedTO[key]) {
-            card.classList.add('collapsed');
-        }
+      const card = document.querySelector(`.to-card[data-key="${key}"]`);
+      if (card && STATE.collapsedTO[key]) card.classList.add('collapsed');
     });
 
     STATE.oppName = s.oppName || "Opponent";
     STATE.oppColor = s.oppColor || "#9a9a9a";
     applyOpponentProfile();
+
+    // NEW: opening KO + officials
+    STATE.openingKO = s.openingKO || null;
+    elWeKO.checked  = STATE.openingKO === "we";
+    elOppKO.checked = STATE.openingKO === "opp";
+
+    STATE.officials = s.officials || { headRef: "", sideJudge: "" };
+    elHeadRef.value = STATE.officials.headRef || "";
+    elSideJudge.value = STATE.officials.sideJudge || "";
+
+    updateSecondHalfInfo();
+    renderOfficials();
 
   }catch(e){
     console.error("Failed to load state", e);
@@ -307,7 +378,31 @@ function applyOpponentProfile(){
   root.style.setProperty('--opp-text', oppTextColor);
   elOppLabel.textContent = STATE.oppName;
   elOurLabel.textContent = TEAM_NAME;
+
+  // NEW: reflect in KO label
+  if (elOppNameInline) elOppNameInline.textContent = STATE.oppName || "Opponent";
 }
+
+// Opening KO radios
+[elWeKO, elOppKO].forEach(r=>{
+  r.addEventListener("change", ()=>{
+    STATE.openingKO = elWeKO.checked ? "we" : (elOppKO.checked ? "opp" : null);
+    updateSecondHalfInfo();
+    saveState();
+  });
+});
+
+// Officials text boxes (autosave + live display)
+[elHeadRef, elSideJudge].forEach(inp=>{
+  inp.addEventListener("input", ()=>{
+    STATE.officials.headRef  = elHeadRef.value.trim();
+    STATE.officials.sideJudge = elSideJudge.value.trim();
+    renderOfficials();
+    saveState();
+  });
+});
+
+
 elOppName.addEventListener('input', ()=>{
     STATE.oppName = elOppName.value || "Opponent";
     applyOpponentProfile();
@@ -319,6 +414,7 @@ elOppColor.addEventListener('input', ()=>{
     applyOpponentProfile();
     saveState();
 });
+
 
 // ----- Main scoring run -----
 [elOur,elOpp].forEach(el=>el.addEventListener("input", run));
