@@ -3,6 +3,7 @@
     --primary-color: #005a9c; /* A classic blue */
     --primary-hover: #00467a;
     --danger-color: #d32f2f;
+    --success-color: #28a745; /* Green for available timeouts */
     --background-color: #f0f2f5; /* Light Gray */
     --card-background: #ffffff;
     --text-color: #212529;
@@ -208,12 +209,12 @@ main {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background-color: var(--muted-color);
+    background-color: var(--danger-color); /* CHANGED: Red for used timeouts */
     cursor: pointer;
     text-indent: -9999px; /* Hides the "TO" text */
 }
 .to-checks input:checked + span {
-    background-color: var(--primary-color);
+    background-color: var(--success-color); /* CHANGED: Green for available timeouts */
 }
 .toggle-arrow {
     border: solid var(--text-color);
