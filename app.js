@@ -20,9 +20,13 @@ const JOINER = " • ";
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; };
 
-// MOVED & FIXED: Placed getContrastColor here with other helper functions.
+// This function determines if a color is light or dark for text contrast
 function getContrastColor(hex) {
     if (!hex) return '#ffffff';
+    // Handle short hex codes
+    if (hex.length === 4) {
+        hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+    }
     const r = parseInt(hex.substr(1, 2), 16);
     const g = parseInt(hex.substr(3, 2), 16);
     const b = parseInt(hex.substr(5, 2), 16);
@@ -118,7 +122,7 @@ function renderBanner(our, opp, oppName){
 // ----- Renderers -----
 function renderRow(list){
   const card=document.createElement("div"); card.className="card";
-  const row=document.createElement("div"); row.className = "score-options-cell"; // Use the same styling
+  const row=document.createElement("div"); row.className = "score-options-cell";
   list.forEach((it,idx)=>{
     it.txt.split(JOINER).forEach(seg=>{ const span=document.createElement("span"); span.className="segment"; span.textContent=seg; row.appendChild(span); });
     if(idx<list.length-1){ const sep=document.createElement("span"); sep.textContent="|"; sep.className="muted"; row.appendChild(sep); }
@@ -133,7 +137,7 @@ function renderTable(list){
   list.forEach(it=>{
     const tr=document.createElement("tr");
     const tdA=document.createElement("td"); tdA.innerHTML=`<span class="badge">${it.plays}</span>`;
-    const tdB=document.createElement("td"); tdB.className = 'score-options-cell'; // Assign class for flex layout
+    const tdB=document.createElement("td"); tdB.className = 'score-options-cell';
     it.txt.split(JOINER).forEach(seg=>{ const s=document.createElement("span"); s.className="segment"; s.textContent=seg; tdB.appendChild(s); });
     tr.appendChild(tdA); tr.appendChild(tdB); tb.appendChild(tr);
   });
@@ -212,7 +216,7 @@ const elClockResult=document.getElementById("clockResult");
 
 [elBallUs, elBallThem, elSnaps, elPlayClock, elPlayTime, elHalf1, elHalf2].forEach(el=>{
   el.addEventListener("change", ()=>{ saveState(); updateClockHelper(); });
-  el.addEventListener("input",  ()=>{ updateClockHelper(); }); // For number inputs
+  el.addEventListener("input",  ()=>{ updateClockHelper(); });
 });
 
 function updateClockHelper(){
@@ -237,7 +241,7 @@ function updateClockHelper(){
   } else {
     const drain = snaps*ptime + Math.max(0, snaps - ourTO)*pclk;
     const canDrain = Math.min(timeLeft, drain);
-    const remain = Math.max(0, timeLeft - canDrain); // Calculate remaining time
+    const remain = Math.max(0, timeLeft - canDrain);
     elClockResult.innerHTML =
       `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
       `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
@@ -304,17 +308,23 @@ function applyOpponentProfile(){
   elOppLabel.textContent = STATE.oppName;
   elOurLabel.textContent = TEAM_NAME;
 }
-
-// FIXED: Removed .trim() to allow spaces in opponent's name.
-elOppName.addEventListener('input', ()=>{ STATE.oppName = elOppName.value || "Opponent"; applyOpponentProfile(); saveState(); run(); });
-elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; applyOpponentProfile(); saveState(); });
-
+elOppName.addEventListener('input', ()=>{
+    STATE.oppName = elOppName.value || "Opponent"; // No .trim()
+    applyOpponentProfile();
+    saveState();
+    run();
+});
+elOppColor.addEventListener('input', ()=>{
+    STATE.oppColor = elOppColor.value;
+    applyOpponentProfile();
+    saveState();
+});
 
 // ----- Main scoring run -----
 [elOur,elOpp].forEach(el=>el.addEventListener("input", run));
 [viewTable, viewRow].forEach(el => el.addEventListener('change', run));
 
-// ADDED: Prevents scores from being negative.
+// Prevents scores from being negative
 [elOur, elOpp].forEach(el => {
     el.addEventListener('change', () => {
         const score = parseInt(el.value, 10);
@@ -323,6 +333,7 @@ elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; ap
         }
     });
 });
+
 
 function run(){
   elOut.innerHTML=""; elStatus.textContent="";
@@ -338,7 +349,9 @@ function run(){
   if (teamNeeding !== 'either') {
     const diff=Math.abs(our-opp);
     const tieTarget=diff, leadTarget=diff+1;
+
     const teamLabel = teamNeeding==="us" ? `${TEAM_NAME} needs` : `${STATE.oppName} needs`;
+
     const tieRes = buildItems(tieTarget, MAX_RESULTS);
     const leadRes= buildItems(leadTarget, MAX_RESULTS);
 
@@ -382,14 +395,13 @@ document.querySelectorAll('.to-title').forEach(title => {
   });
 });
 
-// Event listener for manual timeout checkbox changes
+// Event listeners for manual timeout checkbox changes
 document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox => {
     checkbox.addEventListener('change', () => {
         saveState();
         updateClockHelper();
     });
 });
-
 
 loadState();
 updateClockHelper();
