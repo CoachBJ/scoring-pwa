@@ -10,6 +10,10 @@
     --muted-color: #6c757d;
     --border-color: #dee2e6;
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    /* Variables for opponent colors, set by JS */
+    --opp: #343a40;
+    --opp-text: #ffffff;
 }
 
 body {
@@ -177,9 +181,10 @@ main {
     border-radius: 6px;
     cursor: pointer;
 }
-.chip.opp { 
-    background-color: var(--opp, #343a40); /* Use the CSS variable */
-    color: var(--opp-text, white); /* Use a new variable for text color */
+.chip.opp {
+    background-color: var(--opp);
+    color: var(--opp-text);
+}
 .quick-row { display: flex; gap: 6px; margin-top: 8px; }
 
 /* --- Timeout Section --- */
@@ -211,12 +216,12 @@ main {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background-color: var(--danger-color); /* CHANGED: Red for used timeouts */
+    background-color: var(--danger-color); /* Red for used timeouts */
     cursor: pointer;
     text-indent: -9999px; /* Hides the "TO" text */
 }
 .to-checks input:checked + span {
-    background-color: var(--success-color); /* CHANGED: Green for available timeouts */
+    background-color: var(--success-color); /* Green for available timeouts */
 }
 .toggle-arrow {
     border: solid var(--text-color);
@@ -292,7 +297,6 @@ main {
     border: 1px solid var(--border-color);
     white-space: nowrap;
 }
-
 
 /* --- Responsive Design --- */
 @media (max-width: 900px) {
