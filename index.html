@@ -192,12 +192,31 @@
           <button id="useOppTO" class="mini opp">Use Opp TO (current half)</button>
         </div>
 
-        <div class="subhead">Clock Helper</div>
-        <div class="row toggles compact">
-          <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
-          <label><input type="radio" name="ball" id="ballThem">
-  <span id="ballThemName">Opponent</span> has ball
-</label>
+<div class="subhead">Clock Helper</div>
+
+<details id="clockAdvanced">
+  <summary class="details-summary">Advanced settings</summary>
+
+  <div class="row toggles compact">
+    <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
+    <label><input type="radio" name="ball" id="ballThem"><span id="ballThemName">Opponent</span> has ball</label>
+  </div>
+  <div class="row compact">
+    <label>Snaps this series</label>
+    <input id="snaps" type="number" min="1" max="4" value="3" autocomplete="off" />
+  </div>
+  <div class="row compact">
+    <label>Play clock</label>
+    <input id="playClock" type="number" min="20" max="45" value="40" autocomplete="off" />
+  </div>
+  <div class="row compact">
+    <label>Avg play time</label>
+    <input id="playTime" type="number" min="1" max="15" value="6" autocomplete="off" />
+  </div>
+</details>
+
+<div id="clockResult" class="muted"></div>
+
 
         </div>
         <div class="row compact">
