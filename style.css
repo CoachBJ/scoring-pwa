@@ -339,3 +339,28 @@ input[type="number"] { -moz-appearance: textfield; } /* Firefox */
     #timeInput { font-size: 2em; }
     .brand-text { display: none; } /* Hide text brand on mobile to save space */
 }
+
+
+/* --- Opening KO & Officials --- */
+.kickoff-row { margin-top: 8px; }
+.tiny-info { font-size: 0.9em; color: var(--muted-color); margin-top: -4px; margin-bottom: 8px; }
+
+.w-30 { width: 30%; max-width: 200px; }
+
+.officials-display {
+  margin-top: 8px;
+  background: #f8f9fa;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+.official-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+@media (max-width: 480px) {
+  .official-name { font-size: 1.1rem; }
+}
