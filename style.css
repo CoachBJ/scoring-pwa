@@ -177,7 +177,9 @@ main {
     border-radius: 6px;
     cursor: pointer;
 }
-.chip.opp { background-color: #343a40; color: white; }
+.chip.opp { 
+    background-color: var(--opp, #343a40); /* Use the CSS variable */
+    color: var(--opp-text, white); /* Use a new variable for text color */
 .quick-row { display: flex; gap: 6px; margin-top: 8px; }
 
 /* --- Timeout Section --- */
