@@ -178,7 +178,12 @@
 
   <script src="app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+    <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/scoring-pwa/dev/sw.js', { scope: '/scoring-pwa/dev/' });
+}
+</script>
+
   </script>
 </body>
 </html>
