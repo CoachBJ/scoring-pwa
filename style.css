@@ -16,6 +16,7 @@ body {
     margin: 0;
     background-color: var(--background-color);
     color: var(--text-color);
+    touch-action: manipulation; /* ADDED: This disables double-tap to zoom */
 }
 
 main {
@@ -42,206 +43,275 @@ main {
     font-weight: bold;
     width: 40px;
     height: 40px;
-    display: grid;
-    place-items: center;
     border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.2em;
 }
-.brand-title { font-weight: 600; }
-.brand-sub { font-size: 0.9em; color: var(--muted-color); }
+.brand-text {
+    line-height: 1.2;
+}
+.brand-title {
+    font-weight: 600;
+}
+.brand-sub {
+    font-size: 0.9em;
+    color: var(--muted-color);
+}
 
-/* --- Main Layout --- */
+/* --- Layout --- */
 .layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas: "score clock" "output output";
+    grid-template-columns: 350px 1fr;
+    grid-template-areas: "score output";
     gap: 16px;
+    align-items: flex-start;
 }
 .area-score { grid-area: score; }
-.area-clock { grid-area: clock; }
 .area-output { grid-area: output; }
 
-/* --- Card Styling --- */
+/* --- General Components --- */
 .card {
     background-color: var(--card-background);
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 8px;
+    padding: 16px;
     box-shadow: var(--shadow);
-}
-.section-title {
-    margin-top: 0;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-}
-.subhead {
-    font-weight: 600;
-    margin-top: 24px;
-    margin-bottom: 12px;
-}
-
-/* --- Scoreboard & Inputs --- */
-.score-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    text-align: center;
-}
-.score-card .score-label {
-    font-weight: 500;
-    margin-bottom: 8px;
-}
-.score-input {
-    font-size: 4em;
-    font-weight: bold;
-    text-align: center;
-    width: 100%;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 0;
-    line-height: 1.2;
-    box-sizing: border-box;
-}
-
-/* --- Banner --- */
-#banner {
-    text-align: center;
-    padding: 12px;
-    border-radius: 8px;
-    margin-top: 20px;
-}
-#banner .title {
-    font-size: 1.4em;
-    font-weight: 600;
-}
-#banner .sub {
-    font-size: 1em;
-    margin-top: 4px;
-    opacity: 0.8;
-}
-#banner.good { background-color: #e7f5ff; color: var(--primary-color); }
-#banner.bad { background-color: #ffebee; color: var(--danger-color); }
-#banner.neutral { background-color: #f8f9fa; color: var(--muted-color); }
-
-
-/* --- Clock & Helper --- */
-#timeInput {
-    font-size: 2.5em;
-    font-weight: bold;
-    text-align: center;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 8px;
-    width: 100%;
-    box-sizing: border-box;
-}
-#clockResult {
-    font-size: 1.2em;
-    font-style: italic;
-    color: var(--primary-color);
-    margin-top: 16px;
-    text-align: center;
-    background-color: #e7f5ff;
-    padding: 10px;
-    border-radius: 8px;
-}
-
-/* --- Form Elements & Buttons --- */
-.row { margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-.row.compact { margin-bottom: 8px; }
-.row label { flex-shrink: 0; }
-.row input[type="text"], .row input[type="number"] {
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
     border: 1px solid var(--border-color);
 }
-.toggles { display: flex; flex-wrap: wrap; gap: 10px; }
-.btn {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
+
+.section-title {
+    font-size: 1.2em;
     font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.subhead {
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--muted-color);
+    margin: 24px 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.row.compact {
+    margin-bottom: 10px;
+}
+
+.row label {
+    font-weight: 500;
+}
+
+.toggles label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="tel"] {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1em;
+    width: 60px;
+    text-align: center;
+}
+input[type="text"] {
+    text-align: left;
+    width: 100%;
+}
+
+input#oppName {
+    flex-grow: 1;
+}
+
+.color-pick {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+input[type="color"] {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 1em;
+    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
 }
-.btn-primary { background-color: var(--primary-color); color: white; width: 100%; margin-top: 10px; }
-.btn-primary:hover { background-color: var(--primary-hover); }
-.btn-ghost { background-color: transparent; color: var(--danger-color); }
-.chip {
-    flex-grow: 1;
-    padding: 8px 4px;
-    background-color: #e9ecef;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    cursor: pointer;
+.btn-ghost {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-color);
 }
-.chip.opp { background-color: #343a40; color: white; }
-.quick-row { display: flex; gap: 6px; margin-top: 8px; }
+.btn-ghost:hover {
+    background: #f8f9fa;
+}
 
-/* --- Timeout Section --- */
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.to-card {
-    background: #fafafa;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+
+/* --- Banner --- */
+.banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid;
 }
-.to-title {
+.banner.neutral { background-color: #e9ecef; border-color: #ced4da; }
+.banner.good    { background-color: #d1e7dd; border-color: #a3cfbb; }
+.banner.bad     { background-color: #f8d7da; border-color: #f1aeb5; }
+
+.banner .title { font-weight: 600; }
+.banner .sub   { font-size: 0.9em; color: var(--muted-color); }
+
+
+/* --- Score Input --- */
+.scores {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.score-input {
+    flex: 1;
+    text-align: center;
+}
+.score-input label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 1.1em;
+}
+.score-input input {
+    width: 100%;
+    font-size: 2em;
+    font-weight: bold;
+    padding: 8px 0;
+    box-sizing: border-box; /* Important for 100% width */
+}
+
+/* Quick score chips */
+.chips {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+.chip {
+    padding: 4px 12px;
     font-size: 0.9em;
     font-weight: 500;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-}
-.to-checks { display: flex; justify-content: space-around; }
-.to-checks label {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-}
-.to-checks input { display: none; }
-.to-checks span {
-    display: block;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: var(--muted-color);
-    cursor: pointer;
-    text-indent: -9999px; /* Hides the "TO" text */
-}
-.to-checks input:checked + span {
-    background-color: var(--primary-color);
-}
-.toggle-arrow {
-    border: solid var(--text-color);
-    border-width: 0 2px 2px 0;
-    display: inline-block;
-    padding: 3px;
-    transform: rotate(45deg);
-    transition: transform 0.2s ease-in-out;
-    background: none;
-    width: 6px;
-    height: 6px;
+    background-color: #e9ecef;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     cursor: pointer;
 }
-.to-card.collapsed .toggle-arrow {
-    transform: rotate(-135deg);
+.chip:hover {
+    background-color: #dee2e6;
 }
-.to-card .to-content {
-    overflow: hidden;
-    transition: max-height 0.3s ease-out, padding-top 0.3s ease-out;
-    max-height: 100px;
-    padding-top: 8px;
-}
-.to-card.collapsed .to-content {
-    max-height: 0;
-    padding-top: 0;
+.chip.opp {
+    background-color: var(--opp, #9a9a9a);
+    color: white;
+    border-color: transparent;
 }
 
-/* --- NEW: Output Table & Segment Styling --- */
+
+/* --- Game Clock --- */
+#timeInput {
+    font-size: 2em;
+    font-weight: bold;
+    width: 140px; /* Wider for mm:ss */
+    border: 1px solid var(--border-color);
+    margin-bottom: 8px;
+    font-family: 'Courier New', Courier, monospace;
+}
+input.error { border-color: var(--danger-color); }
+
+.tinyBtns {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+.mini {
+    padding: 4px 8px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    background-color: #e9ecef;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+.mini.opp {
+    background-color: var(--opp, #9a9a9a);
+    color: white;
+    border-color: transparent;
+}
+.mini:hover {
+    background-color: #dee2e6;
+}
+
+/* --- Timeouts --- */
+.to-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.to-card {
+  --to-color: var(--primary-color);
+  border-left: 4px solid var(--to-color);
+  padding: 12px;
+  transition: max-height 0.3s ease-in-out;
+  overflow: hidden;
+}
+.to-card.opp {
+  --to-color: var(--opp, #9a9a9a);
+}
+.to-card.collapsed .to-checks {
+    max-height: 0;
+    padding-top: 0;
+    opacity: 0;
+}
+.to-title {
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.to-checks {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 12px;
+  max-height: 100px; /* estimate */
+  opacity: 1;
+  transition: all 0.3s ease-in-out;
+}
+.to-checks label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8em;
+}
+
+/* --- Output Table & Options --- */
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -254,7 +324,7 @@ main {
 }
 .table th {
     font-weight: 600;
-    font-size: 0.9em;
+    font-sze: 0.9em;
     color: var(--muted-color);
     white-space: nowrap;
 }
@@ -291,21 +361,13 @@ main {
 }
 
 
-/* --- Responsive Design --- */
-@media (max-width: 900px) {
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
     .layout {
-        grid-template-columns: 1fr; /* Stack cards into a single column */
+        grid-template-columns: 1fr; /* Stack columns */
         grid-template-areas:
             "score"
-            "clock"
             "output";
     }
-}
-
-@media (max-width: 480px) {
-    main { padding: 8px; }
-    .card { padding: 15px; }
-    .score-input { font-size: 3.2em; } /* Slightly smaller score on smallest screens */
-    #timeInput { font-size: 2em; }
-    .brand-text { display: none; } /* Hide text brand on mobile to save space */
 }
