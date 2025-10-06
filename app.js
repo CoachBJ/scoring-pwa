@@ -186,12 +186,6 @@ function renderSection(title, resultObj){
   else { (viewTable.checked?renderTable:renderRow)(resultObj.list); }
 }
 
-function updateSecondHalfInfo(){
-  let txt = "2nd-half kickoff: —";
-  if (STATE.openingKO === "we")  txt = "2nd-half kickoff: Opponent";
-  if (STATE.openingKO === "opp") txt = "2nd-half kickoff: Charlotte Christian";
-  elSecondHalfInfo.textContent = txt;
-}
 
 function renderOfficials(){
   const hr = STATE.officials.headRef?.trim();
@@ -395,20 +389,25 @@ function loadState(){
 function applyOpponentProfile(){
   elOppName.value = STATE.oppName;
   elOppColor.value = STATE.oppColor;
+
   const oppTextColor = getContrastColor(STATE.oppColor);
   const root = document.documentElement;
   root.style.setProperty('--opp', STATE.oppColor);
   root.style.setProperty('--opp-text', oppTextColor);
+
   elOppLabel.textContent = STATE.oppName;
   elOurLabel.textContent = TEAM_NAME;
+
+  // “Opponent has ball” dynamic label
   const elBallThemName = document.getElementById('ballThemName');
-if (elBallThemName) elBallThemName.textContent = STATE.oppName || "Opponent";
+  if (elBallThemName) elBallThemName.textContent = STATE.oppName || "Opponent";
 
-  applyOpponentProfile();
-updateTOHeadings();
+  // KO label inline name
+  if (elOppNameInline) elOppNameInline.textContent = STATE.oppName || "Opponent";
 
-    
-});
+  // Timeout headings
+  updateTOHeadings();
+}
 
 
   // NEW: reflect in KO label
