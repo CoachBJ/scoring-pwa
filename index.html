@@ -77,16 +77,21 @@
 
 <!-- Officials (inputs) -->
 <div class="subhead">Officials</div>
-<div class="row compact">
-  <label class="w-30">Head Ref</label>
-  <input id="headRef" type="text" placeholder="Enter head ref name" autocomplete="off" />
-</div>
-<div class="row compact">
-  <label class="w-30">Side Judge (our sideline)</label>
-  <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
-</div>
 
-<!-- Sticky officials + 2nd-half info (single source of truth) -->
+<details id="officialsInputs" open>
+  <summary class="details-summary">Tap to edit officials</summary>
+
+  <div class="row compact">
+    <label class="w-30">Head Ref</label>
+    <input id="headRef" type="text" placeholder="Enter head ref name" autocomplete="off" />
+  </div>
+  <div class="row compact">
+    <label class="w-30">Side Judge (our sideline)</label>
+    <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
+  </div>
+</details>
+
+<!-- Sticky officials + 2nd-half info -->
 <div class="sticky-officials" id="stickyOfficials">
   <div id="secondHalfInfo" class="muted tiny-info">2nd-half kickoff: —</div>
 
@@ -95,8 +100,10 @@
     <div class="official-name" id="sideJudgeDisplay"></div>
   </div>
 
+  <button type="button" id="editOfficials" class="link-btn small">Edit officials</button>
   <button type="button" id="clearOfficials" class="link-btn small">Clear officials</button>
 </div>
+
 
 
 
