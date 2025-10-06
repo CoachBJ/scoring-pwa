@@ -67,6 +67,33 @@
           <label><input id="view-row"   type="radio" name="view"> One Row</label>
         </div>
 
+        <!-- Opening Kickoff -->
+<div class="row toggles compact kickoff-row">
+  <label><input id="weReceivedKO" type="radio" name="openingKO" value="we"> We received the opening kickoff</label>
+  <label><input id="oppReceivedKO" type="radio" name="openingKO" value="opp">
+    <span id="oppNameInline">Opponent</span> received the opening kickoff
+  </label>
+</div>
+<div id="secondHalfInfo" class="muted tiny-info">2nd-half kickoff: —</div>
+
+<!-- Officials (inputs) -->
+<div class="subhead">Officials</div>
+<div class="row compact">
+  <label class="w-30">Head Ref</label>
+  <input id="headRef" type="text" placeholder="Enter head ref name" autocomplete="off" />
+</div>
+<div class="row compact">
+  <label class="w-30">Side Judge (our sideline)</label>
+  <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
+</div>
+
+<!-- Officials (display) -->
+<div class="officials-display" id="officialsDisplay">
+  <div class="official-name" id="headRefDisplay"></div>
+  <div class="official-name" id="sideJudgeDisplay"></div>
+</div>
+
+
         <p id="status" class="muted"></p>
       </section>
 
