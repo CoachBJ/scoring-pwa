@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b3a75" />
   <title>CCS Game Manager</title>
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -48,22 +46,20 @@
           <input
             id="ourScore"
             class="score-input"
-            type="number"
-            min="0"
-            step="1"
-            value="0"
-            inputmode="numeric"
-            aria-label="Our score"
-            autofocus />
+            type="number" min="0" step="1" value="0"
+            inputmode="numeric" aria-label="Our score" autofocus />
         </div>
-        <div class="quick-row">
-          <button class="chip" data-team="our" data-delta="-1">-1</button>
-          <button class="chip" data-team="our" data-delta="2">+2</button>
-          <button class="chip" data-team="our" data-delta="3">+3</button>
-          <button class="chip" data-team="our" data-delta="6">+6</button>
-          <button class="chip" data-team="our" data-delta="7">+7</button>
-          <button class="chip" data-team="our" data-delta="8">+8</button>
+
+        <!-- Big scoring pads (stress-friendly) -->
+        <div class="pad-row">
+          <button class="pad primary" data-team="our" data-delta="7" aria-label="Touchdown plus PAT">TD+PAT</button>
+          <button class="pad primary" data-team="our" data-delta="8" aria-label="Touchdown plus 2-point">TD+2PT</button>
+          <button class="pad" data-team="our" data-delta="6" aria-label="Touchdown">TD</button>
+          <button class="pad" data-team="our" data-delta="3" aria-label="Field goal">FG</button>
+          <button class="pad" data-team="our" data-delta="2" aria-label="Safety">Safety</button>
+          <button class="pad ghost" data-team="our" data-delta="-1" aria-label="Minus one">−1</button>
         </div>
+
         <!-- TO counters -->
         <div class="timeouts-line">
           TOs left (this half): <span id="ourTOLeft">3</span>
@@ -78,21 +74,20 @@
           <input
             id="oppScore"
             class="score-input"
-            type="number"
-            min="0"
-            step="1"
-            value="0"
-            inputmode="numeric"
-            aria-label="Opponent score" />
+            type="number" min="0" step="1" value="0"
+            inputmode="numeric" aria-label="Opponent score" />
         </div>
-        <div class="quick-row">
-          <button class="chip" data-team="opp" data-delta="-1">-1</button>
-          <button class="chip" data-team="opp" data-delta="2">+2</button>
-          <button class="chip" data-team="opp" data-delta="3">+3</button>
-          <button class="chip" data-team="opp" data-delta="6">+6</button>
-          <button class="chip" data-team="opp" data-delta="7">+7</button>
-          <button class="chip" data-team="opp" data-delta="8">+8</button>
+
+        <!-- Big scoring pads (stress-friendly) -->
+        <div class="pad-row">
+          <button class="pad primary" data-team="opp" data-delta="7" aria-label="Touchdown plus PAT">TD+PAT</button>
+          <button class="pad primary" data-team="opp" data-delta="8" aria-label="Touchdown plus 2-point">TD+2PT</button>
+          <button class="pad" data-team="opp" data-delta="6" aria-label="Touchdown">TD</button>
+          <button class="pad" data-team="opp" data-delta="3" aria-label="Field goal">FG</button>
+          <button class="pad" data-team="opp" data-delta="2" aria-label="Safety">Safety</button>
+          <button class="pad ghost" data-team="opp" data-delta="-1" aria-label="Minus one">−1</button>
         </div>
+
         <!-- TO counters -->
         <div class="timeouts-line opp">
           TOs left (this half): <span id="oppTOLeft">3</span>
@@ -106,12 +101,8 @@
         <div class="row">
           <label class="lbl">Quarter time (mm:ss)</label>
           <input
-            id="timeInput"
-            type="text"
-            inputmode="numeric"
-            pattern="^\d{1,2}:?\d{1,2}$"
-            placeholder="mm:ss"
-            value="12:00" />
+            id="timeInput" type="text" inputmode="numeric"
+            pattern="^\d{1,2}:?\d{1,2}$" placeholder="mm:ss" value="12:00" />
           <div class="mini-row">
             <button class="mini" data-delta="-60">-60s</button>
             <button class="mini" data-delta="-30">-30s</button>
@@ -206,9 +197,10 @@
       <div id="status" class="muted"></div>
       <div id="output" class="output"></div>
     </section>
-
-    <footer class="muted foot">Made for game-day: offline-first, touch-friendly.</footer>
   </main>
+
+  <!-- Sticky bottom game HUD -->
+  <div id="bottomBar" class="bottom-bar" aria-live="polite">Time left 12:00 • 1st Half • Us ball • TOs Us 3 / Them 3</div>
 
   <script src="./app.js" defer></script>
   <script>
