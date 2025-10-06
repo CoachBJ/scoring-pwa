@@ -4,6 +4,7 @@
 
 const TEAM_NAME = "Charlotte Christian";
 const MAX_RESULTS = 200;
+const MAX_TIME_SECS = 12 * 60; // ADDED: 12 minute maximum for the clock
 
 // ----- Scoring definitions -----
 const SCORING_PLAYS = [
@@ -18,7 +19,41 @@ const JOINER = " • ";
 // ----- Utils -----
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; };
-const fromMMSS = (txt) => { const m=String(txt||"").trim().match(/^(\d{1,2}):([0-5]?\d)$/); if(!m) return null; return clamp(parseInt(m[1],10)*60+parseInt(m[2],10),0,1440); };
+
+// CHANGED: Rewritten this function to be more flexible
+const fromMMSS = (txt) => {
+  const str = String(txt || "").trim();
+  if (!str) return null;
+
+  // Try standard mm:ss format first
+  const classicMatch = str.match(/^(\d{1,2}):([0-5]?\d)$/);
+  if (classicMatch) {
+    const m = parseInt(classicMatch[1], 10);
+    const s = parseInt(classicMatch[2], 10);
+    return clamp(m * 60 + s, 0, MAX_TIME_SECS);
+  }
+
+  // Try numeric-only format (e.g., 130 -> 1:30, 45 -> 0:45)
+  const numericOnly = str.replace(/\D/g, '');
+  if (numericOnly.length > 0 && numericOnly.length <= 4) {
+    let m = 0, s = 0;
+    if (numericOnly.length <= 2) { // "45" -> 45s
+      s = parseInt(numericOnly, 10);
+    } else if (numericOnly.length === 3) { // "130" -> 1m 30s
+      m = parseInt(numericOnly.substring(0, 1), 10);
+      s = parseInt(numericOnly.substring(1), 10);
+    } else { // "1200" -> 12m 0s
+      m = parseInt(numericOnly.substring(0, 2), 10);
+      s = parseInt(numericOnly.substring(2), 10);
+    }
+
+    if (s >= 60 || m > 12) return null; // Invalid time like 1m 75s or 13m
+
+    return clamp(m * 60 + s, 0, MAX_TIME_SECS);
+  }
+
+  return null; // Format not recognized
+};
 
 // ----- Scoring core -----
 function scoreCombos(target){
@@ -113,12 +148,14 @@ function setTOState(key, arr){ const g=getGroupEl(key); if(!g) return; const box
 function countTO(key){ return getTOState(key).filter(Boolean).length; }
 
 function getTimeSecs(){ const s=fromMMSS(elTimeInput.value); return s==null?0:s; }
-function setTimeSecs(secs){ elTimeInput.value = toMMSS(clamp(secs,0,1440)); }
+// CHANGED: Use MAX_TIME_SECS here
+function setTimeSecs(secs){ elTimeInput.value = toMMSS(clamp(secs,0,MAX_TIME_SECS)); }
 
 elMiniBtns.forEach(b=>{
   b.addEventListener("click", ()=>{
     let secs = getTimeSecs();
-    secs = clamp(secs + Number(b.dataset.dt), 0, 1440);
+    // CHANGED: Use MAX_TIME_SECS here
+    secs = clamp(secs + Number(b.dataset.dt), 0, MAX_TIME_SECS);
     setTimeSecs(secs); saveState(); updateClockHelper();
   });
 });
@@ -223,7 +260,7 @@ function loadState(){
     elOur.value = s.our || 0;
     elOpp.value = s.opp || 0;
     (s.half===2?elHalf2:elHalf1).checked=true;
-    setTimeSecs(typeof s.time==="number"? s.time : 300); // Default to 5:00
+    setTimeSecs(typeof s.time==="number"? s.time : MAX_TIME_SECS); // Default to max time
 
     if(s.to){ Object.keys(s.to).forEach(k=> setTOState(k, s.to[k])); }
     else { ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true])); }
@@ -242,7 +279,7 @@ function loadState(){
 
   }catch(e){
     console.error("Failed to load state", e);
-    setTimeSecs(300); // Default to 5:00
+    setTimeSecs(MAX_TIME_SECS); // Default to max time
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
   }
 }
@@ -305,7 +342,7 @@ document.getElementById("resetGame").addEventListener("click", ()=>{
     STATE.oppColor = "#9a9a9a";
     applyOpponentProfile();
     document.getElementById("half1").checked=true;
-    setTimeSecs(300); // Reset to 5:00
+    setTimeSecs(MAX_TIME_SECS); // Reset to max time
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
     STATE.collapsedTO = {};
     document.querySelectorAll('.to-card.collapsed').forEach(c => c.classList.remove('collapsed'));
