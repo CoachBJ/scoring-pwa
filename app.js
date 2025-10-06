@@ -39,6 +39,7 @@ function toMMSS(s) {
 function fromMMSS(txt) {
   const m = String(txt || "").trim().match(/^(\d{1,2}):?(\d{2})$/);
   if (!m) return 0;
+  // hard cap 12:00 (HS quarter)
   return clamp(parseInt(m[1], 10) * 60 + parseInt(m[2], 10), 0, 12 * 60);
 }
 
@@ -387,6 +388,11 @@ function useTO(side) {
 elUseOurTO && elUseOurTO.addEventListener("click", () => useTO("our"));
 elUseOppTO && elUseOppTO.addEventListener("click", () => useTO("opp"));
 
+// Update calc on inputs
+elBallUs && elBallUs.addEventListener("change", () => { saveState(); updateClockHelper(); });
+[elPTime, elPClk, elSnaps].forEach(el => el && el.addEventListener("input", () => { saveState(); updateClockHelper(); }));
+[elHalf1, elHalf2].forEach(el => el && el.addEventListener("change", () => { saveState(); updateClockHelper(); }));
+
 // =======================
 // Quick score chips
 // =======================
@@ -442,7 +448,7 @@ function loadState() {
       else elHalf1.checked = true;
     }
 
-    setTimeSecs(Number.isFinite(s.time) ? s.time : 300);
+    setTimeSecs(Number.isFinite(s.time) ? s.time : 12*60);
 
     ["our-h1", "opp-h1", "our-h2", "opp-h2"].forEach((k) => setTOState(k, s.to?.[k] ?? [true, true, true]));
 
@@ -463,10 +469,9 @@ function loadState() {
 
     applyOpponentProfile();
     updateSecondHalfInfo(); // NEW
-
   } catch (e) {
     console.error("Failed to load state", e);
-    setTimeSecs(300);
+    setTimeSecs(12*60);
     ["our-h1", "opp-h1", "our-h2", "opp-h2"].forEach((k) => setTOState(k, [true, true, true]));
   }
 }
@@ -556,7 +561,7 @@ elReset && elReset.addEventListener("click", () => {
   if (elOur) elOur.value = "0";
   if (elOpp) elOpp.value = "0";
   if (elHalf1 && elHalf2) elHalf1.checked = true;
-  setTimeSecs(300);
+  setTimeSecs(12*60);
   ["our-h1", "opp-h1", "our-h2", "opp-h2"].forEach((k) => setTOState(k, [true, true, true]));
   STATE.collapsedTO = {};
   document.querySelectorAll(".to-card.collapsed").forEach((c) => c.classList.remove("collapsed"));
