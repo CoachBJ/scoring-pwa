@@ -176,12 +176,11 @@
     </div>
   </main>
 
-  <script src="app.js"></script>
-  <script>
-    <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/scoring-pwa/sw.js');
-}
+<script src="app.js" defer></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/scoring-pwa/dev/sw.js', { scope: '/scoring-pwa/dev/' });
+  }
 </script>
 
   </script>
