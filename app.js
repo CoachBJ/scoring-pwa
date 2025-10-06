@@ -33,6 +33,43 @@ function getContrastColor(hex) {
     const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
     return (yiq >= 128) ? '#000000' : '#ffffff'; // Return black for light colors, white for dark
 }
+
+// ----- UI collapse helpers -----
+function setDetailsOpen(id, open) {
+  const el = document.getElementById(id);
+  if (el) el.open = !!open;
+}
+function getDetailsOpen(id) {
+  const el = document.getElementById(id);
+  return !!(el && el.open);
+}
+
+// ----- Clock helper core (pure calc; no DOM) -----
+function computeClockAdvice({ timeLeft, snaps, playClock, playTime, half2, ballUs, ourTO, oppTO, oppName }) {
+  const toMMSSsafe = (s) => toMMSS(Math.max(0, Math.floor(s || 0)));
+
+  if (ballUs) {
+    const burn = snaps*playTime + Math.max(0, snaps - oppTO)*playClock;
+    const canBurn = Math.min(timeLeft, burn);
+    const remain  = Math.max(0, timeLeft - canBurn);
+    return {
+      html: `${TEAM_NAME} has ball. ${oppName} TOs: <b>${oppTO}</b>. Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSSsafe(canBurn)}</b>. ` +
+            (remain===0 ? `<b>Can run out the half.</b>` : `~<b>${toMMSSsafe(remain)}</b> would remain.`)
+    };
+  } else {
+    const drain = snaps*playTime + Math.max(0, snaps - ourTO)*playClock;
+    const canDrain = Math.min(timeLeft, drain);
+    const remain   = Math.max(0, timeLeft - canDrain);
+    return {
+      html: `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSSsafe(canDrain)}</b>. ` +
+            `Time left would be ≈ <b>${toMMSSsafe(remain)}</b>.`
+    };
+  }
+}
+
+
+
+
 function updateTOHeadings() {
   const opp = STATE.oppName || "Opponent";
 
@@ -278,34 +315,23 @@ const elClockResult=document.getElementById("clockResult");
 });
 
 function updateClockHelper(){
-  const timeLeft=getTimeSecs();
-  const snaps=clamp(Number(elSnaps.value||3),1,4);
-  const pclk =clamp(Number(elPlayClock.value||40),20,45);
-  const ptime=clamp(Number(elPlayTime.value||6),1,15);
-  const half2=elHalf2.checked;
+  const timeLeft = getTimeSecs();
+  const snaps    = clamp(Number(elSnaps.value||3),1,4);
+  const pclk     = clamp(Number(elPlayClock.value||40),20,45);
+  const ptime    = clamp(Number(elPlayTime.value||6),1,15);
+  const half2    = elHalf2.checked;
 
   const ourTO = half2 ? countTO("our-h2") : countTO("our-h1");
   const oppTO = half2 ? countTO("opp-h2") : countTO("opp-h1");
   const oppName = STATE.oppName || "Opponent";
 
-  if(elBallUs.checked){
-    const burn = snaps*ptime + Math.max(0, snaps - oppTO)*pclk;
-    const canBurn = Math.min(timeLeft, burn);
-    const remain = Math.max(0, timeLeft - canBurn);
-    elClockResult.innerHTML =
-      `${TEAM_NAME} has ball. ${oppName} TOs: <b>${oppTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
-      (remain===0 ? `<b>Can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
-  } else {
-    const drain = snaps*ptime + Math.max(0, snaps - ourTO)*pclk;
-    const canDrain = Math.min(timeLeft, drain);
-    const remain = Math.max(0, timeLeft - canDrain);
-    elClockResult.innerHTML =
-      `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
-      `Time left would be ≈ <b>${toMMSS(remain)}</b>.`;
-  }
+  const advice = computeClockAdvice({
+    timeLeft, snaps, playClock: pclk, playTime: ptime,
+    half2, ballUs: elBallUs.checked, ourTO, oppTO, oppName
+  });
+  elClockResult.innerHTML = advice.html;
 }
+
 
 // ----- State -----
 const STATE_KEY="ccs-gamemanager-state-v3"; // Incremented key to avoid old state issues
@@ -313,9 +339,11 @@ let STATE = {
   oppName: "Opponent",
   oppColor: "#9a9a9a",
   collapsedTO: {},
-  openingKO: null,                // "we" | "opp" | null
-  officials: { headRef: "", sideJudge: "" }
+  openingKO: null,
+  officials: { headRef: "", sideJudge: "" },
+  ui: { officialsCollapsed: false, clockAdvancedCollapsed: true }
 };
+
 
 function saveState(){
   document.querySelectorAll('.to-card[data-key]').forEach(card => {
