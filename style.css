@@ -9,6 +9,7 @@
   --text-color: #212529;
   --muted-color: #6c757d;
   --border-color: #dee2e6;
+  --white: #FFFFFF;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   /* Variables for opponent colors, set by JS */
   --opp: #343a40;
@@ -158,12 +159,13 @@ main {
   box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.15);
 }
 #clockResult {
-  font-size: 2.3em;
+  font-size: 2.0em;
   font-style: italic;
-  color: var(--primary-color);
+  font-weight: bold;
+  color: var(--white);
   margin-top: 16px;
   text-align: center;
-  background-color: #C2C2C2;
+  background-color: #FF0000;
   padding: 10px;
   border-radius: 8px;
 }
