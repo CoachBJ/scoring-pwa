@@ -2,257 +2,250 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
-  <title>CCS Game Manager</title>
-
-  <!-- PWA manifest + icons -->
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="./icon-180.png" />
-  <meta name="theme-color" content="#005a9c" />
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="./style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Charlotte Christian — Game Manager</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Header / Brand -->
-  <header class="appbar">
-    <div class="brand">
-      <div class="brand-mark">🏈</div>
-      <div class="brand-text">
-        <div class="brand-title">Charlotte Christian — Game Manager</div>
-        <div class="brand-sub">Fast, offline-ready, game-day tools</div>
+  <main>
+    <header class="appbar">
+      <div class="brand">
+        <div class="brand-mark">CC</div>
+        <div class="brand-text">
+          <div class="brand-title">Charlotte Christian</div>
+          <div class="brand-sub">Game Manager</div>
+        </div>
       </div>
+      <button id="resetGame" class="btn btn-ghost">Reset Game</button>
+    </header>
+
+    <div class="layout">
+      <section class="card area-score">
+        <h2 class="section-title">Scoreboard</h2>
+
+        <div class="row compact">
+          <label>Opponent</label>
+          <input id="oppName" type="text" value="Opponent" autocomplete="off" />
+          <div class="color-pick">
+            <label for="oppColor" class="muted">Color</label>
+            <input id="oppColor" type="color" value="#9a9a9a" />
+          </div>
+        </div>
+
+        <div class="score-grid">
+          <div class="score-card">
+            <div class="score-label"><span id="ourLabel">Charlotte Christian</span></div>
+            <input id="ourScore" type="number" inputmode="numeric" pattern="[0-9]*" value="0" class="score-input" autocomplete="off" />
+            <div class="quick-row">
+              <button class="chip" data-team="our" data-delta="2">+2</button>
+              <button class="chip" data-team="our" data-delta="3">+3</button>
+              <button class="chip" data-team="our" data-delta="6">+6</button>
+              <button class="chip" data-team="our" data-delta="7">+7</button>
+              <button class="chip" data-team="our" data-delta="8">+8</button>
+            </div>
+          </div>
+          <div class="score-card">
+            <div class="score-label"><span id="oppLabel">Opponent</span></div>
+            <input id="oppScore" type="number" inputmode="numeric" pattern="[0-9]*" value="0" class="score-input" autocomplete="off" />
+            <div class="quick-row">
+              <button class="chip opp" data-team="opp" data-delta="2">+2</button>
+              <button class="chip opp" data-team="opp" data-delta="3">+3</button>
+              <button class="chip opp" data-team="opp" data-delta="6">+6</button>
+              <button class="chip opp" data-team="opp" data-delta="7">+7</button>
+              <button class="chip opp" data-team="opp" data-delta="8">+8</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="banner"></div>
+
+        <div class="row toggles compact">
+          <label><input id="view-table" type="radio" name="view" checked> Table</label>
+          <label><input id="view-row"   type="radio" name="view"> One Row</label>
+        </div>
+
+<!-- Opening Kickoff -->
+<div class="row toggles compact kickoff-row">
+  <label><input id="weReceivedKO" type="radio" name="openingKO" value="we"> We received the opening kickoff</label>
+  <label><input id="oppReceivedKO" type="radio" name="openingKO" value="opp">
+    <span id="oppNameInline">Opponent</span> received the opening kickoff
+  </label>
+</div>
+
+<!-- Officials (inputs) -->
+<div class="subhead">Officials</div>
+
+<details id="officialsInputs" open>
+  <summary class="details-summary">Tap to edit officials</summary>
+
+  <div class="row compact">
+    <label class="w-30">Head Ref</label>
+    <input id="headRef" type="text" placeholder="Enter head ref name" autocomplete="off" />
+  </div>
+  <div class="row compact">
+    <label class="w-30">Side Judge (our sideline)</label>
+    <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
+  </div>
+</details>
+
+<!-- Sticky officials + 2nd-half info -->
+<div class="sticky-officials" id="stickyOfficials">
+  <div id="secondHalfInfo" class="muted tiny-info">2nd-half kickoff: —</div>
+
+  <div class="officials-display" id="officialsDisplay" style="display:none">
+    <div class="official-name" id="headRefDisplay"></div>
+    <div class="official-name" id="sideJudgeDisplay"></div>
+  </div>
+
+  <button type="button" id="editOfficials" class="link-btn small">Edit officials</button>
+  <button type="button" id="clearOfficials" class="link-btn small">Clear officials</button>
+</div>
+
+
+
+
+
+        <p id="status" class="muted"></p>
+      </section>
+
+      <section class="card area-clock">
+        <div class="section-head">
+          <h2 class="section-title">Game Clock & Timeouts</h2>
+        </div>
+
+        <div class="row toggles compact">
+          <label><input type="radio" name="half" id="half1" checked> 1st Half</label>
+          <label><input type="radio" name="half" id="half2"> 2nd Half</label>
+        </div>
+
+        <div class="row time-row">
+          <label>Time left</label>
+          <div class="time-manual">
+            <input id="timeInput" type="tel" inputmode="numeric" pattern="[0-9:]*" placeholder="mm:ss" value="12:00" autocomplete="off" />
+          </div>
+          <div class="tinyBtns">
+            <button class="mini" data-dt="-10">-10s</button>
+            <button class="mini" data-dt="+10">+10s</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="to-card" data-key="our-h1">
+            <div class="to-title">
+              <span>Charlotte Christian TOs — 1st</span>
+              <button class="toggle-arrow" aria-label="Toggle timeouts"></button>
+            </div>
+            <div class="to-content">
+              <div class="to-checks" id="group-our-h1">
+                <label><input type="checkbox" checked><span>TO</span></label>
+                <label><input type="checkbox" checked><span>TO</span></label>
+                <label><input type="checkbox" checked><span>TO</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="to-card" data-key="opp-h1">
+            <div class="to-title">
+              <span>Opponent TOs — 1st</span>
+              <button class="toggle-arrow" aria-label="Toggle timeouts"></button>
+            </div>
+            <div class="to-content">
+              <div class="to-checks" id="group-opp-h1">
+                <label><input type="checkbox" checked><span>TO</span></label>
+                <label><input type="checkbox" checked><span>TO</span></label>
+                <label><input type="checkbox" checked><span>TO</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="to-card" data-key="our-h2">
+            <div class="to-title">
+              <span>Charlotte Christian TOs — 2nd</span>
+              <button class="toggle-arrow" aria-label="Toggle timeouts"></button>
+            </div>
+            <div class="to-content">
+              <div class="to-checks" id="group-our-h2">
+                <label><input type="checkbox" checked><span>TO</span></label>
+                <label><input type="checkbox" checked><span>TO</span></label>
+                <label><input type="checkbox" checked><span>TO</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="to-card" data-key="opp-h2">
+            <div class="to-title">
+              <span>Opponent TOs — 2nd</span>
+              <button class="toggle-arrow" aria-label="Toggle timeouts"></button>
+            </div>
+            <div class="to-content">
+              <div class="to-checks" id="group-opp-h2">
+                <label><input type="checkbox" checked><span>TO</span></label>
+                <label><input type="checkbox" checked><span>TO</span></label>
+                <label><input type="checkbox" checked><span>TO</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tinyBtns">
+          <button id="useOurTO" class="mini">Use CC TO (current half)</button>
+          <button id="useOppTO" class="mini opp">Use Opp TO (current half)</button>
+        </div>
+
+<div class="subhead">Clock Helper</div>
+
+<details id="clockAdvanced">
+  <summary class="details-summary">Advanced settings</summary>
+
+  <div class="row toggles compact">
+    <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
+    <label><input type="radio" name="ball" id="ballThem"><span id="ballThemName">Opponent</span> has ball</label>
+  </div>
+  <div class="row compact">
+    <label>Snaps this series</label>
+    <input id="snaps" type="number" min="1" max="4" value="3" autocomplete="off" />
+  </div>
+  <div class="row compact">
+    <label>Play clock</label>
+    <input id="playClock" type="number" min="20" max="45" value="40" autocomplete="off" />
+  </div>
+  <div class="row compact">
+    <label>Avg play time</label>
+    <input id="playTime" type="number" min="1" max="15" value="6" autocomplete="off" />
+  </div>
+</details>
+
+<div id="clockResult" class="muted"></div>
+
+
+        </div>
+        <div class="row compact">
+          <label>Snaps this series</label>
+          <input id="snaps" type="number" min="1" max="4" value="3" autocomplete="off" />
+        </div>
+        <div class="row compact">
+          <label>Play clock</label>
+          <input id="playClock" type="number" min="20" max="45" value="40" autocomplete="off" />
+        </div>
+        <div class="row compact">
+          <label>Avg play time</label>
+          <input id="playTime" type="number" min="1" max="15" value="6" autocomplete="off" />
+        </div>
+        <div id="clockResult" class="muted"></div>
+      </section>
+
+      <section id="output" class="area-output"></section>
+
     </div>
-  </header>
-
-  <!-- Main grid -->
-  <main class="layout">
-    <!-- SCORE AREA (left column) -->
-    <section class="area-score card">
-      <div class="section-title">Scoreboard</div>
-
-      <!-- Possession (always visible) -->
-      <div class="subhead">Possession</div>
-      <div class="score-grid" style="grid-template-columns: 1fr 1fr;">
-        <label class="segment">
-          <input id="posUs" type="radio" name="pos" /> Charlotte Christian
-        </label>
-        <label class="segment">
-          <input id="posThem" type="radio" name="pos" /> <span id="ballThemName">Opponent</span>
-        </label>
-      </div>
-
-      <!-- Scores + quick add (visual only right now) -->
-      <div class="score-grid" style="margin-top: 10px;">
-        <div class="score-card">
-          <div class="score-label">Charlotte Christian</div>
-          <input class="score-input" type="number" inputmode="numeric" value="0" />
-          <div class="quick-row">
-            <button class="mini">+2</button>
-            <button class="mini">+3</button>
-            <button class="mini">+6</button>
-            <button class="mini">+7</button>
-            <button class="mini">+8</button>
-          </div>
-          <div class="tiny-info" style="margin-top:6px;">
-            TOs left (this half): <b><span id="ourTOLeft">3</span></b>
-          </div>
-        </div>
-
-        <div class="score-card">
-          <div class="score-label"><span id="oppNameInline">Opponent</span></div>
-          <input class="score-input opp" type="number" inputmode="numeric" value="0" />
-          <div class="quick-row">
-            <button class="mini opp">+2</button>
-            <button class="mini opp">+3</button>
-            <button class="mini opp">+6</button>
-            <button class="mini opp">+7</button>
-            <button class="mini opp">+8</button>
-          </div>
-          <div class="tiny-info" style="margin-top:6px;">
-            TOs left (this half): <b><span id="oppTOLeft">3</span></b>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CLOCK AREA (right column) -->
-    <section class="area-clock card">
-      <div class="section-title">Clock & Timeouts</div>
-
-      <!-- Game clock -->
-      <div class="subhead">Game Clock</div>
-      <div class="score-grid" style="grid-template-columns: 1fr;">
-        <input id="timeInput" class="score-input" type="text" inputmode="numeric" placeholder="MM:SS" value="12:00" />
-        <div class="quick-row tinyBtns">
-          <button class="mini" data-dt="+60">+1:00</button>
-          <button class="mini" data-dt="+30">+0:30</button>
-          <button class="mini" data-dt="-30">-0:30</button>
-          <button class="mini" data-dt="-60">-1:00</button>
-        </div>
-      </div>
-
-      <div class="subhead" style="margin-top:10px;">
-        <label><input id="half2" type="checkbox" /> 2nd Half</label>
-      </div>
-
-      <!-- Quick TO buttons -->
-      <div class="quick-row" style="margin-top:8px;">
-        <button id="useOurTO" class="mini">Use CC Timeout</button>
-        <button id="useOppTO" class="mini opp">Use Opp Timeout</button>
-      </div>
-
-      <!-- Timeouts grid (checked = AVAILABLE) -->
-      <div class="grid2" style="margin-top:12px;">
-        <div class="to-card" id="to-h1">
-          <div class="to-title">
-            1st Half Timeouts
-            <span class="toggle-arrow">⌄</span>
-          </div>
-          <div class="to-content to-checks">
-            <!-- OUR H1 -->
-            <div>
-              <div class="tiny muted">Our TOs — 1st Half</div>
-              <label><input type="checkbox" data-to-group="our-h1" checked /> TO</label>
-              <label><input type="checkbox" data-to-group="our-h1" checked /> TO</label>
-              <label><input type="checkbox" data-to-group="our-h1" checked /> TO</label>
-            </div>
-            <!-- OPP H1 -->
-            <div>
-              <div class="tiny muted">Opponent TOs — 1st Half</div>
-              <label><input type="checkbox" data-to-group="opp-h1" checked /> TO</label>
-              <label><input type="checkbox" data-to-group="opp-h1" checked /> TO</label>
-              <label><input type="checkbox" data-to-group="opp-h1" checked /> TO</label>
-            </div>
-          </div>
-        </div>
-
-        <div class="to-card" id="to-h2">
-          <div class="to-title">
-            2nd Half Timeouts
-            <span class="toggle-arrow">⌄</span>
-          </div>
-          <div class="to-content to-checks">
-            <!-- OUR H2 -->
-            <div>
-              <div class="tiny muted">Our TOs — 2nd Half</div>
-              <label><input type="checkbox" data-to-group="our-h2" checked /> TO</label>
-              <label><input type="checkbox" data-to-group="our-h2" checked /> TO</label>
-              <label><input type="checkbox" data-to-group="our-h2" checked /> TO</label>
-            </div>
-            <!-- OPP H2 -->
-            <div>
-              <div class="tiny muted">Opponent TOs — 2nd Half</div>
-              <label><input type="checkbox" data-to-group="opp-h2" checked /> TO</label>
-              <label><input type="checkbox" data-to-group="opp-h2" checked /> TO</label>
-              <label><input type="checkbox" data-to-group="opp-h2" checked /> TO</label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Advanced clock helper -->
-      <details id="clockAdvanced" class="to-card collapsed" style="margin-top:12px;">
-        <summary class="to-title">
-          Clock Helper (Advanced)
-          <span class="toggle-arrow">⌄</span>
-        </summary>
-        <div class="to-content">
-          <table class="table">
-            <tr>
-              <td class="score-options-cell">
-                <label>Snaps left</label>
-                <input id="snaps" type="number" value="5" />
-              </td>
-              <td class="score-options-cell">
-                <label>Play clock (s)</label>
-                <input id="playClock" type="number" value="40" />
-              </td>
-              <td class="score-options-cell">
-                <label>Avg play time (s)</label>
-                <input id="playTime" type="number" value="6" />
-              </td>
-            </tr>
-          </table>
-          <div id="clockResult" class="tiny-info" style="margin-top:6px;">—</div>
-        </div>
-      </details>
-    </section>
-
-    <!-- OUTPUT / SETTINGS (bottom row) -->
-    <section class="area-output card">
-      <div class="section-title">Game Settings & Notes</div>
-
-      <!-- Opening Kickoff -->
-      <div class="subhead">Opening Kickoff</div>
-      <div class="kickoff-row">
-        <label><input id="weReceivedKO" type="radio" name="openingKO" value="we" /> We received the opening kickoff</label>
-      </div>
-      <div class="kickoff-row">
-        <label><input id="oppReceivedKO" type="radio" name="openingKO" value="opp" /> Opponent received the opening kickoff</label>
-      </div>
-      <div id="secondHalfInfo" class="tiny-info" style="margin-top:4px;">2nd-half kickoff: —</div>
-
-      <!-- Opponent name & color -->
-      <div class="subhead" style="margin-top:14px;">Opponent</div>
-      <div class="score-grid" style="grid-template-columns: 1fr 1fr;">
-        <label> Name <input id="oppName" type="text" placeholder="Opponent" /></label>
-        <label> Color <input id="oppColor" type="color" value="#9a9a9a" /></label>
-      </div>
-
-      <!-- Officials -->
-      <div class="subhead" style="margin-top:14px;">Officials</div>
-      <div id="officialsDisplay" class="officials-display" style="display:none;">
-        <div id="headRefDisplay" class="official-name"></div>
-        <div id="sideJudgeDisplay" class="official-name"></div>
-        <button id="editOfficials" type="button" class="link-btn small">Edit</button>
-      </div>
-
-      <details id="officialsInputs" class="to-card" open>
-        <summary class="to-title">
-          Edit Officials
-          <span class="toggle-arrow">⌄</span>
-        </summary>
-        <div class="to-content">
-          <table class="table">
-            <tr>
-              <td class="score-options-cell">
-                <label>Head Ref</label>
-                <input id="headRef" type="text" placeholder="Name" />
-              </td>
-              <td class="score-options-cell">
-                <label>Side Judge</label>
-                <input id="sideJudge" type="text" placeholder="Name" />
-              </td>
-            </tr>
-          </table>
-          <button type="button" id="clearOfficials" class="link-btn small">Clear</button>
-        </div>
-      </details>
-
-      <!-- Reset -->
-      <div class="tiny-info" style="margin-top:12px;">
-        <button id="resetGame" class="badge">Reset Game</button>
-      </div>
-
-      <div class="tiny-info" style="margin-top:8px;">
-        Offline-ready. Changes save automatically.
-      </div>
-    </section>
   </main>
 
-  <!-- Scripts -->
-  <script src="./app.js" defer></script>
-  <script>
-    // Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(console.error);
-      });
-    }
-  </script>
+<script src="app.js" defer></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { scope: './' });
+}
+</script>
+
+
 </body>
 </html>
