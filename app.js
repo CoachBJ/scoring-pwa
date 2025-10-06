@@ -291,7 +291,7 @@ function applyOpponentProfile(){
   elOppLabel.textContent = STATE.oppName;
   elOurLabel.textContent = TEAM_NAME;
 }
-elOppName.addEventListener('input', ()=>{ STATE.oppName = elOppName.value.trim() || "Opponent"; applyOpponentProfile(); saveState(); run(); });
+elOppName.addEventListener('input', ()=>{ STATE.oppName = elOppName.value || "Opponent"; applyOpponentProfile(); saveState(); run(); });
 elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; applyOpponentProfile(); saveState(); });
 
 
