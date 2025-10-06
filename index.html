@@ -214,7 +214,6 @@
 
 <script src="app.js"></script>
 <script>
-  // PWA: register service worker if available
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').catch(()=>{});
