@@ -138,8 +138,13 @@ main {
     border-radius: 8px;
     padding: 8px;
     width: 100%;
-    box-sizing: border-box;
+    box-sizing: border-box;}  
+/* Error state for invalid time */
+#timeInput.error {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 2px rgba(211,47,47,0.15);
 }
+
 #clockResult {
     font-size: 1.2em;
     font-style: italic;
@@ -150,7 +155,25 @@ main {
     padding: 10px;
     border-radius: 8px;
 }
+/* Also show error on score boxes if needed */
+.score-input.error {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 2px rgba(211,47,47,0.15);
+}
 
+/* Clear, accessible focus */
+input:focus-visible, button:focus-visible {
+  outline: 3px solid rgba(0,90,156,0.4);
+  outline-offset: 2px;
+}
+
+/* Hide number spinners (Chrome/Edge) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; } /* Firefox */
+
+/* Button press feedback */
+.btn:active { transform: scale(0.98); }
 /* --- Form Elements & Buttons --- */
 .row { margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 .row.compact { margin-bottom: 8px; }
