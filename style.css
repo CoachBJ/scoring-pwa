@@ -16,7 +16,6 @@ body {
     margin: 0;
     background-color: var(--background-color);
     color: var(--text-color);
-    touch-action: manipulation; /* Disables double-tap to zoom */
 }
 
 main {
