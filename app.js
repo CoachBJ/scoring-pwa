@@ -23,7 +23,7 @@ const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), s
 // This function determines if a color is light or dark for text contrast
 function getContrastColor(hex) {
     if (!hex) return '#ffffff';
-    // Handle short hex codes
+    // Handle short hex codes like #F0C
     if (hex.length === 4) {
         hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
     }
@@ -104,7 +104,7 @@ const elOppColor=document.getElementById("oppColor");
 // ----- Banner -----
 function renderBanner(our, opp, oppName){
   const el = document.getElementById("banner");
-  if (!el) return; // Guard against element not being found
+  if (!el) return;
   const usBehind  = Math.max(0, opp - our);
   const oppBehind = Math.max(0, our - opp);
 
@@ -166,7 +166,7 @@ function setTimeSecs(secs){ elTimeInput.value = toMMSS(clamp(secs,0,MAX_TIME_SEC
 elMiniBtns.forEach(b=>{
   b.addEventListener("click", ()=>{
     let secs = getTimeSecs();
-    secs = clamp(secs + Number(b.dataset.dt), 0, MAX_TIME_SECS);
+    secs = clamp(secs + Number(b.dataset.dt), 0, MAX_IIME_SECS);
     setTimeSecs(secs); saveState(); updateClockHelper();
   });
 });
@@ -250,7 +250,7 @@ function updateClockHelper(){
 }
 
 // ----- State -----
-const STATE_KEY="ccs-gamemanager-state-v2";
+const STATE_KEY="ccs-gamemanager-state-v3"; // Incremented key to avoid old state issues
 let STATE = { oppName:"Opponent", oppColor:"#9a9a9a", collapsedTO: {} };
 
 function saveState(){
@@ -309,7 +309,7 @@ function applyOpponentProfile(){
   elOurLabel.textContent = TEAM_NAME;
 }
 elOppName.addEventListener('input', ()=>{
-    STATE.oppName = elOppName.value || "Opponent"; // No .trim()
+    STATE.oppName = elOppName.value || "Opponent";
     applyOpponentProfile();
     saveState();
     run();
@@ -330,10 +330,10 @@ elOppColor.addEventListener('input', ()=>{
         const score = parseInt(el.value, 10);
         if (isNaN(score) || score < 0) {
             el.value = 0;
+            run(); // Rerun to update calculations after correction
         }
     });
 });
-
 
 function run(){
   elOut.innerHTML=""; elStatus.textContent="";
@@ -349,9 +349,7 @@ function run(){
   if (teamNeeding !== 'either') {
     const diff=Math.abs(our-opp);
     const tieTarget=diff, leadTarget=diff+1;
-
     const teamLabel = teamNeeding==="us" ? `${TEAM_NAME} needs` : `${STATE.oppName} needs`;
-
     const tieRes = buildItems(tieTarget, MAX_RESULTS);
     const leadRes= buildItems(leadTarget, MAX_RESULTS);
 
@@ -367,7 +365,9 @@ function run(){
 // ----- Init -----
 document.getElementById("resetGame").addEventListener("click", ()=>{
   if (confirm('Are you sure you want to reset the entire game?')) {
-    elOur.value=0; elOpp.value=0;
+    localStorage.removeItem(STATE_KEY); // Clear saved state from storage
+    elOur.value=0;
+    elOpp.value=0;
     elOppName.value = "Opponent";
     elOppColor.value = "#9a9a9a";
     STATE.oppName = "Opponent";
@@ -378,7 +378,6 @@ document.getElementById("resetGame").addEventListener("click", ()=>{
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
     STATE.collapsedTO = {};
     document.querySelectorAll('.to-card.collapsed').forEach(c => c.classList.remove('collapsed'));
-    saveState();
     run();
     updateClockHelper();
   }
