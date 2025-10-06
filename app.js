@@ -410,10 +410,6 @@ function applyOpponentProfile(){
 }
 
 
-  // NEW: reflect in KO label
-  if (elOppNameInline) elOppNameInline.textContent = STATE.oppName || "Opponent";
-}
-
 // Opening KO radios
 [elWeKO, elOppKO].forEach(r=>{
   r.addEventListener("change", ()=>{
