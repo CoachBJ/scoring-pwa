@@ -21,7 +21,7 @@ let STATE = {
   oppName: "Opponent",
   oppColor: "#9a9a9a",
   collapsedTO: {},
-  weReceivedKO: false, // NEW: opening kickoff flag
+  weReceivedKO: false, // opening kickoff flag
 };
 
 // =======================
@@ -36,55 +36,56 @@ function toMMSS(s) {
   return `${m}:${String(ss).padStart(2, "0")}`;
 }
 
+// more forgiving; returns null when invalid (so field can show error)
 function fromMMSS(txt) {
-  const m = String(txt || "").trim().match(/^(\d{1,2}):?(\d{2})$/);
-  if (!m) return 0;
+  const s = String(txt || "").trim();
+  if (!s) return null;
+  let m, sec;
+  if (s.includes(":")) {
+    const parts = s.split(":");
+    if (parts.length !== 2) return null;
+    m = parseInt(parts[0], 10);
+    sec = parseInt(parts[1], 10);
+    if (Number.isNaN(m) || Number.isNaN(sec)) return null;
+    if (sec < 0 || sec > 59 || m < 0) return null;
+  } else {
+    // Allow "1200" -> 12:00, "902" -> 9:02
+    if (!/^\d{1,4}$/.test(s)) return null;
+    const n = parseInt(s, 10);
+    m = Math.floor(n / 100);
+    sec = n % 100;
+    if (sec > 59) return null;
+  }
   // hard cap 12:00 (HS quarter)
-  return clamp(parseInt(m[1], 10) * 60 + parseInt(m[2], 10), 0, 12 * 60);
+  return clamp(m * 60 + sec, 0, 12 * 60);
 }
 
-function validateInt(v) {
-  if (v === "" || v == null) return null;
-  const n = Math.floor(Number(v));
-  return Number.isNaN(n) ? null : n;
+function validateInt(v, def = null) {
+  if (v == null) return def;
+  v = String(v).trim();
+  if (v === "") return def;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : def;
 }
 
-// Readable opponent-chip theme helpers (Color Lock)
-function hexToRgb(hex) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "");
-  if (!m) return { r: 154, g: 154, b: 154 };
-  return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
-}
-function rgbToHex(r, g, b) {
-  const h = (n) => n.toString(16).padStart(2, "0");
-  return `#${h(r)}${h(g)}${h(b)}`;
-}
-function mixHex(a, b, weight) {
-  const A = hexToRgb(a), B = hexToRgb(b);
-  const w = Math.min(1, Math.max(0, weight));
-  const r = Math.round(A.r * (1 - w) + B.r * w);
-  const g = Math.round(A.g * (1 - w) + B.g * w);
-  const b2 = Math.round(A.b * (1 - w) + B.b * w);
-  return rgbToHex(r, g, b2);
-}
-function relLum({ r, g, b }) {
-  const lin = (v) => {
-    v /= 255;
-    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+// =======================
+// Theme helpers
+// =======================
+function setOppChipTheme(hex) {
+  const parse = (h) => {
+    h = (h || "").replace("#", "");
+    if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+    const r = parseInt(h.slice(0, 2), 16),
+      g = parseInt(h.slice(2, 4), 16),
+      b = parseInt(h.slice(4, 6), 16);
+    return { r, g, b };
   };
-  const R = lin(r), G = lin(g), B = lin(b);
-  return 0.2126 * R + 0.7152 * G + 0.0722 * B;
-}
-function contrastText(bgHex) {
-  return relLum(hexToRgb(bgHex)) > 0.55 ? "#000" : "#fff";
-}
-function setOppChipTheme(baseHex) {
-  const L = relLum(hexToRgb(baseHex || "#9a9a9a"));
-  // If dark, lighten a lot; if light, darken some
-  const bg = L < 0.45 ? mixHex(baseHex, "#ffffff", 0.72) : mixHex(baseHex, "#000000", 0.25);
-  const fg = contrastText(bg);
-  const br = mixHex(bg, "#000000", 0.20);
-
+  const lum = (c) => (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+  const c = parse(hex);
+  const L = lum(c);
+  const bg = hex;
+  const fg = L > 0.6 ? "#1a1a1a" : "#ffffff";
+  const br = L > 0.6 ? "#b5b5b5" : "#303030";
   const root = document.documentElement.style;
   root.setProperty("--opp-chip-bg", bg);
   root.setProperty("--opp-chip-fg", fg);
@@ -116,16 +117,19 @@ function scoreCombos(target) {
 
 function rankKey(counts) {
   const total = counts.reduce((a, b) => a + b, 0);
-  // Prefer fewer total plays, then prefer big plays
-  return [total, -counts[0], -counts[1], -counts[2], counts[3], counts[4]];
+  const usesHigh = counts[0] + counts[1]; // 8s and 7s preferred
+  const fg = counts[3];
+  const saf = counts[4];
+  return [total, -usesHigh, fg, saf];
 }
 
 function formatCombo(counts) {
   const parts = [];
-  for (let i = 0; i < counts.length; i++) {
-    if (counts[i] <= 0) continue;
-    parts.push(counts[i] > 1 ? `${counts[i]}× ${SCORING_PLAYS[i].label}` : SCORING_PLAYS[i].label);
-  }
+  counts.forEach((c, i) => {
+    if (!c) return;
+    const play = SCORING_PLAYS[i];
+    parts.push(c > 1 ? `${c}× ${play.label}` : play.label);
+  });
   return parts.join(JOINER);
 }
 
@@ -164,80 +168,49 @@ const viewRow = document.querySelector("#view-row");
 const elOurLabel = document.querySelector("#ourLabel");
 const elOppLabel = document.querySelector("#oppLabel");
 
-// Opponent/theme inputs
+// Kickoff + opponent profile
+const elWeReceivedKO = document.getElementById("weReceivedKO");
+const elSecondHalfInfo = document.getElementById("secondHalfInfo");
 const elOppName = document.getElementById("oppName");
 const elOppColor = document.getElementById("oppColor");
 
-// Kickoff + info (NEW)
-const elWeReceivedKO = document.getElementById("weReceivedKO");
-const elSecondHalfInfo = document.getElementById("secondHalfInfo");
-
-// Timeouts-left under score cards (NEW)
-const elOurTOLeft = document.getElementById("ourTOLeft");
-const elOppTOLeft = document.getElementById("oppTOLeft");
-
-// Banner
-function renderBanner(our, opp, oppName) {
-  const el = document.getElementById("banner");
-  if (!el) return;
-  el.innerHTML = `
-    <div class="badge-row">
-      <span class="pill">${TEAM_NAME}: <b>${our ?? 0}</b></span>
-      <span class="pill opp">${oppName || "Opponent"}: <b>${opp ?? 0}</b></span>
-    </div>
-  `;
-}
-
-// Output rendering
+// =======================
+// Render helpers
+// =======================
 function renderRow(list) {
-  const card = document.createElement("div");
-  card.className = "card";
-  const row = document.createElement("div");
-  row.className = "row-opts";
-  list.forEach((it, idx) => {
-    it.txt.split(JOINER).forEach((seg) => {
-      const span = document.createElement("span");
-      span.className = "segment";
-      span.textContent = seg;
-      row.appendChild(span);
-    });
-    if (idx < list.length - 1) {
-      const sep = document.createElement("span");
-      sep.textContent = "|";
-      sep.className = "muted";
-      row.appendChild(sep);
-    }
-  });
-  card.appendChild(row);
-  elOut && elOut.appendChild(card);
+  for (const { txt } of list) {
+    const p = document.createElement("p");
+    p.className = "row-line";
+    p.textContent = txt;
+    elOut && elOut.appendChild(p);
+  }
 }
-
 function renderTable(list) {
-  const card = document.createElement("div");
-  card.className = "card";
   const table = document.createElement("table");
-  table.className = "table";
-  table.innerHTML = `<thead><tr><th>Possessions</th><th>Option</th></tr></thead>`;
-  const tb = document.createElement("tbody");
-  list.forEach((it) => {
+  table.className = "combo-table";
+  table.innerHTML = `<thead><tr><th>Combo</th><th>Plays</th></tr></thead><tbody></tbody>`;
+  const tb = table.querySelector("tbody");
+  list.forEach(({ txt, plays }) => {
     const tr = document.createElement("tr");
-    const tdA = document.createElement("td");
-    tdA.innerHTML = `<span class="badge">${it.plays}</span>`;
-    const tdB = document.createElement("td");
-    tdB.className = "score-options-cell";
-    it.txt.split(JOINER).forEach((seg) => {
-      const s = document.createElement("span");
-      s.className = "segment";
-      s.textContent = seg;
-      tdB.appendChild(s);
-    });
-    tr.appendChild(tdA);
-    tr.appendChild(tdB);
+    tr.innerHTML = `<td>${txt}</td><td class="td-num">${plays}</td>`;
     tb.appendChild(tr);
   });
-  table.appendChild(tb);
-  card.appendChild(table);
-  elOut && elOut.appendChild(card);
+  elOut && elOut.appendChild(table);
+}
+
+function renderBanner(our, opp, oppName) {
+  const banner = document.createElement("div");
+  banner.id = "banner";
+  const us = document.createElement("div");
+  const them = document.createElement("div");
+  us.className = "badge-row";
+  them.className = "badge-row";
+
+  us.innerHTML = `<span class="pill"><strong>${TEAM_NAME}</strong> ${our}</span>`;
+  them.innerHTML = `<span class="pill opp"><strong>${oppName || "Opponent"}</strong> ${opp}</span>`;
+  banner.appendChild(us);
+  banner.appendChild(them);
+  elOut && elOut.appendChild(banner);
 }
 
 function renderSection(title, resultObj) {
@@ -273,80 +246,13 @@ const elSnaps = document.getElementById("snaps");
 const elClockResult = document.getElementById("clockResult");
 
 function getTimeSecs() {
-  return fromMMSS(elTimeInput ? elTimeInput.value : "0:00");
+  return validateInt(localStorage.getItem("ccs-time-secs"), 12 * 60);
 }
-function setTimeSecs(secs) {
-  if (elTimeInput) elTimeInput.value = toMMSS(secs);
-}
-
-function getGroupEl(key) {
-  return document.querySelector(`.to-card[data-key="${key}"] .to-checks`);
-}
-function getTOState(key) {
-  const g = getGroupEl(key);
-  if (!g) return [true, true, true];
-  return [...g.querySelectorAll('input[type="checkbox"]')].map((c) => !!c.checked);
-}
-function setTOState(key, arr) {
-  const g = getGroupEl(key);
-  if (!g) return;
-  const boxes = [...g.querySelectorAll('input[type="checkbox"]')];
-  for (let i = 0; i < boxes.length && i < arr.length; i++) {
-    boxes[i].checked = !!arr[i];
-  }
-}
-function countTO(key) {
-  return getTOState(key).filter(Boolean).length;
+function setTimeSecs(s) {
+  localStorage.setItem("ccs-time-secs", String(clamp(s, 0, 12 * 60)));
+  if (elTimeInput) elTimeInput.value = toMMSS(getTimeSecs());
 }
 
-function updateClockHelper() {
-  if (!elClockResult || !elPTime || !elPClk || !elSnaps || !elBallUs) return;
-
-  const half2 = !!(elHalf2 && elHalf2.checked);
-  const timeLeft = getTimeSecs();
-  const ptime = Math.max(0, Number(elPTime.value || 0)); // play duration
-  const pclk = Math.max(0, Number(elPClk.value || 0));   // clock run-off per play (when no TO)
-  const snaps = Math.max(0, Math.floor(Number(elSnaps.value || 0)));
-
-  const ourTO = half2 ? countTO("our-h2") : countTO("our-h1");
-  const oppTO = half2 ? countTO("opp-h2") : countTO("opp-h1");
-  const oppName = STATE.oppName || "Opponent";
-
-  // NEW: surface TOs left under the score cards
-  if (elOurTOLeft) elOurTOLeft.textContent = ourTO;
-  if (elOppTOLeft) elOppTOLeft.textContent = oppTO;
-
-  if (elBallUs.checked) {
-    const burn = snaps * ptime + Math.max(0, snaps - oppTO) * pclk;
-    const canBurn = Math.min(timeLeft, burn);
-    const remain = Math.max(0, timeLeft - canBurn);
-    elClockResult.innerHTML =
-      `${TEAM_NAME} has ball. ${oppName} TOs: <b>${oppTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
-      (remain === 0 ? `<b>Can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
-  } else {
-    const drain = snaps * ptime + Math.max(0, snaps - ourTO) * pclk;
-    const canDrain = Math.min(timeLeft, drain);
-    const remain = Math.max(0, timeLeft - canDrain);
-    elClockResult.innerHTML =
-      `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
-      `Time left would be ≈ <b>${toMMSS(remain)}</b>.`;
-  }
-}
-
-// Mini time buttons
-elMiniBtns.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const delta = Number(btn.dataset.delta || 0);
-    const secs = Math.max(0, getTimeSecs() + delta);
-    setTimeSecs(secs);
-    saveState();
-    updateClockHelper();
-  });
-});
-
-// Manual time commit
 function commitManualTime() {
   const secs = fromMMSS(elTimeInput.value);
   if (secs == null) {
@@ -388,99 +294,80 @@ function useTO(side) {
 elUseOurTO && elUseOurTO.addEventListener("click", () => useTO("our"));
 elUseOppTO && elUseOppTO.addEventListener("click", () => useTO("opp"));
 
-// Update calc on inputs
-elBallUs && elBallUs.addEventListener("change", () => { saveState(); updateClockHelper(); });
-[elPTime, elPClk, elSnaps].forEach(el => el && el.addEventListener("input", () => { saveState(); updateClockHelper(); }));
-[elHalf1, elHalf2].forEach(el => el && el.addEventListener("change", () => { saveState(); updateClockHelper(); }));
+function getGroupEl(key) {
+  return document.querySelector(`.to-card[data-key="${key}"] .to-checks`);
+}
+function getTOLeft(side, isH2) {
+  const g = getGroupEl(`${side}-${isH2 ? "h2" : "h1"}`);
+  if (!g) return 3;
+  return [...g.querySelectorAll('input[type="checkbox"]')].filter((x) => x.checked).length;
+}
+function updateClockHelper() {
+  const isH2 = elHalf2 && elHalf2.checked;
+  const secs = getTimeSecs();
+  const usTO = getTOLeft("our", isH2);
+  const themTO = getTOLeft("opp", isH2);
+  const haveBall = elBallUs && elBallUs.checked;
+
+  const ptime = Math.max(0, validateInt(elPTime && elPTime.value, 6));
+  const pclk = Math.max(0, validateInt(elPClk && elPClk.value, 30));
+  const snaps = Math.max(0, validateInt(elSnaps && elSnaps.value, 4));
+
+  const est = snaps * Math.max(ptime, pclk);
+  const summary = `Clock ${toMMSS(secs)} • ${haveBall ? "Us" : "Them"} ball • TOs: Us ${usTO}, Them ${themTO} • Est. time used: ${toMMSS(est)}`;
+  if (elClockResult) elClockResult.textContent = summary;
+
+  // Update small TO counts under the score cards
+  const ourSpan = document.getElementById("ourTOLeft");
+  const oppSpan = document.getElementById("oppTOLeft");
+  if (ourSpan) ourSpan.textContent = String(usTO);
+  if (oppSpan) oppSpan.textContent = String(themTO);
+}
 
 // =======================
-// Quick score chips
-// =======================
-document.querySelectorAll(".chip").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const team = btn.dataset.team;
-    const delta = Number(btn.dataset.delta || 0);
-    if (!team || !Number.isFinite(delta)) return;
-    if (team === "our" && elOur) elOur.value = String((validateInt(elOur.value) || 0) + delta);
-    if (team === "opp" && elOpp) elOpp.value = String((validateInt(elOpp.value) || 0) + delta);
-    saveState();
-    run();
-  });
-});
-
-// =======================
-// State (save/load)
+// State save/load
 // =======================
 function saveState() {
-  // store collapsed state for TO cards
-  document.querySelectorAll('.to-card[data-key]').forEach((card) => {
-    STATE.collapsedTO[card.dataset.key] = card.classList.contains("collapsed");
-  });
-
-  const s = {
-    our: Number(elOur && elOur.value || 0),
-    opp: Number(elOpp && elOpp.value || 0),
-    half: elHalf2 && elHalf2.checked ? 2 : 1,
-    time: getTimeSecs(),
-    to: {
-      "our-h1": getTOState("our-h1"),
-      "opp-h1": getTOState("opp-h1"),
-      "our-h2": getTOState("our-h2"),
-      "opp-h2": getTOState("opp-h2"),
-    },
+  const st = {
     oppName: STATE.oppName,
     oppColor: STATE.oppColor,
     collapsedTO: STATE.collapsedTO,
-    weReceivedKO: STATE.weReceivedKO, // NEW
+    weReceivedKO: STATE.weReceivedKO,
+    time: getTimeSecs(),
+    scores: { our: elOur && elOur.value, opp: elOpp && elOpp.value },
+    to: ["our-h1", "opp-h1", "our-h2", "opp-h2"].map((key) => ({
+      key,
+      boxes: [...(getGroupEl(key)?.querySelectorAll('input[type="checkbox"]') || [])].map((b) => b.checked),
+    })),
   };
-  localStorage.setItem(STATE_KEY, JSON.stringify(s));
+  localStorage.setItem(STATE_KEY, JSON.stringify(st));
 }
-
 function loadState() {
   try {
-    const s = JSON.parse(localStorage.getItem(STATE_KEY) || "{}");
+    const st = JSON.parse(localStorage.getItem(STATE_KEY) || "{}");
+    STATE.oppName = st.oppName || STATE.oppName;
+    STATE.oppColor = st.oppColor || STATE.oppColor;
+    STATE.collapsedTO = st.collapsedTO || {};
+    STATE.weReceivedKO = !!st.weReceivedKO;
 
-    if (elOur) elOur.value = String(s.our ?? 0);
-    if (elOpp) elOpp.value = String(s.opp ?? 0);
+    if (elOur && st.scores?.our != null) elOur.value = String(validateInt(st.scores.our, 0));
+    if (elOpp && st.scores?.opp != null) elOpp.value = String(validateInt(st.scores.opp, 0));
+    if (typeof st.time === "number") setTimeSecs(st.time);
 
-    if (elHalf1 && elHalf2) {
-      if (s.half === 2) elHalf2.checked = true;
-      else elHalf1.checked = true;
-    }
-
-    setTimeSecs(Number.isFinite(s.time) ? s.time : 12*60);
-
-    ["our-h1", "opp-h1", "our-h2", "opp-h2"].forEach((k) => setTOState(k, s.to?.[k] ?? [true, true, true]));
-
-    STATE.oppName = s.oppName || "Opponent";
-    STATE.oppColor = s.oppColor || "#9a9a9a";
-    STATE.collapsedTO = s.collapsedTO || {};
-
-    // NEW: opening kickoff
-    STATE.weReceivedKO = !!s.weReceivedKO;
-    if (elWeReceivedKO) elWeReceivedKO.checked = STATE.weReceivedKO;
-
-    // apply collapses
-    document.querySelectorAll('.to-card[data-key]').forEach((card) => {
-      const k = card.dataset.key;
-      if (STATE.collapsedTO[k]) card.classList.add("collapsed");
-      else card.classList.remove("collapsed");
+    (st.to || []).forEach(({ key, boxes }) => {
+      const g = getGroupEl(key);
+      if (!g) return;
+      const cbs = [...g.querySelectorAll('input[type="checkbox"]')];
+      for (let i = 0; i < Math.min(cbs.length, boxes.length); i++) cbs[i].checked = !!boxes[i];
     });
-
-    applyOpponentProfile();
-    updateSecondHalfInfo(); // NEW
-  } catch (e) {
-    console.error("Failed to load state", e);
-    setTimeSecs(12*60);
-    ["our-h1", "opp-h1", "our-h2", "opp-h2"].forEach((k) => setTOState(k, [true, true, true]));
-  }
+  } catch (_) {}
 }
 
 // =======================
-// Opponent profile + kickoff info
+// Opponent profile + kickoff
 // =======================
-function applyOpponentProfile() {
-  if (elOppName) elOppName.value = STATE.oppName;
+function applyOpponentProfile(skipInputWrite = false) {
+  if (!skipInputWrite && elOppName) elOppName.value = STATE.oppName;
   if (elOppColor) elOppColor.value = STATE.oppColor;
 
   // theme vars
@@ -505,7 +392,7 @@ function updateSecondHalfInfo() {
 // inputs
 elOppName && elOppName.addEventListener("input", () => {
   STATE.oppName = elOppName.value || "Opponent";
-  applyOpponentProfile();
+  applyOpponentProfile(true);
   saveState();
   run();
 });
@@ -514,20 +401,23 @@ elOppColor && elOppColor.addEventListener("input", () => {
   applyOpponentProfile();
   saveState();
 });
-
-// NEW: opening kickoff checkbox listener
 elWeReceivedKO && elWeReceivedKO.addEventListener("change", () => {
   STATE.weReceivedKO = !!elWeReceivedKO.checked;
-  saveState();
   updateSecondHalfInfo();
+  saveState();
+});
+
+// Keep manual TO checkbox changes synced
+document.querySelectorAll('.to-checks input[type="checkbox"]').forEach((cb) => {
+  cb.addEventListener("change", () => {
+    saveState();
+    updateClockHelper();
+  });
 });
 
 // =======================
-// Main scoring run
+// Run combos (now for both teams)
 // =======================
-[elOur, elOpp].forEach((el) => el && el.addEventListener("input", run));
-[viewTable, viewRow].forEach((el) => el && el.addEventListener("change", run));
-
 function run() {
   if (!elOut) return;
 
@@ -544,13 +434,15 @@ function run() {
 
   renderBanner(our, opp, STATE.oppName);
 
-  // Build two sections: what we need to TIE and to LEAD
-  const diff = Math.max(0, opp - our);
-  const toTie = buildItems(diff, MAX_RESULTS);
-  renderSection("To tie", toTie);
+  // Build sections for both teams
+  const usDiff = Math.max(0, opp - our);
+  renderSection("Us: to tie", buildItems(usDiff, MAX_RESULTS));
+  renderSection("Us: to lead", buildItems(usDiff + 1, MAX_RESULTS));
 
-  const toLead = buildItems(diff + 1, MAX_RESULTS);
-  renderSection("To lead", toLead);
+  const oppName = STATE.oppName || "Opponent";
+  const theirDiff = Math.max(0, our - opp);
+  renderSection(`${oppName}: to tie`, buildItems(theirDiff, MAX_RESULTS));
+  renderSection(`${oppName}: to lead`, buildItems(theirDiff + 1, MAX_RESULTS));
 }
 
 // =======================
@@ -561,31 +453,54 @@ elReset && elReset.addEventListener("click", () => {
   if (elOur) elOur.value = "0";
   if (elOpp) elOpp.value = "0";
   if (elHalf1 && elHalf2) elHalf1.checked = true;
-  setTimeSecs(12*60);
+  setTimeSecs(12 * 60);
   ["our-h1", "opp-h1", "our-h2", "opp-h2"].forEach((k) => setTOState(k, [true, true, true]));
   STATE.collapsedTO = {};
   document.querySelectorAll(".to-card.collapsed").forEach((c) => c.classList.remove("collapsed"));
-  // NEW: reset opening kickoff
-  STATE.weReceivedKO = false;
+  // NEW kickoff default
   if (elWeReceivedKO) elWeReceivedKO.checked = false;
-  saveState();
-  run();
-  updateClockHelper();
+  STATE.weReceivedKO = false;
   updateSecondHalfInfo();
+  saveState();
+  updateClockHelper();
+  run();
 });
 
-document.querySelectorAll(".to-title").forEach((title) => {
-  title.addEventListener("click", () => {
-    const card = title.closest('.to-card[data-key]');
-    if (!card) return;
+document.querySelectorAll(".to-card .to-title").forEach((t) => {
+  t.addEventListener("click", () => {
+    const card = t.closest(".to-card");
     card.classList.toggle("collapsed");
+    const key = card.getAttribute("data-key");
+    STATE.collapsedTO[key] = card.classList.contains("collapsed");
     saveState();
   });
 });
 
-// Keep manual TO checkbox changes synced
-document.querySelectorAll('.to-checks input[type="checkbox"]').forEach((cb) => {
-  cb.addEventListener("change", () => {
+function setTOState(key, arr) {
+  const g = getGroupEl(key);
+  if (!g) return;
+  const cbs = [...g.querySelectorAll('input[type="checkbox"]')];
+  for (let i = 0; i < Math.min(cbs.length, arr.length); i++) cbs[i].checked = !!arr[i];
+}
+
+// quick score buttons
+document.querySelectorAll(".chip[data-delta]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const delta = parseInt(btn.getAttribute("data-delta"), 10) || 0;
+    const team = btn.getAttribute("data-team");
+    const input = team === "our" ? elOur : elOpp;
+    if (!input) return;
+    input.value = String(Math.max(0, (validateInt(input.value, 0) || 0) + delta));
+    saveState();
+    run();
+  });
+});
+
+// time micro buttons
+elMiniBtns.forEach((b) => {
+  b.addEventListener("click", () => {
+    const d = parseInt(b.getAttribute("data-delta"), 10) || 0;
+    setTimeSecs(getTimeSecs() + d);
     saveState();
     updateClockHelper();
   });
@@ -593,5 +508,7 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach((cb) => {
 
 // Initial boot
 loadState();
+applyOpponentProfile();
+updateSecondHalfInfo();
 updateClockHelper();
 run();
