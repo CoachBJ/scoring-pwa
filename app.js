@@ -4,7 +4,7 @@
 
 const TEAM_NAME = "Charlotte Christian";
 const MAX_RESULTS = 200;
-const MAX_TIME_SECS = 12 * 60; // ADDED: 12 minute maximum for the clock
+const MAX_TIME_SECS = 12 * 60; // 12 minute maximum for the clock
 
 // ----- Scoring definitions -----
 const SCORING_PLAYS = [
@@ -20,7 +20,6 @@ const JOINER = " • ";
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; };
 
-// CHANGED: Rewritten this function to be more flexible
 const fromMMSS = (txt) => {
   const str = String(txt || "").trim();
   if (!str) return null;
@@ -148,19 +147,19 @@ function setTOState(key, arr){ const g=getGroupEl(key); if(!g) return; const box
 function countTO(key){ return getTOState(key).filter(Boolean).length; }
 
 function getTimeSecs(){ const s=fromMMSS(elTimeInput.value); return s==null?0:s; }
-// CHANGED: Use MAX_TIME_SECS here
 function setTimeSecs(secs){ elTimeInput.value = toMMSS(clamp(secs,0,MAX_TIME_SECS)); }
 
 elMiniBtns.forEach(b=>{
   b.addEventListener("click", ()=>{
     let secs = getTimeSecs();
-    // CHANGED: Use MAX_TIME_SECS here
     secs = clamp(secs + Number(b.dataset.dt), 0, MAX_TIME_SECS);
     setTimeSecs(secs); saveState(); updateClockHelper();
   });
 });
 elTimeInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ commitManualTime(); }});
 elTimeInput.addEventListener("blur", commitManualTime);
+elTimeInput.addEventListener("focus", ()=>{ elTimeInput.select(); }); // ADDED: Select all text on focus
+
 function commitManualTime(){
   const secs=fromMMSS(elTimeInput.value);
   if(secs==null){ elTimeInput.classList.add("error"); return; }
