@@ -71,6 +71,17 @@ function buildItems(target, cap){
     .sort((a,b)=>{ for(let i=0;i<a.key.length;i++){ if(a.key[i]!==b.key[i]) return a.key[i]-b.key[i]; } return a.txt.localeCompare(b.txt); });
   const seen=new Set(), out=[]; for(const it of items){ if(seen.has(it.txt)) continue; seen.add(it.txt); out.push(it); if(out.length>=cap) break; }
   return { list: out };
+
+
+  // This function determines if a color is light or dark
+function getContrastColor(hex) {
+    if (!hex) return '#ffffff';
+    const r = parseInt(hex.substr(1, 2), 16);
+    const g = parseInt(hex.substr(3, 2), 16);
+    const b = parseInt(hex.substr(5, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#000000' : '#ffffff'; // Return black for light colors, white for dark
+}
 }
 
 // ----- DOM refs: scores/options -----
@@ -283,17 +294,19 @@ function loadState(){
   }
 }
 
-// Opponent profile
+
+
+// And change it to this:
 function applyOpponentProfile(){
   elOppName.value = STATE.oppName;
   elOppColor.value = STATE.oppColor;
-  document.documentElement.style.setProperty('--opp', STATE.oppColor);
+  const oppTextColor = getContrastColor(STATE.oppColor); // Calculate contrast color
+  const root = document.documentElement;
+  root.style.setProperty('--opp', STATE.oppColor); // Set opponent's main color
+  root.style.setProperty('--opp-text', oppTextColor); // Set opponent's text color
   elOppLabel.textContent = STATE.oppName;
   elOurLabel.textContent = TEAM_NAME;
 }
-elOppName.addEventListener('input', ()=>{ STATE.oppName = elOppName.value || "Opponent"; applyOpponentProfile(); saveState(); run(); });
-elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; applyOpponentProfile(); saveState(); });
-
 
 // ----- Main scoring run -----
 [elOur,elOpp].forEach(el=>el.addEventListener("input", run)); // Recalculate on score change
