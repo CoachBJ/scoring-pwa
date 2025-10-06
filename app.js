@@ -20,6 +20,16 @@ const JOINER = " • ";
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; };
 
+// MOVED & FIXED: Placed getContrastColor here with other helper functions.
+function getContrastColor(hex) {
+    if (!hex) return '#ffffff';
+    const r = parseInt(hex.substr(1, 2), 16);
+    const g = parseInt(hex.substr(3, 2), 16);
+    const b = parseInt(hex.substr(5, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#000000' : '#ffffff'; // Return black for light colors, white for dark
+}
+
 const fromMMSS = (txt) => {
   const str = String(txt || "").trim();
   if (!str) return null;
@@ -71,17 +81,6 @@ function buildItems(target, cap){
     .sort((a,b)=>{ for(let i=0;i<a.key.length;i++){ if(a.key[i]!==b.key[i]) return a.key[i]-b.key[i]; } return a.txt.localeCompare(b.txt); });
   const seen=new Set(), out=[]; for(const it of items){ if(seen.has(it.txt)) continue; seen.add(it.txt); out.push(it); if(out.length>=cap) break; }
   return { list: out };
-
-
-  // This function determines if a color is light or dark
-function getContrastColor(hex) {
-    if (!hex) return '#ffffff';
-    const r = parseInt(hex.substr(1, 2), 16);
-    const g = parseInt(hex.substr(3, 2), 16);
-    const b = parseInt(hex.substr(5, 2), 16);
-    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    return (yiq >= 128) ? '#000000' : '#ffffff'; // Return black for light colors, white for dark
-}
 }
 
 // ----- DOM refs: scores/options -----
@@ -169,7 +168,7 @@ elMiniBtns.forEach(b=>{
 });
 elTimeInput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ commitManualTime(); }});
 elTimeInput.addEventListener("blur", commitManualTime);
-elTimeInput.addEventListener("focus", ()=>{ elTimeInput.select(); }); // ADDED: Select all text on focus
+elTimeInput.addEventListener("focus", ()=>{ elTimeInput.select(); });
 
 function commitManualTime(){
   const secs=fromMMSS(elTimeInput.value);
@@ -242,12 +241,12 @@ function updateClockHelper(){
     elClockResult.innerHTML =
       `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
       `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
-      `Time left would be ≈ <b>${toMMSS(remain)}</b>.`; // Append the remaining time
+      `Time left would be ≈ <b>${toMMSS(remain)}</b>.`;
   }
 }
 
 // ----- State -----
-const STATE_KEY="ccs-gamemanager-state-v2"; // Changed key to avoid conflicts
+const STATE_KEY="ccs-gamemanager-state-v2";
 let STATE = { oppName:"Opponent", oppColor:"#9a9a9a", collapsedTO: {} };
 
 function saveState(){
@@ -270,7 +269,7 @@ function loadState(){
     elOur.value = s.our || 0;
     elOpp.value = s.opp || 0;
     (s.half===2?elHalf2:elHalf1).checked=true;
-    setTimeSecs(typeof s.time==="number"? s.time : MAX_TIME_SECS); // Default to max time
+    setTimeSecs(typeof s.time==="number"? s.time : MAX_TIME_SECS);
 
     if(s.to){ Object.keys(s.to).forEach(k=> setTOState(k, s.to[k])); }
     else { ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true])); }
@@ -289,29 +288,41 @@ function loadState(){
 
   }catch(e){
     console.error("Failed to load state", e);
-    setTimeSecs(MAX_TIME_SECS); // Default to max time
+    setTimeSecs(MAX_TIME_SECS);
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
   }
 }
 
-
-
-// And change it to this:
+// Opponent profile
 function applyOpponentProfile(){
   elOppName.value = STATE.oppName;
   elOppColor.value = STATE.oppColor;
-  const oppTextColor = getContrastColor(STATE.oppColor); // Calculate contrast color
+  const oppTextColor = getContrastColor(STATE.oppColor);
   const root = document.documentElement;
-  root.style.setProperty('--opp', STATE.oppColor); // Set opponent's main color
-  root.style.setProperty('--opp-text', oppTextColor); // Set opponent's text color
+  root.style.setProperty('--opp', STATE.oppColor);
+  root.style.setProperty('--opp-text', oppTextColor);
   elOppLabel.textContent = STATE.oppName;
   elOurLabel.textContent = TEAM_NAME;
 }
 
+// FIXED: Removed .trim() to allow spaces in opponent's name.
+elOppName.addEventListener('input', ()=>{ STATE.oppName = elOppName.value || "Opponent"; applyOpponentProfile(); saveState(); run(); });
+elOppColor.addEventListener('input', ()=>{ STATE.oppColor = elOppColor.value; applyOpponentProfile(); saveState(); });
+
+
 // ----- Main scoring run -----
-[elOur,elOpp].forEach(el=>el.addEventListener("input", run)); // Recalculate on score change
+[elOur,elOpp].forEach(el=>el.addEventListener("input", run));
 [viewTable, viewRow].forEach(el => el.addEventListener('change', run));
 
+// ADDED: Prevents scores from being negative.
+[elOur, elOpp].forEach(el => {
+    el.addEventListener('change', () => {
+        const score = parseInt(el.value, 10);
+        if (isNaN(score) || score < 0) {
+            el.value = 0;
+        }
+    });
+});
 
 function run(){
   elOut.innerHTML=""; elStatus.textContent="";
@@ -322,22 +333,18 @@ function run(){
 
   renderBanner(our, opp, STATE.oppName);
 
-  // Simplified logic to always be "auto"
   let teamNeeding = our > opp ? "opp" : our < opp ? "us" : "either";
 
   if (teamNeeding !== 'either') {
     const diff=Math.abs(our-opp);
     const tieTarget=diff, leadTarget=diff+1;
-
     const teamLabel = teamNeeding==="us" ? `${TEAM_NAME} needs` : `${STATE.oppName} needs`;
-
     const tieRes = buildItems(tieTarget, MAX_RESULTS);
     const leadRes= buildItems(leadTarget, MAX_RESULTS);
 
     renderSection(`${teamLabel} to Tie`, tieRes);
     renderSection(`${teamLabel} to Take the Lead`, leadRes);
   } else {
-     // If scores are tied, don't show the output section, the banner handles it.
      elOut.innerHTML = "";
   }
 
@@ -354,7 +361,7 @@ document.getElementById("resetGame").addEventListener("click", ()=>{
     STATE.oppColor = "#9a9a9a";
     applyOpponentProfile();
     document.getElementById("half1").checked=true;
-    setTimeSecs(MAX_TIME_SECS); // Reset to max time
+    setTimeSecs(MAX_TIME_SECS);
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
     STATE.collapsedTO = {};
     document.querySelectorAll('.to-card.collapsed').forEach(c => c.classList.remove('collapsed'));
@@ -375,7 +382,7 @@ document.querySelectorAll('.to-title').forEach(title => {
   });
 });
 
-// *** FIX: Add event listeners for manual timeout checkbox changes ***
+// Event listener for manual timeout checkbox changes
 document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox => {
     checkbox.addEventListener('change', () => {
         saveState();
