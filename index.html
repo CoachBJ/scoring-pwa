@@ -77,21 +77,16 @@
 
 <!-- Officials (inputs) -->
 <div class="subhead">Officials</div>
+<div class="row compact">
+  <label class="w-30">Head Ref</label>
+  <input id="headRef" type="text" placeholder="Enter head ref name" autocomplete="off" />
+</div>
+<div class="row compact">
+  <label class="w-30">Side Judge (our sideline)</label>
+  <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
+</div>
 
-<details id="officialsInputs" open>
-  <summary class="details-summary">Tap to edit officials</summary>
-
-  <div class="row compact">
-    <label class="w-30">Head Ref</label>
-    <input id="headRef" type="text" placeholder="Enter head ref name" autocomplete="off" />
-  </div>
-  <div class="row compact">
-    <label class="w-30">Side Judge (our sideline)</label>
-    <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
-  </div>
-</details>
-
-<!-- Sticky officials + 2nd-half info -->
+<!-- Sticky officials + 2nd-half info (single source of truth) -->
 <div class="sticky-officials" id="stickyOfficials">
   <div id="secondHalfInfo" class="muted tiny-info">2nd-half kickoff: —</div>
 
@@ -100,10 +95,8 @@
     <div class="official-name" id="sideJudgeDisplay"></div>
   </div>
 
-  <button type="button" id="editOfficials" class="link-btn small">Edit officials</button>
   <button type="button" id="clearOfficials" class="link-btn small">Clear officials</button>
 </div>
-
 
 
 
@@ -192,31 +185,12 @@
           <button id="useOppTO" class="mini opp">Use Opp TO (current half)</button>
         </div>
 
-<div class="subhead">Clock Helper</div>
-
-<details id="clockAdvanced">
-  <summary class="details-summary">Advanced settings</summary>
-
-  <div class="row toggles compact">
-    <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
-    <label><input type="radio" name="ball" id="ballThem"><span id="ballThemName">Opponent</span> has ball</label>
-  </div>
-  <div class="row compact">
-    <label>Snaps this series</label>
-    <input id="snaps" type="number" min="1" max="4" value="3" autocomplete="off" />
-  </div>
-  <div class="row compact">
-    <label>Play clock</label>
-    <input id="playClock" type="number" min="20" max="45" value="40" autocomplete="off" />
-  </div>
-  <div class="row compact">
-    <label>Avg play time</label>
-    <input id="playTime" type="number" min="1" max="15" value="6" autocomplete="off" />
-  </div>
-</details>
-
-<div id="clockResult" class="muted"></div>
-
+        <div class="subhead">Clock Helper</div>
+        <div class="row toggles compact">
+          <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
+          <label><input type="radio" name="ball" id="ballThem">
+  <span id="ballThemName">Opponent</span> has ball
+</label>
 
         </div>
         <div class="row compact">
@@ -249,4 +223,3 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
-
