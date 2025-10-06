@@ -28,6 +28,8 @@ let STATE = {
 // Utils
 // =======================
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
 function toMMSS(s) {
   s = Math.max(0, Math.floor(s || 0));
@@ -159,20 +161,23 @@ function buildItems(target, cap) {
 // =======================
 // DOM refs
 // =======================
-const elOur = document.querySelector("#ourScore");
-const elOpp = document.querySelector("#oppScore");
-const elOut = document.querySelector("#output");
-const elStatus = document.querySelector("#status");
-const viewTable = document.querySelector("#view-table");
-const viewRow = document.querySelector("#view-row");
-const elOurLabel = document.querySelector("#ourLabel");
-const elOppLabel = document.querySelector("#oppLabel");
+const elOur = $("#ourScore");
+const elOpp = $("#oppScore");
+const elOut = $("#output");
+const elStatus = $("#status");
+const viewTable = $("#view-table");
+const viewRow = $("#view-row");
+const elOurLabel = $("#ourLabel");
+const elOppLabel = $("#oppLabel");
 
 // Kickoff + opponent profile
-const elWeReceivedKO = document.getElementById("weReceivedKO");
-const elSecondHalfInfo = document.getElementById("secondHalfInfo");
-const elOppName = document.getElementById("oppName");
-const elOppColor = document.getElementById("oppColor");
+const elWeReceivedKO = $("#weReceivedKO");
+const elSecondHalfInfo = $("#secondHalfInfo");
+const elOppName = $("#oppName");
+const elOppColor = $("#oppColor");
+
+// Bottom sticky bar
+const elBottomBar = $("#bottomBar");
 
 // =======================
 // Render helpers
@@ -234,16 +239,16 @@ function renderSection(title, resultObj) {
 // =======================
 // Game clock / Timeouts
 // =======================
-const elHalf1 = document.getElementById("half1");
-const elHalf2 = document.getElementById("half2");
-const elTimeInput = document.getElementById("timeInput");
-const elMiniBtns = document.querySelectorAll(".mini");
+const elHalf1 = $("#half1");
+const elHalf2 = $("#half2");
+const elTimeInput = $("#timeInput");
+const elMiniBtns = $$(".mini");
 
-const elBallUs = document.getElementById("ballUs");
-const elPTime = document.getElementById("ptime");
-const elPClk = document.getElementById("pclk");
-const elSnaps = document.getElementById("snaps");
-const elClockResult = document.getElementById("clockResult");
+const elBallUs = $("#ballUs");
+const elPTime = $("#ptime");
+const elPClk = $("#pclk");
+const elSnaps = $("#snaps");
+const elClockResult = $("#clockResult");
 
 function getTimeSecs() {
   return validateInt(localStorage.getItem("ccs-time-secs"), 12 * 60);
@@ -270,8 +275,8 @@ elTimeInput && elTimeInput.addEventListener("keydown", (e) => {
 elTimeInput && elTimeInput.addEventListener("blur", commitManualTime);
 
 // One-tap Use TO
-const elUseOurTO = document.getElementById("useOurTO");
-const elUseOppTO = document.getElementById("useOppTO");
+const elUseOurTO = $("#useOurTO");
+const elUseOppTO = $("#useOppTO");
 
 function useTO(side) {
   const half2 = elHalf2 && elHalf2.checked;
@@ -318,10 +323,15 @@ function updateClockHelper() {
   if (elClockResult) elClockResult.textContent = summary;
 
   // Update small TO counts under the score cards
-  const ourSpan = document.getElementById("ourTOLeft");
-  const oppSpan = document.getElementById("oppTOLeft");
+  const ourSpan = $("#ourTOLeft");
+  const oppSpan = $("#oppTOLeft");
   if (ourSpan) ourSpan.textContent = String(usTO);
   if (oppSpan) oppSpan.textContent = String(themTO);
+
+  // Update bottom sticky bar
+  if (elBottomBar) {
+    elBottomBar.textContent = `${isH2 ? "2nd Half" : "1st Half"} • Time left ${toMMSS(secs)} • ${haveBall ? "Us" : "Them"} ball • TOs Us ${usTO} / Them ${themTO}`;
+  }
 }
 
 // =======================
@@ -408,7 +418,7 @@ elWeReceivedKO && elWeReceivedKO.addEventListener("change", () => {
 });
 
 // Keep manual TO checkbox changes synced
-document.querySelectorAll('.to-checks input[type="checkbox"]').forEach((cb) => {
+$$('.to-checks input[type="checkbox"]').forEach((cb) => {
   cb.addEventListener("change", () => {
     saveState();
     updateClockHelper();
@@ -416,7 +426,7 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach((cb) => {
 });
 
 // =======================
-// Run combos (now for both teams)
+// Run combos (both teams)
 // =======================
 function run() {
   if (!elOut) return;
@@ -446,9 +456,9 @@ function run() {
 }
 
 // =======================
-// Reset, collapsible TO cards, listeners
+// Reset, listeners, big pads
 // =======================
-const elReset = document.getElementById("resetGame");
+const elReset = $("#resetGame");
 elReset && elReset.addEventListener("click", () => {
   if (elOur) elOur.value = "0";
   if (elOpp) elOpp.value = "0";
@@ -457,7 +467,7 @@ elReset && elReset.addEventListener("click", () => {
   ["our-h1", "opp-h1", "our-h2", "opp-h2"].forEach((k) => setTOState(k, [true, true, true]));
   STATE.collapsedTO = {};
   document.querySelectorAll(".to-card.collapsed").forEach((c) => c.classList.remove("collapsed"));
-  // NEW kickoff default
+  // kickoff default
   if (elWeReceivedKO) elWeReceivedKO.checked = false;
   STATE.weReceivedKO = false;
   updateSecondHalfInfo();
@@ -466,7 +476,7 @@ elReset && elReset.addEventListener("click", () => {
   run();
 });
 
-document.querySelectorAll(".to-card .to-title").forEach((t) => {
+$$(".to-card .to-title").forEach((t) => {
   t.addEventListener("click", () => {
     const card = t.closest(".to-card");
     card.classList.toggle("collapsed");
@@ -483,9 +493,26 @@ function setTOState(key, arr) {
   for (let i = 0; i < Math.min(cbs.length, arr.length); i++) cbs[i].checked = !!arr[i];
 }
 
-// quick score buttons
-document.querySelectorAll(".chip[data-delta]").forEach((btn) => {
-  btn.addEventListener("click", () => {
+// Press-and-hold helper for pads
+function addRepeatPress(el, handler) {
+  let timer = null;
+  const start = () => {
+    handler();
+    timer = setInterval(handler, 180);
+  };
+  const stop = () => {
+    if (timer) { clearInterval(timer); timer = null; }
+  };
+  el.addEventListener("mousedown", start);
+  el.addEventListener("touchstart", start, { passive: true });
+  ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach((ev) =>
+    el.addEventListener(ev, stop)
+  );
+}
+
+// score buttons (chips & pads)
+$$(".chip[data-delta], .pad[data-delta]").forEach((btn) => {
+  const doDelta = () => {
     const delta = parseInt(btn.getAttribute("data-delta"), 10) || 0;
     const team = btn.getAttribute("data-team");
     const input = team === "our" ? elOur : elOpp;
@@ -493,7 +520,9 @@ document.querySelectorAll(".chip[data-delta]").forEach((btn) => {
     input.value = String(Math.max(0, (validateInt(input.value, 0) || 0) + delta));
     saveState();
     run();
-  });
+  };
+  btn.addEventListener("click", doDelta);
+  addRepeatPress(btn, doDelta);
 });
 
 // time micro buttons
