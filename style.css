@@ -16,6 +16,7 @@ body {
     margin: 0;
     background-color: var(--background-color);
     color: var(--text-color);
+    touch-action: manipulation; /* Disables double-tap to zoom */
 }
 
 main {
@@ -323,7 +324,7 @@ input.error { border-color: var(--danger-color); }
 }
 .table th {
     font-weight: 600;
-    font-sze: 0.9em;
+    font-size: 0.9em;
     color: var(--muted-color);
     white-space: nowrap;
 }
@@ -358,7 +359,6 @@ input.error { border-color: var(--danger-color); }
     border: 1px solid var(--border-color);
     white-space: nowrap;
 }
-
 
 
 /* --- Responsive Adjustments --- */
