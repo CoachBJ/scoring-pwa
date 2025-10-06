@@ -1,5 +1,5 @@
 // PROD SW (root)
-const CACHE = 'scoring-prod-v3'; // bump on each release
+const CACHE = 'scoring-prod-v4'; // bump on each release
 const ASSETS = [
   '/scoring-pwa/',
   '/scoring-pwa/index.html',
