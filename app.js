@@ -33,6 +33,19 @@ function getContrastColor(hex) {
     const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
     return (yiq >= 128) ? '#000000' : '#ffffff'; // Return black for light colors, white for dark
 }
+function updateTOHeadings() {
+  const opp = STATE.oppName || "Opponent";
+
+  const ourH1 = document.querySelector('.to-card[data-key="our-h1"] .to-title span');
+  const ourH2 = document.querySelector('.to-card[data-key="our-h2"] .to-title span');
+  const oppH1 = document.querySelector('.to-card[data-key="opp-h1"] .to-title span');
+  const oppH2 = document.querySelector('.to-card[data-key="opp-h2"] .to-title span');
+
+  if (ourH1) ourH1.textContent = "Charlotte Christian TOs — 1st";
+  if (ourH2) ourH2.textContent = "Charlotte Christian TOs — 2nd";
+  if (oppH1) oppH1.textContent = `${opp} TOs — 1st`;
+  if (oppH2) oppH2.textContent = `${opp} TOs — 2nd`;
+}
 
 const fromMMSS = (txt) => {
   const str = String(txt || "").trim();
@@ -69,6 +82,15 @@ const fromMMSS = (txt) => {
 };
 
 // ----- Scoring core -----
+function updateSecondHalfInfo(){
+  if (!elSecondHalfInfo) return;
+  let txt = "2nd-half kickoff: —";
+  if (STATE.openingKO === "we")  txt = "2nd-half kickoff: Opponent";
+  if (STATE.openingKO === "opp") txt = "2nd-half kickoff: Charlotte Christian";
+  elSecondHalfInfo.textContent = txt;
+}
+
+
 function scoreCombos(target){
   const combos=[], counts=new Array(SCORING_PLAYS.length).fill(0);
   function dfs(rem,start){ if(rem===0){combos.push([...counts]);return;}
@@ -103,6 +125,7 @@ const elWeKO = document.getElementById("weReceivedKO");
 const elOppKO = document.getElementById("oppReceivedKO");
 const elSecondHalfInfo = document.getElementById("secondHalfInfo");
 const elOppNameInline = document.getElementById("oppNameInline");
+
 
 const elHeadRef = document.getElementById("headRef");
 const elSideJudge = document.getElementById("sideJudge");
@@ -378,6 +401,15 @@ function applyOpponentProfile(){
   root.style.setProperty('--opp-text', oppTextColor);
   elOppLabel.textContent = STATE.oppName;
   elOurLabel.textContent = TEAM_NAME;
+  const elBallThemName = document.getElementById('ballThemName');
+if (elBallThemName) elBallThemName.textContent = STATE.oppName || "Opponent";
+
+  applyOpponentProfile();
+updateTOHeadings();
+
+    
+});
+
 
   // NEW: reflect in KO label
   if (elOppNameInline) elOppNameInline.textContent = STATE.oppName || "Opponent";
@@ -473,6 +505,19 @@ document.getElementById("resetGame").addEventListener("click", ()=>{
     setTimeSecs(MAX_TIME_SECS);
     ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
     STATE.collapsedTO = {};
+    // Clear KO radios
+if (elWeKO)  elWeKO.checked = false;
+if (elOppKO) elOppKO.checked = false;
+STATE.openingKO = null;
+updateSecondHalfInfo();
+
+// Clear officials
+if (elHeadRef)   elHeadRef.value   = "";
+if (elSideJudge) elSideJudge.value = "";
+STATE.officials = { headRef: "", sideJudge: "" };
+renderOfficials();
+saveState();
+
     document.querySelectorAll('.to-card.collapsed').forEach(c => c.classList.remove('collapsed'));
     run();
     updateClockHelper();
