@@ -166,7 +166,7 @@ function setTimeSecs(secs){ elTimeInput.value = toMMSS(clamp(secs,0,MAX_TIME_SEC
 elMiniBtns.forEach(b=>{
   b.addEventListener("click", ()=>{
     let secs = getTimeSecs();
-    secs = clamp(secs + Number(b.dataset.dt), 0, MAX_IIME_SECS);
+    secs = clamp(secs + Number(b.dataset.dt), 0, MAX_TIME_SECS);
     setTimeSecs(secs); saveState(); updateClockHelper();
   });
 });
