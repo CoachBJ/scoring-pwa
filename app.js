@@ -19,6 +19,18 @@ const SCORING_PLAYS = [
 ];
 const JOINER = " • ";
 
+// Helper: read CSS vars (e.g., --primary-color, --opp)
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+// Helper: theme the clock result based on who has ball
+function setClockResultTheme(weHaveBall){
+  const bg = weHaveBall ? cssVar('--primary-color') : cssVar('--opp');
+  const fg = weHaveBall ? getContrastColor(bg) : cssVar('--opp-text') || getContrastColor(bg);
+  if (elClockResult){
+    elClockResult.style.background = bg || '#005a9c';
+    elClockResult.style.color = fg || '#fff';
+  }
+}
 
 
 // --- Robust helpers ---
