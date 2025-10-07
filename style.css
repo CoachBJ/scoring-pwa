@@ -563,3 +563,12 @@ input[type="number"] {
 
 /* optional “pressing” visual for long-press (below) */
 .btn-pressing { filter: brightness(.92); }
+
+
+/* iPad touch fixes */
+button, .chip, .mini {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
