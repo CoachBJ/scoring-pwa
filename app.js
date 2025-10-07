@@ -280,7 +280,7 @@ function renderOfficials(){
 const elHalf1=document.getElementById("half1");
 const elHalf2=document.getElementById("half2");
 const elTimeInput=document.getElementById("timeInput");
-const elMiniBtns=document.querySelectorAll(".mini");
+const elMiniBtns = document.querySelectorAll('.mini[data-dt]');
 
 function getGroupEl(key){ return document.querySelector(`.to-card[data-key="${key}"] .to-checks`); }
 function getTOState(key){ const g=getGroupEl(key); const boxes=g?[...g.querySelectorAll('input[type="checkbox"]')]:[]; return boxes.map(b=>b.checked); }
@@ -309,8 +309,12 @@ function commitManualTime(){
 }
 
 // One-tap Use TO
-document.getElementById("useOurTO").addEventListener("click", ()=>{ useTO('our'); });
-document.getElementById("useOppTO").addEventListener("click", ()=>{ useTO('opp'); });
+const btnUseOur = document.getElementById("useOurTO");
+if (btnUseOur) btnUseOur.addEventListener("click", () => { useTO('our'); });
+
+const btnUseOpp = document.getElementById("useOppTO");
+if (btnUseOpp) btnUseOpp.addEventListener("click", () => { useTO('opp'); });
+
 function useTO(side){
   const half2 = elHalf2.checked;
   const key = `${side}-${half2?'h2':'h1'}`;
