@@ -27,11 +27,40 @@ main {
   margin: 0 auto;
 }
 /* --- App Header --- */
-.appbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+/* New top banner with center title + logos */
+.appbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+}
+.app-title{
+  flex:1;
+  text-align:center;
+  font-weight:900;
+  letter-spacing:.02em;
+  line-height:1.1;
+  /* Big but responsive */
+  font-size: clamp(1.1rem, 2.2vw + 0.6rem, 1.8rem);
+}
+.app-logo{
+  width:56px; height:56px;
+  object-fit:contain;
+  border-radius:10px; /* remove if you don’t want rounded logos */
+}
+.toolbar{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:16px;
+}
+
+/* Tighten on small phones */
+@media (max-width:480px){
+  .app-logo{ width:44px; height:44px; }
+  .app-title{ font-size: clamp(1rem, 4.5vw, 1.4rem); }
+}
+
 }
 .brand {
   display: flex;
