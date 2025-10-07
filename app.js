@@ -20,47 +20,102 @@ const SCORING_PLAYS = [
 const JOINER = " • ";
 
 
+
+// --- Robust helpers ---
+function safeIsHalf2() {
+  // If the radio isn’t mounted yet, default to 1st half (safe)
+  return !!(typeof elHalf2 !== 'undefined' && elHalf2 && elHalf2.checked);
+}
+function safeGetGroupEl(key) {
+  return document.querySelector(`.to-card[data-key="${key}"] .to-checks`) || null;
+}
+function getTOState(key) {
+  const g = safeGetGroupEl(key);
+  if (!g) return [true, true, true]; // default: 3 available if group missing
+  const boxes = [...g.querySelectorAll('input[type="checkbox"]')];
+  // If boxes somehow missing, fall back to 3 available
+  return boxes.length ? boxes.map(b => !!b.checked) : [true, true, true];
+}
+function countTO(key) {
+  const arr = getTOState(key);
+  return Array.isArray(arr) ? arr.filter(Boolean).length : 3;
+}
+
+// --- Safer timeout summary (no crashes) ---
 function renderTimeoutsSummary() {
-  if (!elOurTOLeft || !elOppTOLeft) return; // in case the HTML isn’t present yet
-  const half2 = elHalf2.checked;
+  if (!elOurTOLeft || !elOppTOLeft) return;
+  const half2 = safeIsHalf2();
   elOurTOLeft.textContent = String(half2 ? countTO("our-h2") : countTO("our-h1"));
   elOppTOLeft.textContent = String(half2 ? countTO("opp-h2") : countTO("opp-h1"));
   if (elOppTOName) elOppTOName.textContent = STATE.oppName || "Opponent";
 }
 
+// --- Safer clock math (guards every read) ---
+function updateClockHelper() {
+  try {
+    const timeLeft = getTimeSecs(); // already clamped & null-safe
+    const snaps    = clamp(Number(elSnaps?.value ?? 3), 1, 4);
+    const pclk     = clamp(Number(elPlayClock?.value ?? 40), 20, 45);
+    const ptime    = clamp(Number(elPlayTime?.value ?? 6), 1, 15);
+    const half2    = safeIsHalf2();
 
-function updateClockHelper(){
-  const timeLeft = getTimeSecs();
-  const snaps    = clamp(Number(elSnaps.value || 3), 1, 4);
-  const pclk     = clamp(Number(elPlayClock.value || 40), 20, 45);
-  const ptime    = clamp(Number(elPlayTime.value || 6), 1, 15);
-  const half2    = elHalf2.checked;
+    const ourTO   = half2 ? countTO("our-h2") : countTO("our-h1");
+    const oppTO   = half2 ? countTO("opp-h2") : countTO("opp-h1");
+    const oppName = STATE.oppName || "Opponent";
 
-  const ourTO   = half2 ? countTO("our-h2") : countTO("our-h1");
-  const oppTO   = half2 ? countTO("opp-h2") : countTO("opp-h1");
-  const oppName = STATE.oppName || "Opponent";
+    if (elBallUs?.checked) {
+      const burn    = snaps * ptime + Math.max(0, snaps - oppTO) * pclk;
+      const canBurn = Math.min(timeLeft, burn);
+      const remain  = Math.max(0, timeLeft - canBurn);
+      elClockResult.innerHTML =
+        `${TEAM_NAME} has ball. ${oppName} TOs: <b>${oppTO}</b>. ` +
+        `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
+        (remain === 0 ? `<b>Can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
+    } else {
+      const drain    = snaps * ptime + Math.max(0, snaps - ourTO) * pclk;
+      const canDrain = Math.min(timeLeft, drain);
+      const remain   = Math.max(0, timeLeft - canDrain);
+      elClockResult.innerHTML =
+        `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
+        `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
+        `Time left would be ≈ <b>${toMMSS(remain)}</b>.`;
+    }
 
-  if (elBallUs.checked){
-    const burn    = snaps * ptime + Math.max(0, snaps - oppTO) * pclk;
-    const canBurn = Math.min(timeLeft, burn);
-    const remain  = Math.max(0, timeLeft - canBurn);
-    elClockResult.innerHTML =
-      `${TEAM_NAME} has ball. ${oppName} TOs: <b>${oppTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
-      (remain === 0 ? `<b>Can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
-  } else {
-    const drain    = snaps * ptime + Math.max(0, snaps - ourTO) * pclk;
-    const canDrain = Math.min(timeLeft, drain);
-    const remain   = Math.max(0, timeLeft - canDrain);
-    elClockResult.innerHTML =
-      `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
-      `Time left would be ≈ <b>${toMMSS(remain)}</b>.`;
+    renderTimeoutsSummary(); // keep scoreboard in sync
+  } catch (e) {
+    // Never let the UI die—show a small notice and keep going
+    console.error('updateClockHelper error:', e);
+    if (elClockResult) {
+      elClockResult.textContent = 'Clock helper paused due to an input error. Fix inputs or toggle half to refresh.';
+    }
   }
-
-  // NEW: keep scoreboard TO summary in sync
-  renderTimeoutsSummary();
 }
+
+// --- One-tap Use TO (no-throw even at 0) ---
+function useTO(side) {
+  const half2 = safeIsHalf2();
+  const key = `${side}-${half2 ? 'h2' : 'h1'}`;
+  const g = safeGetGroupEl(key);
+  if (!g) { renderTimeoutsSummary(); updateClockHelper(); return; }
+
+  const boxes = [...g.querySelectorAll('input[type="checkbox"]')];
+  if (!boxes.length) { renderTimeoutsSummary(); updateClockHelper(); return; }
+
+  // Find last available TO and mark it used
+  const idx = [...boxes].map(b => b.checked).lastIndexOf(true);
+  if (idx >= 0) {
+    boxes[idx].checked = false;
+    saveState();
+  }
+  renderTimeoutsSummary();
+  updateClockHelper();
+}
+
+
+
+
+
+
 
 
 function updateTOHeadings() {
@@ -283,9 +338,12 @@ const elTimeInput=document.getElementById("timeInput");
 const elMiniBtns = document.querySelectorAll('.mini[data-dt]');
 
 function getGroupEl(key){ return document.querySelector(`.to-card[data-key="${key}"] .to-checks`); }
-function getTOState(key){ const g=getGroupEl(key); const boxes=g?[...g.querySelectorAll('input[type="checkbox"]')]:[]; return boxes.map(b=>b.checked); }
-function setTOState(key, arr){ const g=getGroupEl(key); if(!g) return; const boxes=[...g.querySelectorAll('input[type="checkbox"]')]; boxes.forEach((b,i)=>{ b.checked=(arr && typeof arr[i]==="boolean")?arr[i]:true; }); }
-function countTO(key){ return getTOState(key).filter(Boolean).length; }
+function setTOState(key, arr){
+  const g = safeGetGroupEl(key);
+  if (!g) return;
+  const boxes = [...g.querySelectorAll('input[type="checkbox"]')];
+  boxes.forEach((b,i)=>{ b.checked = (arr && typeof arr[i]==="boolean") ? arr[i] : true; });
+}
 
 function getTimeSecs(){ const s=fromMMSS(elTimeInput.value); return s==null?0:s; }
 function setTimeSecs(secs){ elTimeInput.value = toMMSS(clamp(secs,0,MAX_TIME_SECS)); }
@@ -315,16 +373,7 @@ if (btnUseOur) btnUseOur.addEventListener("click", () => { useTO('our'); });
 const btnUseOpp = document.getElementById("useOppTO");
 if (btnUseOpp) btnUseOpp.addEventListener("click", () => { useTO('opp'); });
 
-function useTO(side){
-  const half2 = elHalf2.checked;
-  const key = `${side}-${half2?'h2':'h1'}`;
-  const g = getGroupEl(key); if(!g) return;
-  const boxes=[...g.querySelectorAll('input[type="checkbox"]')];
-  let idx=-1; for(let j=boxes.length-1;j>=0;j--){ if(boxes[j].checked){ idx=j; break; } }
-  if(idx<0){ return; }
-  boxes[idx].checked = false;
-  saveState(); updateClockHelper();
-}
+
 
 if (elClearOfficials) {
   elClearOfficials.addEventListener("click", () => {
