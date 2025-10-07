@@ -625,3 +625,10 @@ details.panel .row {
   padding: 0 14px 12px 14px;
 }
 
+.two-pt-math{
+  font-size:.95rem;
+  line-height:1.3;
+  color: var(--muted-color);
+  text-align:center;
+}
+.two-pt-math b{ color: var(--text-color); }
