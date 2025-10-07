@@ -1,5 +1,5 @@
 // sw.js
-const CACHE = 'scoring-v57';
+const CACHE = 'scoring-v58';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,7 @@ const ASSETS = [
   './manifest.webmanifest',
   // keep these ONLY if the files exist at the app root:
   './white-c.png',
-  './icon-512.png',
+  './black_script.png',
   './icon-180.png',
 ];
 
