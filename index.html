@@ -195,27 +195,37 @@
           </div>
         </div>
 
-        <div class="subhead">Clock Helper</div>
-        <div class="row toggles compact">
-          <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
-          <label><input type="radio" name="ball" id="ballThem">
-  <span id="ballThemName">Opponent</span> has ball
-</label>
+        <!-- Possession (moved ABOVE Clock Helper) -->
+<div class="row toggles compact" id="possessionRow">
+  <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
+  <label><input type="radio" name="ball" id="ballThem">
+    <span id="ballThemName">Opponent</span> has ball
+  </label>
+</div>
 
-        </div>
-        <div class="row compact">
-          <label>Snaps this series</label>
-          <input id="snaps" type="number" min="1" max="4" value="3" autocomplete="off" />
-        </div>
-        <div class="row compact">
-          <label>Play clock</label>
-          <input id="playClock" type="number" min="20" max="45" value="40" autocomplete="off" />
-        </div>
-        <div class="row compact">
-          <label>Avg play time</label>
-          <input id="playTime" type="number" min="1" max="15" value="6" autocomplete="off" />
-        </div>
-        <div id="clockResult" class="muted"></div>
+<!-- Collapsible Clock Helper (default collapsed) -->
+<details class="panel" id="clockPanel">
+  <summary>Clock Helper</summary>
+
+  <div class="row compact">
+    <label>Snaps this series</label>
+    <input id="snaps" type="number" min="1" max="4" value="3" autocomplete="off" />
+  </div>
+
+  <div class="row compact">
+    <label>Play clock</label>
+    <input id="playClock" type="number" min="20" max="45" value="40" autocomplete="off" />
+  </div>
+
+  <div class="row compact">
+    <label>Avg play time</label>
+    <input id="playTime" type="number" min="1" max="15" value="6" autocomplete="off" />
+  </div>
+</details>
+
+<!-- Keep the result visible even when collapsed -->
+<div id="clockResult" class="muted"></div>
+
       </section>
 
       <section id="output" class="area-output"></section>
