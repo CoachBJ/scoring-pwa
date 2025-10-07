@@ -529,7 +529,7 @@ function saveState(){
     oppName: STATE.oppName, oppColor: STATE.oppColor,
     collapsedTO: STATE.collapsedTO,
     openingKO: STATE.openingKO,
-    officials: STATE.officials
+    officials: STATE.officials,
     turnovers: STATE.turnovers        // NEW
 
   };
