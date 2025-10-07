@@ -675,3 +675,63 @@ details.panel .row {
   text-align:center;
 }
 .two-pt-math b{ color: var(--text-color); }
+
+
+
+/* ===== Bigger, clearer Half (1st/2nd) radios ===== */
+.area-clock .row.toggles label{
+  font-size: 1.25rem;
+  font-weight: 800;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f1f3f5;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.area-clock .row.toggles input[type="radio"]{
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary-color);
+}
+.area-clock .row.toggles label:has(input:checked){
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(0,90,156,0.25) inset;
+}
+
+/* ===== Bigger, clearer Possession radios ===== */
+#possessionRow label{
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  font-weight: 900;
+  padding: 12px 14px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid var(--border-color);
+}
+#possessionRow input[type="radio"]{
+  width: 26px;
+  height: 26px;
+  accent-color: currentColor;
+}
+
+/* Highlight the selected side with team colors */
+#possessionRow label:has(#ballUs:checked){
+  background: var(--primary-color);
+  color: #fff;
+  border-color: transparent;
+}
+#possessionRow label:has(#ballThem:checked){
+  background: var(--opp);
+  color: var(--opp-text);
+  border-color: transparent;
+}
+
+/* Touch/visibility niceties */
+#possessionRow label, .area-clock .row.toggles label{
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
