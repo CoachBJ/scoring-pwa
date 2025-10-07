@@ -162,6 +162,14 @@ function applyOpponentProfile(){
 
 
 
+function applyOppName(name){
+  ['oppLabel','oppNameInline','oppTOName','ballThemName']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.textContent = name || 'Opponent'; });
+}
+document.getElementById('oppName').addEventListener('input', e => applyOppName(e.target.value));
+
+
+
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; };
 
