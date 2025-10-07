@@ -60,15 +60,20 @@
           </div>
         </div>
 
-          <div class="timeouts-summary">
-            <div class="timeouts-line">
-              TOs left (this half) — <strong>Charlotte Christian:</strong>
-              <span id="ourTOLeft">3</span>
+          <div class="timeouts-bar" aria-live="polite">
+              <div class="side left">
+                <strong>Charlotte Christian TO LEFT:</strong> <span id="ourTOLeft">3</span>
+              </div>
+              <div class="side right">
+                <strong><span id="oppTOName">Opponent</span> TO LEFT:</strong> <span id="oppTOLeft">3</span>
+              </div>
+            
+              <div class="tinyBtns to-quick">
+                <button id="useOurTO" class="mini">Use CC TO (current half)</button>
+                <button id="useOppTO" class="mini opp">Use Opp TO (current half)</button>
+              </div>
             </div>
-            <div class="timeouts-line opp">
-              TOs left (this half) — <strong><span id="oppTOName">Opponent</span>:</strong>
-              <span id="oppTOLeft">3</span>
-            </div>
+
           
             <div class="tinyBtns to-quick">
               <button id="useOurTO" class="mini">Use CC TO (current half)</button>
