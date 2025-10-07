@@ -5,6 +5,9 @@
 const TEAM_NAME = "Charlotte Christian";
 const MAX_RESULTS = 200;
 const MAX_TIME_SECS = 12 * 60; // 12 minute maximum for the clock
+const elOurTOLeft = document.getElementById("ourTOLeft");
+const elOppTOLeft = document.getElementById("oppTOLeft");
+const elOppTOName = document.getElementById("oppTOName");
 
 // ----- Scoring definitions -----
 const SCORING_PLAYS = [
@@ -60,6 +63,19 @@ function updateClockHelper(){
 }
 
 
+function updateTOHeadings() {
+  const opp = STATE.oppName || "Opponent";
+  const ourH1 = document.querySelector('.to-card[data-key="our-h1"] .to-title span');
+  const ourH2 = document.querySelector('.to-card[data-key="our-h2"] .to-title span');
+  const oppH1 = document.querySelector('.to-card[data-key="opp-h1"] .to-title span');
+  const oppH2 = document.querySelector('.to-card[data-key="opp-h2"] .to-title span');
+
+  if (ourH1) ourH1.textContent = "Charlotte Christian TOs — 1st";
+  if (ourH2) ourH2.textContent = "Charlotte Christian TOs — 2nd";
+  if (oppH1) oppH1.textContent = `${opp} TOs — 1st`;
+  if (oppH2) oppH2.textContent = `${opp} TOs — 2nd`;
+}
+
 
 // ----- Utils -----
 
@@ -90,6 +106,17 @@ function applyOpponentProfile(){
 }
 
 
+const resetBtn = document.getElementById("resetGame");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    // ...existing reset code...
+  });
+}
+
+const useOurBtn = document.getElementById("useOurTO");
+if (useOurBtn) useOurBtn.addEventListener("click", () => useTO('our'));
+const useOppBtn = document.getElementById("useOppTO");
+if (useOppBtn) useOppBtn.addEventListener("click", () => useTO('opp'));
 
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -108,19 +135,8 @@ function getContrastColor(hex) {
     const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
     return (yiq >= 128) ? '#000000' : '#ffffff'; // Return black for light colors, white for dark
 }
-function updateTOHeadings() {
-  const opp = STATE.oppName || "Opponent";
-
-  const ourH1 = document.querySelector('.to-card[data-key="our-h1"] .to-title span');
-  const ourH2 = document.querySelector('.to-card[data-key="our-h2"] .to-title span');
-  const oppH1 = document.querySelector('.to-card[data-key="opp-h1"] .to-title span');
-  const oppH2 = document.querySelector('.to-card[data-key="opp-h2"] .to-title span');
 
 
-// Add near other DOM refs
-const elOurTOLeft = document.getElementById("ourTOLeft");
-const elOppTOLeft = document.getElementById("oppTOLeft");
-const elOppTOName = document.getElementById("oppTOName");
 
 // Helper to refresh the summary numbers (current half)
 function renderTimeoutsSummary() {
