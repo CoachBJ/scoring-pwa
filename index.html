@@ -241,6 +241,34 @@
       <section id="output" class="area-output"></section>
 
     </div>
+
+    <!-- 2-Point Decision (after TD) -->
+<div id="twoPtBox" class="two-pt card-lite">
+  <div class="two-pt-head">2-Point Decision (after TD)</div>
+
+  <div class="two-pt-controls">
+    <label>XP% <input id="xpRate" type="number" min="0" max="100" step="1" value="48"></label>
+    <label>2-pt% <input id="twoPtRate" type="number" min="0" max="100" step="1" value="45"></label>
+    <button id="recalcTwoPt" class="mini">Update</button>
+  </div>
+
+  <div id="twoPtResult" class="two-pt-result">—</div>
+
+  <details class="two-pt-notes">
+    <summary>Key chart notes</summary>
+    <ul class="two-pt-list">
+      <li>Down 10 → <b>Go for 2</b> (get to 8)</li>
+      <li>Down 9 → <b>Go for 2</b> (get to 7)</li>
+      <li>Down 5 → <b>Go for 2</b> (get to 3)</li>
+      <li>Down 2 → <b>Go for 2</b> (tie)</li>
+      <li>Up 1 → <b>Go for 2</b> (force FG just to tie)</li>
+      <li>Up 5 → <b>Go for 2</b> (get to 7)</li>
+      <li>Up 12 → <b>Go for 2</b> (get to 14)</li>
+      <li>Up 14 → <b>Go for 2</b> (get to 16)</li>
+    </ul>
+  </details>
+</div>
+
   </main>
 
 <script src="app.js" defer></script>
