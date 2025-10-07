@@ -162,11 +162,14 @@ function applyOpponentProfile(){
 
 
 
-function applyOppName(name){
-  ['oppLabel','oppNameInline','oppTOName','ballThemName']
-    .forEach(id => { const el=document.getElementById(id); if(el) el.textContent = name || 'Opponent'; });
-}
-document.getElementById('oppName').addEventListener('input', e => applyOppName(e.target.value));
+// Live-sync opponent name across UI
+const elOppName = document.getElementById('oppName');
+
+elOppName.addEventListener('input', (e) => {
+  STATE.oppName = e.target.value || 'Opponent';
+  applyOpponentProfile(); // this already updates oppLabel, oppTOName, ballThemName, etc.
+  saveState();            // keep it persisted
+});
 
 
 
