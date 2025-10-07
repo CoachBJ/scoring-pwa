@@ -179,7 +179,7 @@ main {
   box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.15);
 }
 #clockResult {
-  font-size: 2.0em;
+  font-size: 1.75em;
   font-style: italic;
   font-weight: bold;
   color: var(--white);
