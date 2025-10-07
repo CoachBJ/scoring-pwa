@@ -439,10 +439,13 @@ const elPlayClock=document.getElementById("playClock");
 const elPlayTime=document.getElementById("playTime");
 const elClockResult=document.getElementById("clockResult");
 
-[elBallUs, elBallThem, elSnaps, elPlayClock, elPlayTime, elHalf1, elHalf2].forEach(el=>{
-  el.addEventListener("change", ()=>{ saveState(); updateClockHelper(); });
-  el.addEventListener("input",  ()=>{ updateClockHelper(); });
-});
+[elBallUs, elBallThem, elSnaps, elPlayClock, elPlayTime, elHalf1, elHalf2]
+  .filter(Boolean)
+  .forEach(el => {
+    el.addEventListener("change", () => { saveState(); updateClockHelper(); });
+    el.addEventListener("input",  () => { updateClockHelper(); });
+  });
+
 
 
 // ----- State -----
