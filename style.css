@@ -495,3 +495,40 @@ input[type="number"] {
   width: 30%;
   max-width: 200px;
 }
+
+
+/* --- BIG Use TO buttons --- */
+.to-quick {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+  margin-top: 8px;
+}
+@media (min-width: 640px) {
+  .to-quick { grid-template-columns: 1fr 1fr; }
+}
+
+#useOurTO, #useOppTO {
+  font-size: 1.25rem;          /* large text */
+  font-weight: 800;
+  padding: 14px 16px;          /* big hit area */
+  min-height: 56px;            /* ~Apple HIG 44px+ */
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+#useOurTO {
+  background: var(--primary-color);
+  color: #fff;
+}
+#useOurTO:active { transform: scale(.98); }
+
+#useOppTO {
+  background: var(--opp);
+  color: var(--opp-text);
+}
+#useOppTO:active { transform: scale(.98); }
+
+/* optional “pressing” visual for long-press (below) */
+.btn-pressing { filter: brightness(.92); }
