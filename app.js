@@ -16,7 +16,82 @@ const SCORING_PLAYS = [
 ];
 const JOINER = " • ";
 
+
+function renderTimeoutsSummary() {
+  if (!elOurTOLeft || !elOppTOLeft) return; // in case the HTML isn’t present yet
+  const half2 = elHalf2.checked;
+  elOurTOLeft.textContent = String(half2 ? countTO("our-h2") : countTO("our-h1"));
+  elOppTOLeft.textContent = String(half2 ? countTO("opp-h2") : countTO("opp-h1"));
+  if (elOppTOName) elOppTOName.textContent = STATE.oppName || "Opponent";
+}
+
+
+function updateClockHelper(){
+  const timeLeft = getTimeSecs();
+  const snaps    = clamp(Number(elSnaps.value || 3), 1, 4);
+  const pclk     = clamp(Number(elPlayClock.value || 40), 20, 45);
+  const ptime    = clamp(Number(elPlayTime.value || 6), 1, 15);
+  const half2    = elHalf2.checked;
+
+  const ourTO   = half2 ? countTO("our-h2") : countTO("our-h1");
+  const oppTO   = half2 ? countTO("opp-h2") : countTO("opp-h1");
+  const oppName = STATE.oppName || "Opponent";
+
+  if (elBallUs.checked){
+    const burn    = snaps * ptime + Math.max(0, snaps - oppTO) * pclk;
+    const canBurn = Math.min(timeLeft, burn);
+    const remain  = Math.max(0, timeLeft - canBurn);
+    elClockResult.innerHTML =
+      `${TEAM_NAME} has ball. ${oppName} TOs: <b>${oppTO}</b>. ` +
+      `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
+      (remain === 0 ? `<b>Can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
+  } else {
+    const drain    = snaps * ptime + Math.max(0, snaps - ourTO) * pclk;
+    const canDrain = Math.min(timeLeft, drain);
+    const remain   = Math.max(0, timeLeft - canDrain);
+    elClockResult.innerHTML =
+      `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
+      `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
+      `Time left would be ≈ <b>${toMMSS(remain)}</b>.`;
+  }
+
+  // NEW: keep scoreboard TO summary in sync
+  renderTimeoutsSummary();
+}
+
+
+
 // ----- Utils -----
+
+// Opponent profile
+function applyOpponentProfile(){
+  elOppName.value = STATE.oppName;
+  elOppColor.value = STATE.oppColor;
+
+  const oppTextColor = getContrastColor(STATE.oppColor);
+  const root = document.documentElement;
+  root.style.setProperty('--opp', STATE.oppColor);
+  root.style.setProperty('--opp-text', oppTextColor);
+
+  elOppLabel.textContent = STATE.oppName;
+  elOurLabel.textContent = TEAM_NAME;
+
+  // “Opponent has ball” dynamic label
+  const elBallThemName = document.getElementById('ballThemName');
+  if (elBallThemName) elBallThemName.textContent = STATE.oppName || "Opponent";
+  if (elOppTOName) elOppTOName.textContent = STATE.oppName || "Opponent";
+
+
+  // KO label inline name
+  if (elOppNameInline) elOppNameInline.textContent = STATE.oppName || "Opponent";
+
+  // Timeout headings
+  updateTOHeadings();
+}
+
+
+
+
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; };
 
@@ -40,6 +115,23 @@ function updateTOHeadings() {
   const ourH2 = document.querySelector('.to-card[data-key="our-h2"] .to-title span');
   const oppH1 = document.querySelector('.to-card[data-key="opp-h1"] .to-title span');
   const oppH2 = document.querySelector('.to-card[data-key="opp-h2"] .to-title span');
+
+
+// Add near other DOM refs
+const elOurTOLeft = document.getElementById("ourTOLeft");
+const elOppTOLeft = document.getElementById("oppTOLeft");
+const elOppTOName = document.getElementById("oppTOName");
+
+// Helper to refresh the summary numbers (current half)
+function renderTimeoutsSummary() {
+  if (!elOurTOLeft || !elOppTOLeft) return;
+  const half2 = elHalf2.checked;
+  const our = half2 ? countTO("our-h2") : countTO("our-h1");
+  const opp = half2 ? countTO("opp-h2") : countTO("opp-h1");
+  elOurTOLeft.textContent = String(our);
+  elOppTOLeft.textContent = String(opp);
+}
+  
 
   if (ourH1) ourH1.textContent = "Charlotte Christian TOs — 1st";
   if (ourH2) ourH2.textContent = "Charlotte Christian TOs — 2nd";
@@ -277,35 +369,6 @@ const elClockResult=document.getElementById("clockResult");
   el.addEventListener("input",  ()=>{ updateClockHelper(); });
 });
 
-function updateClockHelper(){
-  const timeLeft=getTimeSecs();
-  const snaps=clamp(Number(elSnaps.value||3),1,4);
-  const pclk =clamp(Number(elPlayClock.value||40),20,45);
-  const ptime=clamp(Number(elPlayTime.value||6),1,15);
-  const half2=elHalf2.checked;
-
-  const ourTO = half2 ? countTO("our-h2") : countTO("our-h1");
-  const oppTO = half2 ? countTO("opp-h2") : countTO("opp-h1");
-  const oppName = STATE.oppName || "Opponent";
-
-  if(elBallUs.checked){
-    const burn = snaps*ptime + Math.max(0, snaps - oppTO)*pclk;
-    const canBurn = Math.min(timeLeft, burn);
-    const remain = Math.max(0, timeLeft - canBurn);
-    elClockResult.innerHTML =
-      `${TEAM_NAME} has ball. ${oppName} TOs: <b>${oppTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
-      (remain===0 ? `<b>Can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
-  } else {
-    const drain = snaps*ptime + Math.max(0, snaps - ourTO)*pclk;
-    const canDrain = Math.min(timeLeft, drain);
-    const remain = Math.max(0, timeLeft - canDrain);
-    elClockResult.innerHTML =
-      `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
-      `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
-      `Time left would be ≈ <b>${toMMSS(remain)}</b>.`;
-  }
-}
 
 // ----- State -----
 const STATE_KEY="ccs-gamemanager-state-v3"; // Incremented key to avoid old state issues
@@ -385,29 +448,6 @@ function loadState(){
   }
 }
 
-// Opponent profile
-function applyOpponentProfile(){
-  elOppName.value = STATE.oppName;
-  elOppColor.value = STATE.oppColor;
-
-  const oppTextColor = getContrastColor(STATE.oppColor);
-  const root = document.documentElement;
-  root.style.setProperty('--opp', STATE.oppColor);
-  root.style.setProperty('--opp-text', oppTextColor);
-
-  elOppLabel.textContent = STATE.oppName;
-  elOurLabel.textContent = TEAM_NAME;
-
-  // “Opponent has ball” dynamic label
-  const elBallThemName = document.getElementById('ballThemName');
-  if (elBallThemName) elBallThemName.textContent = STATE.oppName || "Opponent";
-
-  // KO label inline name
-  if (elOppNameInline) elOppNameInline.textContent = STATE.oppName || "Opponent";
-
-  // Timeout headings
-  updateTOHeadings();
-}
 
 
 // Opening KO radios
@@ -539,5 +579,6 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
 });
 
 loadState();
+renderTimeoutsSummary();   // NEW
 updateClockHelper();
 run();
