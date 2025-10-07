@@ -38,6 +38,26 @@ main {
   align-items: center;
   gap: 12px;
 }
+
+/* --- Timeout summary under scoreboard --- */
+.timeouts-summary {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+.timeouts-line {
+  font-weight: 600;
+}
+.timeouts-line.opp {
+  color: var(--opp-text);
+  background: var(--opp);
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.to-quick {
+  margin-top: 6px;
+}
+
 .brand-mark {
   background-color: var(--primary-color);
   color: white;
