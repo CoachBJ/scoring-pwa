@@ -71,23 +71,29 @@ function updateClockHelper() {
     const ptime    = clamp(Number(elPlayTime?.value ?? 6), 1, 15);
     const half2    = safeIsHalf2();
 
-    const ourTO   = half2 ? countTO("our-h2") : countTO("our-h1");
-    const oppTO   = half2 ? countTO("opp-h2") : countTO("opp-h1");
-    const oppName = STATE.oppName || "Opponent";
+    const ourTO    = half2 ? countTO("our-h2") : countTO("our-h1");
+    const oppTO    = half2 ? countTO("opp-h2") : countTO("opp-h1");
 
-if (elBallUs?.checked) {
-  const burn    = snaps * ptime + Math.max(0, snaps - oppTO) * pclk;
-  const canBurn = Math.min(timeLeft, burn);
-  const remain  = Math.max(0, timeLeft - canBurn);
-  elClockResult.innerHTML = `Est burn ≈ <b>${toMMSS(canBurn)}</b>. ~<b>${toMMSS(remain)}</b> would remain.`;
-  setClockResultTheme(true);
-} else {
-  const drain    = snaps * ptime + Math.max(0, snaps - ourTO) * pclk;
-  const canDrain = Math.min(timeLeft, drain);
-  const remain   = Math.max(0, timeLeft - canDrain);
-  elClockResult.innerHTML = `Est burn ≈ <b>${toMMSS(canDrain)}</b>. ~<b>${toMMSS(remain)}</b> would remain.`;
-  setClockResultTheme(false);
+    if (elBallUs?.checked) {
+      const burn    = snaps * ptime + Math.max(0, snaps - oppTO) * pclk;
+      const canBurn = Math.min(timeLeft, burn);
+      const remain  = Math.max(0, timeLeft - canBurn);
+      elClockResult.innerHTML = `Est burn ≈ <b>${toMMSS(canBurn)}</b>. ~<b>${toMMSS(remain)}</b> would remain.`;
+      setClockResultTheme(true);
+    } else {
+      const drain    = snaps * ptime + Math.max(0, snaps - ourTO) * pclk;
+      const canDrain = Math.min(timeLeft, drain);
+      const remain   = Math.max(0, timeLeft - canDrain);
+      elClockResult.innerHTML = `Est burn ≈ <b>${toMMSS(canDrain)}</b>. ~<b>${toMMSS(remain)}</b> would remain.`;
+      setClockResultTheme(false);
+    }
+  } catch (e) {
+    console.error('updateClockHelper:', e);
+  } finally {
+    if (window.__recalcTwoPointDecision) window.__recalcTwoPointDecision();
+  }
 }
+
 
 
     renderTimeoutsSummary(); // keep scoreboard in sync
@@ -604,7 +610,7 @@ function run(){
   } else {
      elOut.innerHTML = "";
   }
-
+  if (window.__recalcTwoPointDecision) window.__recalcTwoPointDecision();
   saveState();
 }
 
@@ -699,6 +705,86 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
 })();
 
 
+// ===== 2-Point Decision (after TD) =====
+(function twoPointModule(){
+  const elXP = document.getElementById('xpRate');
+  const el2P = document.getElementById('twoPtRate');
+  const elRes = document.getElementById('twoPtResult');
+  const btnRe = document.getElementById('recalcTwoPt');
+  if (!elXP || !el2P || !elRes) return; // not on page
+
+  // Quick chart overrides (after adding 6 for TD)
+  const CRIT = {
+    '-25': "🟢 GO FOR 2 » Goal: down 23 (3-score window)",
+    '-24': "🟢 GO FOR 2 » Move to -22 (improves path)",
+    '-23': "🟢 GO FOR 2 » Goal: down 21 (clean 3 TDs)",
+    '-20': "🟢 GO FOR 2 » Goal: down 18 (clean 3 TDs)",
+    '-18': "🟢 GO FOR 2 » Down 16 clarifies path (2 TD + 2×2pt)",
+    '-17': "🟢 GO FOR 2 » Reduces needed 2PCs later (to -15)",
+    '-16': "🟢 GO FOR 2 » Goal: down 14 (clean 2 TDs)",
+    '-13': "🟢 GO FOR 2 » Create TD+FG game (to -11)",
+    '-10': "🟢 GO FOR 2 » Make it one-score (down 8)",
+    '-9':  "🟢 GO FOR 2 » Make it one-score (down 7)",
+    '-5':  "🟢 GO FOR 2 » Get to FG game (down 3)",
+    '-2':  "🟢 GO FOR 2 » Tie it",
+    '1':   "🟢 GO FOR 2 » Up 3 (FG only ties)",
+    '4':   "🟢 GO FOR 2 » Up 6 > up 5 vs opp TD",
+    '5':   "🟢 GO FOR 2 » Up 7 (true one-score)",
+    '12':  "🟢 GO FOR 2 » Up 14 (two-score standard)",
+    '14':  "🟢 GO FOR 2 » Up 16 (requires 2 TD + 2×2pt to tie)",
+    '19':  "🟢 GO FOR 2 » Up 21 (three-score standard)",
+    '22':  "🟢 GO FOR 2 » Up 24 (3 TD + 3×2pt to tie)"
+  };
+
+  function classify(decision){
+    if (decision.startsWith('🟢')) return 'result-go';
+    if (decision.startsWith('🟡')) return 'result-consider';
+    return 'result-kick';
+  }
+
+  function calcTwoPointDecision(){
+    const our = validateInt(document.getElementById('ourScore')?.value);
+    const opp = validateInt(document.getElementById('oppScore')?.value);
+    if (our == null || opp == null) { elRes.textContent = '—'; elRes.className='two-pt-result'; return; }
+
+    const xp = Math.max(0, Math.min(100, Number(elXP.value || 0))) / 100;
+    const tp = Math.max(0, Math.min(100, Number(el2P.value || 0))) / 100;
+
+    // "If we score a TD right now" => add 6 to (our-opp)
+    const diffAfterTD = (our - opp) + 6;
+
+    const ep2  = 2 * tp; // expected points if going for 2
+    const epp  = 1 * xp; // expected points if kicking
+    const timeLeft = getTimeSecs();
+    const late = safeIsHalf2() || timeLeft <= 120; // keep it simple & aligned to your UI
+
+    // Chart override first (if present)
+    let final = CRIT[String(diffAfterTD)] || '';
+
+    // Fall back to EP compare (situational in late, green in early)
+    if (!final) {
+      if (late) {
+        final = (ep2 > epp)
+          ? `🟡 GO FOR 2 (Situational) » EP ${ep2.toFixed(2)} vs ${epp.toFixed(2)}`
+          : `🔴 KICK PAT » EP ${epp.toFixed(2)} vs ${ep2.toFixed(2)}`;
+      } else {
+        final = (ep2 > epp)
+          ? `🟢 GO FOR 2 » EP ${ep2.toFixed(2)} vs ${epp.toFixed(2)}`
+          : `🔴 KICK PAT » EP ${epp.toFixed(2)} vs ${ep2.toFixed(2)}`;
+      }
+    }
+
+    elRes.textContent = final;
+    elRes.className = `two-pt-result ${classify(final)}`;
+  }
+
+  // Recalc on button + when inputs change
+  btnRe?.addEventListener('click', calcTwoPointDecision);
+  [elXP, el2P].forEach(inp => inp?.addEventListener('input', calcTwoPointDecision));
+
+  // Expose a hook so main run/clock updates can refresh it without coupling
+  window.__recalcTwoPointDecision = calcTwoPointDecision;
+})();
 
 
 
