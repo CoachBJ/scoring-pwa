@@ -40,11 +40,42 @@ main {
 }
 
 /* --- Timeout summary under scoreboard --- */
-.timeouts-summary {
-  margin-top: 12px;
+
+/* --- Single-line Timeouts Bar --- */
+.timeouts-bar {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
+  align-items: center;
+  margin-top: 12px;
 }
+
+.timeouts-bar .side.left {
+  font-weight: 700;
+}
+
+.timeouts-bar .side.right {
+  justify-self: end;
+  font-weight: 700;
+  color: var(--opp-text);
+  background: var(--opp);
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+/* keep big Use TO buttons beneath it */
+.timeouts-bar .to-quick {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+}
+
+
+@media (min-width: 900px) {
+  .timeouts-bar { position: sticky; top: 8px; z-index: 4; }
+}
+
+
+
 .timeouts-line {
   font-weight: 600;
 }
