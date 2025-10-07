@@ -656,7 +656,52 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
     });
 });
 
+
+// --- Wire up "Use TO" buttons (tap + long-press + keyboard) ---
+(function wireUseTOButtons() {
+  const hook = (id, side) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+
+    // Single tap / mouse click
+    const fire = () => { useTO(side); if (navigator.vibrate) navigator.vibrate(20); };
+    btn.addEventListener('click', fire);
+
+    // Prevent iOS callout on long-press
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Long-press (pointer)
+    let t = null;
+    btn.addEventListener('pointerdown', () => {
+      btn.classList.add('btn-pressing');
+      t = setTimeout(fire, 350);
+    });
+    ['pointerup','pointerleave','pointercancel'].forEach(ev => {
+      btn.addEventListener(ev, () => {
+        btn.classList.remove('btn-pressing');
+        if (t) { clearTimeout(t); t = null; }
+      });
+    });
+
+    // Keyboard accessibility
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); }
+    });
+  };
+
+  hook('useOurTO', 'our');
+  hook('useOppTO', 'opp');
+})();
+
+
+
+
+
 loadState();
 renderTimeoutsSummary();   // NEW
 updateClockHelper();
 run();
+
+
+
+
