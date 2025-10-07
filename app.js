@@ -162,17 +162,6 @@ function applyOpponentProfile(){
 
 
 
-// Live-sync opponent name across UI
-const elOppName = document.getElementById('oppName');
-
-elOppName.addEventListener('input', (e) => {
-  STATE.oppName = e.target.value || 'Opponent';
-  applyOpponentProfile(); // this already updates oppLabel, oppTOName, ballThemName, etc.
-  saveState();            // keep it persisted
-});
-
-
-
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; };
 
@@ -284,6 +273,14 @@ const elOfficialsDisplay = document.getElementById("officialsDisplay");
 const elOppName=document.getElementById("oppName");
 const elOppColor=document.getElementById("oppColor");
 
+elOppName.addEventListener('input', () => {
+  STATE.oppName = elOppName.value || 'Opponent';
+  applyOpponentProfile();
+  saveState();
+  run();
+});
+
+
 // ----- Banner -----
 function renderBanner(our, opp, oppName){
   const el = document.getElementById("banner");
@@ -388,9 +385,12 @@ function bindLongPressTO(btnId, side) {
     if (navigator.vibrate) navigator.vibrate(20);
   };
 
-  btn.addEventListener('pointerdown', () => {
+  // Prevent iOS long-press callout
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  btn.addEventListener('pointerdown', (e) => {
     btn.classList.add('btn-pressing');
-    t = setTimeout(fire, 500);
+    t = setTimeout(fire, 350); // slightly faster than 500ms
   });
   ['pointerup','pointerleave','pointercancel'].forEach(ev => {
     btn.addEventListener(ev, () => {
@@ -399,10 +399,13 @@ function bindLongPressTO(btnId, side) {
     });
   });
 
+  // Optional quick tap fallback if you want it:
+  // btn.addEventListener('click', fire);
+
+  // Keep dblclick as secondary
   btn.addEventListener('dblclick', fire);
 }
-bindLongPressTO('useOurTO','our');
-bindLongPressTO('useOppTO','opp');
+
 
 
 
