@@ -702,11 +702,12 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
 
 // ===== 2-Point Decision (after TD) =====
 (function twoPointModule(){
-  const elXP = document.getElementById('xpRate');
-  const el2P = document.getElementById('twoPtRate');
+  const elXP  = document.getElementById('xpRate');
+  const el2P  = document.getElementById('twoPtRate');
   const elRes = document.getElementById('twoPtResult');
+  const elMath= document.getElementById('twoPtMath'); // NEW
   const btnRe = document.getElementById('recalcTwoPt');
-  if (!elXP || !el2P || !elRes) return; // not on page
+  if (!elXP || !el2P || !elRes) return;
 
   // Quick chart overrides (after adding 6 for TD)
   const CRIT = {
@@ -740,23 +741,27 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
   function calcTwoPointDecision(){
     const our = validateInt(document.getElementById('ourScore')?.value);
     const opp = validateInt(document.getElementById('oppScore')?.value);
-    if (our == null || opp == null) { elRes.textContent = '—'; elRes.className='two-pt-result'; return; }
+    if (our == null || opp == null) {
+      elRes.textContent = '—';
+      elRes.className='two-pt-result';
+      if (elMath) elMath.textContent = '';
+      return;
+    }
 
     const xp = Math.max(0, Math.min(100, Number(elXP.value || 0))) / 100;
     const tp = Math.max(0, Math.min(100, Number(el2P.value || 0))) / 100;
 
-    // "If we score a TD right now" => add 6 to (our-opp)
+    // After the TD only (no try yet)
     const diffAfterTD = (our - opp) + 6;
 
-    const ep2  = 2 * tp; // expected points if going for 2
-    const epp  = 1 * xp; // expected points if kicking
+    const ep2 = 2 * tp; // expected points for going for 2
+    const epp = 1 * xp; // expected points for PAT
+
+    // --- your existing final decision logic (unchanged) ---
     const timeLeft = getTimeSecs();
-    const late = safeIsHalf2() || timeLeft <= 120; // keep it simple & aligned to your UI
+    const late = safeIsHalf2() || timeLeft <= 120;
 
-    // Chart override first (if present)
     let final = CRIT[String(diffAfterTD)] || '';
-
-    // Fall back to EP compare (situational in late, green in early)
     if (!final) {
       if (late) {
         final = (ep2 > epp)
@@ -771,16 +776,22 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
 
     elRes.textContent = final;
     elRes.className = `two-pt-result ${classify(final)}`;
+
+    // --- NEW: show the math and the up/down line just below ---
+    if (elMath){
+      const line1 = `Math: EP(2-pt) = 2 × ${(tp*100).toFixed(0)}% = <b>${ep2.toFixed(2)}</b> • EP(PAT) = 1 × ${(xp*100).toFixed(0)}% = <b>${epp.toFixed(2)}</b>`;
+      let line2 = '';
+      if (diffAfterTD > 0)  line2 = `After TD: <b>Charlotte Christian will be UP by ${diffAfterTD}</b>.`;
+      else if (diffAfterTD < 0) line2 = `After TD: <b>Charlotte Christian will be DOWN by ${Math.abs(diffAfterTD)}</b>.`;
+      else line2 = `After TD: <b>Game would be TIED</b>.`;
+      elMath.innerHTML = `${line1}<br>${line2}`;
+    }
   }
 
-  // Recalc on button + when inputs change
   btnRe?.addEventListener('click', calcTwoPointDecision);
   [elXP, el2P].forEach(inp => inp?.addEventListener('input', calcTwoPointDecision));
-
-  // Expose a hook so main run/clock updates can refresh it without coupling
   window.__recalcTwoPointDecision = calcTwoPointDecision;
 })();
-
 
 
 loadState();
