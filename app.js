@@ -138,22 +138,6 @@ function getContrastColor(hex) {
 
 
 
-// Helper to refresh the summary numbers (current half)
-function renderTimeoutsSummary() {
-  if (!elOurTOLeft || !elOppTOLeft) return;
-  const half2 = elHalf2.checked;
-  const our = half2 ? countTO("our-h2") : countTO("our-h1");
-  const opp = half2 ? countTO("opp-h2") : countTO("opp-h1");
-  elOurTOLeft.textContent = String(our);
-  elOppTOLeft.textContent = String(opp);
-}
-  
-
-  if (ourH1) ourH1.textContent = "Charlotte Christian TOs — 1st";
-  if (ourH2) ourH2.textContent = "Charlotte Christian TOs — 2nd";
-  if (oppH1) oppH1.textContent = `${opp} TOs — 1st`;
-  if (oppH2) oppH2.textContent = `${opp} TOs — 2nd`;
-}
 
 const fromMMSS = (txt) => {
   const str = String(txt || "").trim();
