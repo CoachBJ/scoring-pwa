@@ -89,22 +89,17 @@ function updateClockHelper() {
     }
   } catch (e) {
     console.error('updateClockHelper:', e);
+    if (elClockResult) {
+      elClockResult.textContent = 'Clock helper paused due to an input error. Fix inputs or toggle half to refresh.';
+    }
   } finally {
+    renderTimeoutsSummary(); // keep scoreboard in sync
     if (window.__recalcTwoPointDecision) window.__recalcTwoPointDecision();
   }
 }
 
 
 
-    renderTimeoutsSummary(); // keep scoreboard in sync
-  } catch (e) {
-    // Never let the UI die—show a small notice and keep going
-    console.error('updateClockHelper error:', e);
-    if (elClockResult) {
-      elClockResult.textContent = 'Clock helper paused due to an input error. Fix inputs or toggle half to refresh.';
-    }
-  }
-}
 
 // --- One-tap Use TO (no-throw even at 0) ---
 function useTO(side) {
