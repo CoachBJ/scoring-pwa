@@ -572,3 +572,39 @@ button, .chip, .mini {
   -webkit-touch-callout: none;
 }
 
+
+/* Collapsible settings panel */
+details.panel {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin: 12px 0;
+}
+
+details.panel > summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  padding: 12px 14px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+details.panel > summary::-webkit-details-marker { display: none; }
+
+details.panel > summary::after {
+  content: '+';
+  font-weight: 700;
+}
+
+details.panel[open] > summary::after {
+  content: '–';
+}
+
+details.panel .row {
+  padding: 0 14px 12px 14px;
+}
+
