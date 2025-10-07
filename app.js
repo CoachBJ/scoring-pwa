@@ -75,23 +75,20 @@ function updateClockHelper() {
     const oppTO   = half2 ? countTO("opp-h2") : countTO("opp-h1");
     const oppName = STATE.oppName || "Opponent";
 
-    if (elBallUs?.checked) {
-      const burn    = snaps * ptime + Math.max(0, snaps - oppTO) * pclk;
-      const canBurn = Math.min(timeLeft, burn);
-      const remain  = Math.max(0, timeLeft - canBurn);
-      elClockResult.innerHTML =
-        `${TEAM_NAME} has ball. ${oppName} TOs: <b>${oppTO}</b>. ` +
-        `Over <b>${snaps}</b> snaps, est burn ≈ <b>${toMMSS(canBurn)}</b>. ` +
-        (remain === 0 ? `<b>Can run out the half.</b>` : `~<b>${toMMSS(remain)}</b> would remain.`);
-    } else {
-      const drain    = snaps * ptime + Math.max(0, snaps - ourTO) * pclk;
-      const canDrain = Math.min(timeLeft, drain);
-      const remain   = Math.max(0, timeLeft - canDrain);
-      elClockResult.innerHTML =
-        `${oppName} has ball. ${TEAM_NAME} TOs: <b>${ourTO}</b>. ` +
-        `Over <b>${snaps}</b> snaps, they can drain ≈ <b>${toMMSS(canDrain)}</b>. ` +
-        `Time left would be ≈ <b>${toMMSS(remain)}</b>.`;
-    }
+if (elBallUs?.checked) {
+  const burn    = snaps * ptime + Math.max(0, snaps - oppTO) * pclk;
+  const canBurn = Math.min(timeLeft, burn);
+  const remain  = Math.max(0, timeLeft - canBurn);
+  elClockResult.innerHTML = `Est burn ≈ <b>${toMMSS(canBurn)}</b>. ~<b>${toMMSS(remain)}</b> would remain.`;
+  setClockResultTheme(true);
+} else {
+  const drain    = snaps * ptime + Math.max(0, snaps - ourTO) * pclk;
+  const canDrain = Math.min(timeLeft, drain);
+  const remain   = Math.max(0, timeLeft - canDrain);
+  elClockResult.innerHTML = `Est burn ≈ <b>${toMMSS(canDrain)}</b>. ~<b>${toMMSS(remain)}</b> would remain.`;
+  setClockResultTheme(false);
+}
+
 
     renderTimeoutsSummary(); // keep scoreboard in sync
   } catch (e) {
@@ -284,14 +281,6 @@ const elOfficialsDisplay = document.getElementById("officialsDisplay");
 // Opponent/theme inputs
 const elOppName=document.getElementById("oppName");
 const elOppColor=document.getElementById("oppColor");
-
-elOppName.addEventListener('input', () => {
-  STATE.oppName = elOppName.value || 'Opponent';
-  applyOpponentProfile();
-  saveState();
-  run();
-});
-
 
 // ----- Banner -----
 function renderBanner(our, opp, oppName){
@@ -560,16 +549,20 @@ function loadState(){
 });
 
 
-elOppName.addEventListener('input', ()=>{
-    STATE.oppName = elOppName.value || "Opponent";
-    applyOpponentProfile();
-    saveState();
-    run();
+// Opponent/theme inputs
+elOppName.addEventListener('input', () => {
+  STATE.oppName = elOppName.value || 'Opponent';
+  applyOpponentProfile();
+  updateClockHelper();      // <-- add this line
+  saveState();
+  run();
 });
-elOppColor.addEventListener('input', ()=>{
-    STATE.oppColor = elOppColor.value;
-    applyOpponentProfile();
-    saveState();
+
+elOppColor.addEventListener('input', () => {
+  STATE.oppColor = elOppColor.value;
+  applyOpponentProfile();
+  updateClockHelper();      // <-- add this line
+  saveState();
 });
 
 
