@@ -106,18 +106,6 @@ function applyOpponentProfile(){
 }
 
 
-const resetBtn = document.getElementById("resetGame");
-if (resetBtn) {
-  resetBtn.addEventListener("click", () => {
-    // ...existing reset code...
-  });
-}
-
-const useOurBtn = document.getElementById("useOurTO");
-if (useOurBtn) useOurBtn.addEventListener("click", () => useTO('our'));
-const useOppBtn = document.getElementById("useOppTO");
-if (useOppBtn) useOppBtn.addEventListener("click", () => useTO('opp'));
-
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const toMMSS = (s) => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; };
