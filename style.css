@@ -50,6 +50,23 @@ main {
   margin-top: 12px;
 }
 
+
+/* --- 2-Point box --- */
+.card-lite { background:#fff; border:1px solid var(--border-color); border-radius:12px; padding:12px; margin-top:12px; }
+.two-pt { display:grid; gap:10px; }
+.two-pt-head { font-weight:700; }
+.two-pt-controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.two-pt-controls label { display:flex; gap:6px; align-items:center; font-weight:600; }
+.two-pt-result { font-weight:800; padding:10px; border-radius:8px; text-align:center; }
+.two-pt-result.result-go { background:#e7f5ee; }
+.two-pt-result.result-kick { background:#eef3ff; }
+.two-pt-result.result-consider { background:#fff8e1; }
+.two-pt-notes summary { cursor:pointer; font-weight:600; }
+.two-pt-list { margin:6px 0 0 18px; }
+
+
+
+
 .timeouts-bar .side.left {
   font-weight: 700;
 }
