@@ -161,6 +161,8 @@ function applyOpponentProfile(){
   const elBallThemName = document.getElementById('ballThemName');
   if (elBallThemName) elBallThemName.textContent = STATE.oppName || "Opponent";
   if (elOppTOName) elOppTOName.textContent = STATE.oppName || "Opponent";
+  if (elOppNameTO) elOppNameTO.textContent = STATE.oppName || "Opponent";
+
 
 
   // KO label inline name
@@ -189,6 +191,50 @@ function getContrastColor(hex) {
     return (yiq >= 128) ? '#000000' : '#ffffff'; // Return black for light colors, white for dark
 }
 
+// --- Turnovers (game) ---
+const elOurTOv = document.getElementById('ourTOv');
+const elOppTOv = document.getElementById('oppTOv');
+const elOppNameTO = document.getElementById('oppNameTO');
+const elToDiff = document.getElementById('toDiff');
+
+function renderTurnovers(){
+  if (!elOurTOv || !elOppTOv || !elToDiff) return;
+  const our = Math.max(0, Number(STATE.turnovers?.our || 0));
+  const opp = Math.max(0, Number(STATE.turnovers?.opp || 0));
+  elOurTOv.textContent = our;
+  elOppTOv.textContent = opp;
+
+  const margin = opp - our; // TO Margin = their giveaways minus ours (positive is good for us)
+  elToDiff.textContent = `TO Margin: ${margin > 0 ? '+' : ''}${margin}`;
+  elToDiff.classList.remove('pos', 'neg');
+  if (margin > 0) elToDiff.classList.add('pos');
+  if (margin < 0) elToDiff.classList.add('neg');
+}
+
+
+// Turnover buttons
+(function wireTurnovers(){
+  const clampTO = v => Math.max(0, Math.min(99, v)); // keep sane bounds
+
+  const hook = (id, delta, side) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const fire = () => {
+      const cur = Number(STATE.turnovers[side] || 0);
+      STATE.turnovers[side] = clampTO(cur + delta);
+      renderTurnovers();
+      saveState();
+      if (navigator.vibrate) navigator.vibrate(10);
+    };
+    el.addEventListener('click', fire);
+    el.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); fire(); }});
+  };
+
+  hook('ourTOvPlus',  +1, 'our');
+  hook('ourTOvMinus', -1, 'our');
+  hook('oppTOvPlus',  +1, 'opp');
+  hook('oppTOvMinus', -1, 'opp');
+})();
 
 
 
@@ -456,8 +502,9 @@ let STATE = {
   oppName: "Opponent",
   oppColor: "#9a9a9a",
   collapsedTO: {},
-  openingKO: null,                // "we" | "opp" | null
-  officials: { headRef: "", sideJudge: "" }
+  openingKO: null,
+  officials: { headRef: "", sideJudge: "" },
+  turnovers: { our: 0, opp: 0 }   // NEW
 };
 
 function saveState(){
@@ -483,6 +530,8 @@ function saveState(){
     collapsedTO: STATE.collapsedTO,
     openingKO: STATE.openingKO,
     officials: STATE.officials
+    turnovers: STATE.turnovers        // NEW
+
   };
   localStorage.setItem(STATE_KEY, JSON.stringify(s));
 }
@@ -517,6 +566,8 @@ function loadState(){
     STATE.officials = s.officials || { headRef: "", sideJudge: "" };
     elHeadRef.value = STATE.officials.headRef || "";
     elSideJudge.value = STATE.officials.sideJudge || "";
+    STATE.turnovers = s.turnovers || { our: 0, opp: 0 };   // NEW
+    renderTurnovers();                                     // NEW
 
     updateSecondHalfInfo();
     renderOfficials();
@@ -634,6 +685,8 @@ updateSecondHalfInfo();
 if (elHeadRef)   elHeadRef.value   = "";
 if (elSideJudge) elSideJudge.value = "";
 STATE.officials = { headRef: "", sideJudge: "" };
+STATE.turnovers = { our: 0, opp: 0 };   // NEW
+renderTurnovers();                      // NEW
 renderOfficials();
 saveState();
 
