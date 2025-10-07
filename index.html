@@ -80,28 +80,37 @@
 
 
 
-        <div class="row toggles compact">
-          <label><input id="view-table" type="radio" name="view" checked> Table</label>
-          <label><input id="view-row"   type="radio" name="view"> One Row</label>
-        </div>
+<!-- Game Settings (collapsible) -->
+<details class="panel" id="gameSettings">
+  <summary>Game Settings</summary>
 
-<div class="row toggles compact kickoff-row">
-  <label><input id="weReceivedKO" type="radio" name="openingKO" value="we"> We received the opening kickoff</label>
-  <label><input id="oppReceivedKO" type="radio" name="openingKO" value="opp">
-    <span id="oppNameInline">Opponent</span> received the opening kickoff
-  </label>
-</div>
+  <!-- A) View: Table / One Row -->
+  <div class="row toggles compact">
+    <label><input id="view-table" type="radio" name="view" checked> Table</label>
+    <label><input id="view-row"   type="radio" name="view"> One Row</label>
+  </div>
 
-<div class="subhead">Officials</div>
-<div class="row compact">
-  <label class="w-30">Head Ref</label>
-  <input id="headRef" type="text" placeholder="Enter head ref name" autocomplete="off" />
-</div>
-<div class="row compact">
-  <label class="w-30">Side Judge (our sideline)</label>
-  <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
-</div>
+  <!-- B) Opening Kickoff -->
+  <div class="row toggles compact kickoff-row">
+    <label><input id="weReceivedKO" type="radio" name="openingKO" value="we"> We received the opening kickoff</label>
+    <label><input id="oppReceivedKO" type="radio" name="openingKO" value="opp">
+      <span id="oppNameInline">Opponent</span> received the opening kickoff
+    </label>
+  </div>
 
+  <!-- C) Officials (inputs) -->
+  <div class="subhead">Officials</div>
+  <div class="row compact">
+    <label class="w-30">Head Ref</label>
+    <input id="headRef" type="text" placeholder="Enter head ref name" autocomplete="off" />
+  </div>
+  <div class="row compact">
+    <label class="w-30">Side Judge (our sideline)</label>
+    <input id="sideJudge" type="text" placeholder="Enter side judge name" autocomplete="off" />
+  </div>
+</details>
+
+<!-- Always-visible info under the panel -->
 <div class="sticky-officials" id="stickyOfficials">
   <div id="secondHalfInfo" class="muted tiny-info">2nd-half kickoff: —</div>
 
