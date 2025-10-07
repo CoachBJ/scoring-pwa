@@ -367,11 +367,31 @@ function commitManualTime(){
 }
 
 // One-tap Use TO
-const btnUseOur = document.getElementById("useOurTO");
-if (btnUseOur) btnUseOur.addEventListener("click", () => { useTO('our'); });
+function bindLongPressTO(btnId, side) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  let t = null;
 
-const btnUseOpp = document.getElementById("useOppTO");
-if (btnUseOpp) btnUseOpp.addEventListener("click", () => { useTO('opp'); });
+  const fire = () => {
+    useTO(side);
+    if (navigator.vibrate) navigator.vibrate(20);
+  };
+
+  btn.addEventListener('pointerdown', () => {
+    btn.classList.add('btn-pressing');
+    t = setTimeout(fire, 500);
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev => {
+    btn.addEventListener(ev, () => {
+      btn.classList.remove('btn-pressing');
+      if (t) { clearTimeout(t); t = null; }
+    });
+  });
+
+  btn.addEventListener('dblclick', fire);
+}
+bindLongPressTO('useOurTO','our');
+bindLongPressTO('useOppTO','opp');
 
 
 
