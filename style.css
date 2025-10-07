@@ -166,21 +166,20 @@ main {
   grid-area: score;
 }
 /* Put title + Reset on one line, keep it pinned */
-.area-clock .section-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  position: sticky;
-  top: 8px;              /* adjust if needed */
-  z-index: 6;
-  background: var(--card-background);
-  padding-block: 4px;    /* small padding so sticky looks clean */
+.area-clock .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.reset-inline{
-  margin-left:auto;      /* pushes the button to the far right */
+.area-clock .section-title {
+  margin: 0;           /* kills bottom space */
+  padding: 0;          /* kills extra padding */
+  border: 0;           /* removes underline */
 }
+
+.reset-inline { margin-left: auto; }
 
 }
 .area-output {
