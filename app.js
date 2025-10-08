@@ -553,18 +553,15 @@ let STATE = {
 };
 
 function saveState(){
-  document.querySelectorAll('.to-card[data-key]').forEach(card => {
+  document.querySelectorAll('.to-card[data-key]').forEach(card=>{
     STATE.collapsedTO[card.dataset.key] = card.classList.contains('collapsed');
   });
-
-  // derive openingKO from radios
   STATE.openingKO = (elWeKO?.checked) ? "we" : ((elOppKO?.checked) ? "opp" : null);
 
-  // officials already in STATE via inputs
-
-  const s={
-    our:Number(elOur.value||0), opp:Number(elOpp.value||0),
-    half: elHalf2.checked?2:1,
+  const s = {
+    our: Number(elOur.value||0),
+    opp: Number(elOpp.value||0),
+    half: elHalf2.checked ? 2 : 1,
     time: getTimeSecs(),
     to: {
       "our-h1": getTOState("our-h1"),
@@ -572,18 +569,17 @@ function saveState(){
       "our-h2": getTOState("our-h2"),
       "opp-h2": getTOState("opp-h2")
     },
-    oppName: STATE.oppName, oppColor: STATE.oppColor,
+    oppName:   STATE.oppName,
+    oppColor:  STATE.oppColor,
     collapsedTO: STATE.collapsedTO,
-    openingKO: STATE.openingKO,
-    officials: STATE.officials,
-    turnovers: STATE.turnovers   
-    // inside the `s = { ... }` object you write to localStorage:
-    offPlays: STATE.offPlays,  
-    defPlays: STATE.defPlays,
-    // NEW
-
+    openingKO:  STATE.openingKO,
+    officials:  STATE.officials,
+    turnovers:  STATE.turnovers,
+    // NEW: persist playlists
+    offPlays:   STATE.offPlays,
+    defPlays:   STATE.defPlays
   };
-   localStorage.setItem(STATE_KEY, JSON.stringify(s));
+  localStorage.setItem(STATE_KEY, JSON.stringify(s));
 }
 
 
@@ -591,18 +587,19 @@ function loadState(){
   try{
     const s = JSON.parse(localStorage.getItem(STATE_KEY) || "{}");
 
-    // score & half
+    // scores & half
     if (elOur) elOur.value = s.our ?? 0;
     if (elOpp) elOpp.value = s.opp ?? 0;
-    (s.half === 2 ? elHalf2 : elHalf1).checked = true;
+
+    // ✅ guard half radios in case they’re not mounted yet
+    const halfEl = (s.half === 2 && elHalf2) ? elHalf2 : elHalf1;
+    if (halfEl) halfEl.checked = true;
+
     setTimeSecs(typeof s.time === "number" ? s.time : MAX_TIME_SECS);
 
     // timeouts
-    if (s.to) {
-      Object.keys(s.to).forEach(k => setTOState(k, s.to[k]));
-    } else {
-      ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k => setTOState(k,[true,true,true]));
-    }
+    if (s.to) Object.keys(s.to).forEach(k => setTOState(k, s.to[k]));
+    else ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k => setTOState(k,[true,true,true]));
 
     // collapsed TO cards
     STATE.collapsedTO = s.collapsedTO || {};
@@ -614,6 +611,8 @@ function loadState(){
     // opponent profile
     STATE.oppName  = s.oppName  || "Opponent";
     STATE.oppColor = s.oppColor || "#9a9a9a";
+
+    // ✅ migrate to multi-field rows
     STATE.offPlays = migrateRows(s.offPlays);
     STATE.defPlays = migrateRows(s.defPlays);
 
@@ -621,14 +620,14 @@ function loadState(){
 
     // opening KO + officials
     STATE.openingKO = s.openingKO || null;
-    if (typeof elWeKO  !== "undefined") elWeKO.checked  = STATE.openingKO === "we";
-    if (typeof elOppKO !== "undefined") elOppKO.checked = STATE.openingKO === "opp";
+    if (elWeKO)  elWeKO.checked  = STATE.openingKO === "we";
+    if (elOppKO) elOppKO.checked = STATE.openingKO === "opp";
 
     STATE.officials = s.officials || { headRef: "", sideJudge: "" };
     if (elHeadRef)   elHeadRef.value   = STATE.officials.headRef   || "";
     if (elSideJudge) elSideJudge.value = STATE.officials.sideJudge || "";
 
-    // --- turnovers migration ---
+    // turnovers migration
     if (typeof s.turnovers === "number" || typeof (s.turnovers?.our) === "number") {
       const ourNum = typeof s.turnovers === "number" ? s.turnovers : (s.turnovers?.our || 0);
       const oppNum = typeof s.turnovers === "number" ? 0 : (s.turnovers?.opp || 0);
@@ -640,7 +639,7 @@ function loadState(){
       STATE.turnovers = s.turnovers || STATE.turnovers;
     }
 
-    // render (keep these INSIDE the try)
+    // render
     renderTurnovers();
     updateSecondHalfInfo();
     renderOfficials();
@@ -1008,16 +1007,6 @@ function bumpTouch(name, delta) {
   if (navigator.vibrate) navigator.vibrate(10);
 }
 
-// ---- compose loadState once (touch counter + playlists) ----
-const __origLoadState = (typeof loadState === 'function') ? loadState : () => {};
-loadState = function(){
-  __origLoadState();
-  ensureTouchState();
-  renderTouchCounter();
-  STATE.offPlays = (Array.isArray(STATE.offPlays) && STATE.offPlays.length) ? STATE.offPlays : Array(PLAY_ROWS).fill("");
-  STATE.defPlays = (Array.isArray(STATE.defPlays) && STATE.defPlays.length) ? STATE.defPlays : Array(PLAY_ROWS).fill("");
-  renderPlaylists();
-};
 
 document.addEventListener('DOMContentLoaded', () => {
   ensureTouchState();
@@ -1028,7 +1017,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ===== Playlists (Offense / Defense) =====
-const PLAY_ROWS = 75;
 
 // Keep in STATE so it saves/loads with everything else
 STATE.offPlays = STATE.offPlays || Array(PLAY_ROWS).fill("");
@@ -1252,32 +1240,25 @@ document.addEventListener('DOMContentLoaded', queueAnalytics);
 
 // ===== Export CSV =====
 function exportPlaysCSV(){
-  const safe = (s)=> `"${String(s||'').replace(/"/g,'""')}"`;
-  // include touches summary too
-  const touches = STATE.touches ? Object.entries(STATE.touches).map(([k,v])=>`${k}:${v}`).join('; ') : '';
-
+  const safe = s => `"${String(s||'').replace(/"/g,'""')}"`;
   const lines = [];
-  lines.push('Section,Index,Call');
+  lines.push('Section,Index,YL,Dn,Dist,Hash,Play Call,Gain');
+
   for (let i=0;i<PLAY_ROWS;i++){
-    lines.push(`Offense,${i+1},${safe(STATE.offPlays[i])}`);
+    const p = STATE.offPlays[i] || {};
+    lines.push(`Offense,${i+1},${safe(p.yl)},${safe(p.dn)},${safe(p.dist)},${safe(p.hash)},${safe(p.call)},${Number(p.gain||0)}`);
   }
   for (let i=0;i<PLAY_ROWS;i++){
-    lines.push(`Defense,${i+1},${safe(STATE.defPlays[i])}`);
+    const p = STATE.defPlays[i] || {};
+    lines.push(`Defense,${i+1},${safe(p.yl)},${safe(p.dn)},${safe(p.dist)},${safe(p.hash)},${safe(p.call)},${Number(p.gain||0)}`);
   }
-  lines.push('');
-  lines.push(`Summary,,Touches = ${safe(touches)}`);
 
   const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  const ts = new Date().toISOString().replace(/[:.]/g,'-');
-  a.download = `CCS_Game_Plays_${ts}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.download = `CCS_Game_Plays_${new Date().toISOString().replace(/[:.]/g,'-')}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
 }
-
-document.getElementById('exportPlays')?.addEventListener('click', exportPlaysCSV);
 
 
 
