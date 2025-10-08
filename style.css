@@ -80,7 +80,7 @@ main {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   background:#fff;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 .turnovers .col.our{ border-left:6px solid var(--primary-color); }
 .turnovers .col.opp{ border-left:6px solid var(--opp); }
@@ -105,7 +105,7 @@ main {
 .turnovers .ctrls{
   display:grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 4px;
 }
 .turnovers .trio{
   display:grid;
@@ -115,7 +115,7 @@ main {
   gap: 6px;
 }
 .turnovers .val{
-  min-width: 2ch;
+  min-width: 1.5ch;
   text-align: center;
   font-weight: 900;
 }
