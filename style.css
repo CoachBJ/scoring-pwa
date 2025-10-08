@@ -68,117 +68,63 @@ main {
   gap: 12px;
 }
 
-/* ===== Turnover Counter ===== */
-.turnovers {
-  display: grid;
-  gap: 12px;
-  margin-top: 10px;
+/* Two side-by-side columns for turnovers */
+.turnovers .to-2col{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  align-items:start;
 }
 
-.turnovers .to-stat {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
+.turnovers .col{
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: #fff;
-}
-
-.turnovers .to-stat.our {
-  border-left: 6px solid var(--primary-color);
-}
-.turnovers .to-stat.opp {
-  border-left: 6px solid var(--opp);
-}
-
-.turnovers .to-label {
-  font-weight: 800;
-  font-size: clamp(1rem, 2vw, 1.1rem);
-}
-
-.turnovers .to-value {
-  font-weight: 900;
-  font-size: clamp(1.6rem, 3.8vw, 2.2rem);
-  line-height: 1;
-  justify-self: end;
-  min-width: 2ch;
-  text-align: right;
-}
-
-.turnovers .tinyBtns {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.turnovers .mini {
-  font-weight: 800;
-  min-height: 44px;
-  border-radius: 10px;
-}
-
-.turnovers .mini.opp {
-  background: var(--opp);
-  color: var(--opp-text);
-  border-color: transparent;
-}
-
-.turnovers .to-diff {
-  text-align: center;
-  font-weight: 900;
+  background:#fff;
   padding: 10px 12px;
-  border-radius: 10px;
-  background: #f1f3f5;
 }
 
-.turnovers .to-diff.pos { background: #e7f5ee; }   /* positive margin */
-.turnovers .to-diff.neg { background: #ffebee; }   /* negative margin */
-
-/* --- Single-line Timeouts Bar --- */
-.timeouts-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  align-items: center;
-  margin-top: 12px;
-}
-
-/* Single-line per team */
-.turnovers .team-line{
-  display: grid;
-  grid-template-columns: auto repeat(3, max-content);
-  gap: 12px 14px;
-  align-items: center;
-  padding: 10px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  background: #fff;
-}
-
-.turnovers .team-line.our{ border-left: 6px solid var(--primary-color); }
-.turnovers .team-line.opp{ border-left: 6px solid var(--opp); }
+.turnovers .col.our{ border-left:6px solid var(--primary-color); }
+.turnovers .col.opp{ border-left:6px solid var(--opp); }
 
 .turnovers .team-name{
   font-weight: 900;
-  white-space: nowrap;
-  margin-right: 4px;
+  margin-bottom: 6px;
 }
 
-.turnovers .trio{
-  display: grid;
-  grid-template-columns: auto auto auto auto;
-  align-items: center;
+/* Top row: labels across */
+.turnovers .labels{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  font-weight: 700;
+  text-align:center;
+  margin-bottom: 6px;
+}
+
+/* Second row: controls across */
+.turnovers .ctrls{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
 }
 
-.turnovers .trio .label{ font-weight: 700; }
-.turnovers .trio .val{
+/* Compact trio: [-] value [+] stacked nicely */
+.turnovers .trio{
+  display:grid;
+  grid-template-columns: auto 1fr auto;
+  align-items:center;
+  justify-items:center;
+  gap: 6px;
+}
+
+.turnovers .val{
   min-width: 2ch;
   text-align: center;
   font-weight: 900;
+}
+
+@media (max-width: 700px){
+  .turnovers .to-2col{ grid-template-columns: 1fr; } /* stack on small screens */
 }
 
 /* Keep existing .to-diff styles you already have */
@@ -223,7 +169,7 @@ main {
 
 @media (min-width: 900px) {
   .timeouts-bar { position: sticky; top: 8px; z-index: 4; }
-}
+
 
 
 
