@@ -117,60 +117,74 @@
 
   <button type="button" id="clearOfficials" class="link-btn small">Clear officials</button>
   <!-- Turnovers (below Clear officials) -->
-    <!-- Turnovers (below Clear officials) -->
 <div class="turnovers card-lite" id="turnoversBox" aria-live="polite">
-  <div class="team-line our">
-    <span class="team-name">Charlotte Christian:</span>
+  <div class="to-2col">
+    <!-- LEFT: Charlotte Christian -->
+    <div class="col our">
+      <div class="team-name">Charlotte Christian</div>
 
-    <div class="trio">
-      <span class="label">Fum. Lost</span>
-      <button class="mini" id="ourFLminus">−</button>
-      <span class="val" id="ourFL">0</span>
-      <button class="mini" id="ourFLplus">+</button>
+      <!-- labels row -->
+      <div class="labels">
+        <div>Fum. Lost</div>
+        <div>Fum. Rec.</div>
+        <div>INT</div>
+      </div>
+
+      <!-- controls row -->
+      <div class="ctrls">
+        <div class="trio">
+          <button class="mini" id="ourFLminus">−</button>
+          <span class="val" id="ourFL">0</span>
+          <button class="mini" id="ourFLplus">+</button>
+        </div>
+        <div class="trio">
+          <button class="mini" id="ourFRminus">−</button>
+          <span class="val" id="ourFR">0</span>
+          <button class="mini" id="ourFRplus">+</button>
+        </div>
+        <div class="trio">
+          <button class="mini" id="ourINTminus">−</button>
+          <span class="val" id="ourINT">0</span>
+          <button class="mini" id="ourINTplus">+</button>
+        </div>
+      </div>
     </div>
 
-    <div class="trio">
-      <span class="label">Fum. Rec.</span>
-      <button class="mini" id="ourFRminus">−</button>
-      <span class="val" id="ourFR">0</span>
-      <button class="mini" id="ourFRplus">+</button>
-    </div>
+    <!-- RIGHT: Opponent -->
+    <div class="col opp">
+      <div class="team-name"><span id="oppNameTO">Opponent</span></div>
 
-    <div class="trio">
-      <span class="label">INT</span>
-      <button class="mini" id="ourINTminus">−</button>
-      <span class="val" id="ourINT">0</span>
-      <button class="mini" id="ourINTplus">+</button>
-    </div>
-  </div>
+      <!-- labels row -->
+      <div class="labels">
+        <div>Fum. Lost</div>
+        <div>Fum. Rec.</div>
+        <div>INT</div>
+      </div>
 
-  <div class="team-line opp">
-    <span class="team-name"><span id="oppNameTO">Opponent</span>:</span>
-
-    <div class="trio">
-      <span class="label">Fum. Lost</span>
-      <button class="mini opp" id="oppFLminus">−</button>
-      <span class="val" id="oppFL">0</span>
-      <button class="mini opp" id="oppFLplus">+</button>
-    </div>
-
-    <div class="trio">
-      <span class="label">Fum. Rec.</span>
-      <button class="mini opp" id="oppFRminus">−</button>
-      <span class="val" id="oppFR">0</span>
-      <button class="mini opp" id="oppFRplus">+</button>
-    </div>
-
-    <div class="trio">
-      <span class="label">INT</span>
-      <button class="mini opp" id="oppINTminus">−</button>
-      <span class="val" id="oppINT">0</span>
-      <button class="mini opp" id="oppINTplus">+</button>
+      <!-- controls row -->
+      <div class="ctrls">
+        <div class="trio">
+          <button class="mini opp" id="oppFLminus">−</button>
+          <span class="val" id="oppFL">0</span>
+          <button class="mini opp" id="oppFLplus">+</button>
+        </div>
+        <div class="trio">
+          <button class="mini opp" id="oppFRminus">−</button>
+          <span class="val" id="oppFR">0</span>
+          <button class="mini opp" id="oppFRplus">+</button>
+        </div>
+        <div class="trio">
+          <button class="mini opp" id="oppINTminus">−</button>
+          <span class="val" id="oppINT">0</span>
+          <button class="mini opp" id="oppINTplus">+</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="to-diff" id="toDiff">TO Margin: 0</div>
 </div>
+
 
 
         <p id="status" class="muted"></p>
