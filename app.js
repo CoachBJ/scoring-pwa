@@ -427,6 +427,12 @@ const elTimeInput=document.getElementById("timeInput");
 const elMiniBtns = document.querySelectorAll('.mini[data-dt]');
 const elOppNameTO = document.getElementById("oppNameTO"); // for the TO line label
 
+document.addEventListener('DOMContentLoaded', () => {
+  const n = document.getElementById('toOppName');
+  if (n) n.textContent = (window.STATE?.oppName) || 'Opponent';
+});
+
+
 
 function getGroupEl(key){ return document.querySelector(`.to-card[data-key="${key}"] .to-checks`); }
 function setTOState(key, arr){
