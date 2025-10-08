@@ -288,11 +288,12 @@
   <div class="two-pt-head">2-Point Decision (after TD)</div>
    <div id="twoPtMath" class="two-pt-math"></div> <!-- NEW -->
 
-  <div class="two-pt-controls">
-    <label>XP% <input id="xpRate" type="number" min="0" max="100" step="1" value="48"></label>
-    <label>2-pt% <input id="twoPtRate" type="number" min="0" max="100" step="1" value="45"></label>
-    <button id="recalcTwoPt" class="mini">Update</button>
-  </div>
+<div class="two-pt-controls">
+  <label>XP% <input id="xpRate" type="number" min="0" max="100" step="1" value="48"></label>
+  <label>2-pt% <input id="twoPtRate" type="number" min="0" max="100" step="1" value="45"></label>
+  <button id="recalcTwoPt" class="mini" type="button">Update</button>
+</div> <!-- ← make sure this ends with '>' -->
+
 
   <div id="twoPtResult" class="two-pt-result">—</div>
 
@@ -309,7 +310,6 @@
       <li>Up 14 → <b>Go for 2</b> (get to 16)</li>
     </ul>
   </details>
-</div>
 
       </section>
 
