@@ -118,6 +118,53 @@ main {
 
 
 
+/* --- Playlists: multi-field rows --- */
+.playlist .play-head,
+.playlist .play-row {
+  display: grid;
+  grid-template-columns:
+    2.2ch           /* # */
+    7ch             /* YL */
+    4ch             /* Down */
+    5ch             /* Dist */
+    6ch             /* Hash */
+    1fr             /* Play Call (flex) */
+    6ch;            /* Gain (auto) */
+  gap: 6px;
+  align-items: center;
+}
+
+.playlist .play-head {
+  font-weight: 700;
+  color: var(--muted-color);
+  position: sticky; top: 0;
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px 0;
+  z-index: 1;
+}
+
+.playlist .idx { text-align: right; font-weight: 800; opacity: .85; }
+
+.playlist input.play-yl   { width: 100%; padding: 6px; text-align: center; }
+.playlist input.play-dn   { width: 100%; padding: 6px; text-align: center; }
+.playlist input.play-dist { width: 100%; padding: 6px; text-align: center; }
+.playlist input.play-hash { width: 100%; padding: 6px; text-align: center; }
+.playlist input.play-call { width: 100%; padding: 6px; }
+
+.playlist .gain {
+  text-align: center;
+  font-weight: 800;
+  padding: 4px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+/* small inputs */
+.playlist input[type="number"]::-webkit-outer-spin-button,
+.playlist input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.playlist input[type="number"] { -moz-appearance: textfield; }
 
   
 
