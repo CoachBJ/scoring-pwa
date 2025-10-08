@@ -221,6 +221,9 @@ main {
   border-radius: 6px;
 }
 
+.timeouts-bar .to-quick{ grid-column:1 / -1; margin-top:6px; }
+
+
 /* keep big Use TO buttons beneath it */
 .timeouts-bar .to-quick {
   grid-column: 1 / -1;
@@ -245,8 +248,12 @@ main {
   padding: 6px 8px;
   border-radius: 6px;
 }
-.to-quick {
-  margin-top: 6px;
+/* keep this scoped so it won't fight with the timeouts-bar version */
+.area-clock .to-quick{
+  display:grid; gap:10px; grid-template-columns:1fr; margin-top:8px;
+}
+@media (min-width:640px){ .area-clock .to-quick{ grid-template-columns:1fr 1fr; } }
+
 }
 
 .brand-mark {
@@ -490,9 +497,8 @@ input[type="number"] {
   border-radius: 6px;
   cursor: pointer;
 }
-.chip.opp {
-  background-color: var(--opp);
-  color: var(--opp-text);
+.chip.opp{ text-shadow: 0 1px 0 rgba(0,0,0,.25); }
+
 }
 .quick-row {
   display: flex;
@@ -653,13 +659,7 @@ input[type="number"] {
 .sticky-officials {
   margin-top: 8px;
 }
-@media (min-width: 900px) {
-  .sticky-officials {
-    position: sticky;
-    top: 8px; /* adjust if your header is taller */
-    z-index: 5;
-  }
-}
+
 /* Tiny helpers */
 .tiny-info {
   font-size: 0.9em;
@@ -719,13 +719,7 @@ input[type="number"] {
 }
 
 
-/* --- BIG Use TO buttons --- */
-.to-quick {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: 1fr;
-  margin-top: 8px;
-}
+
 @media (min-width: 640px) {
   .to-quick { grid-template-columns: 1fr 1fr; }
 }
