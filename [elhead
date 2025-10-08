@@ -246,7 +246,7 @@ function renderTurnovers(){
     const cur = clampNonNeg(STATE.turnovers[side][key]);
     STATE.turnovers[side][key] = clampNonNeg(cur + delta);
 
-    // NEW: mirror fumbles lost -> opponent fumbles recovered
+    // Mirror fumbles lost <-> opponent fumbles recovered
     if (key === 'fumLost' && delta !== 0) {
       const other = mirror(side);
       const curRec = clampNonNeg(STATE.turnovers[other].fumRec);
@@ -258,9 +258,16 @@ function renderTurnovers(){
     if (navigator.vibrate) navigator.vibrate(10);
   };
 
-  // (keep your existing listeners below)
-})();
+  const bind = (side, key) => {
+    const ids = TO_IDS[side][key];
+    document.getElementById(ids.plus)?.addEventListener('click',  () => bump(side, key, +1));
+    document.getElementById(ids.minus)?.addEventListener('click', () => bump(side, key, -1));
+  };
 
+  ['our','opp'].forEach(side => {
+    ['fumLost','fumRec','intThrown'].forEach(key => bind(side, key));
+  });
+})();
 
 
 const fromMMSS = (txt) => {
@@ -406,11 +413,12 @@ function renderSection(title, resultObj){
 function renderOfficials(){
   const hr = STATE.officials.headRef?.trim();
   const sj = STATE.officials.sideJudge?.trim();
-  elHeadRefDisplay.textContent = hr ? `Head Ref: ${hr}` : "";
-  elSideJudgeDisplay.textContent = sj ? `Side Judge (our sideline): ${sj}` : "";
+  if (elHeadRefDisplay)   elHeadRefDisplay.textContent   = hr ? `Head Ref: ${hr}` : "";
+  if (elSideJudgeDisplay) elSideJudgeDisplay.textContent = sj ? `Side Judge (our sideline): ${sj}` : "";
   const any = !!(hr || sj);
-  elOfficialsDisplay.style.display = any ? "grid" : "none";
+  if (elOfficialsDisplay) elOfficialsDisplay.style.display = any ? "grid" : "none";
 }
+
 
 // ===== Game clock / TOs (checkbox groups) =====
 const elHalf1=document.getElementById("half1");
@@ -544,7 +552,8 @@ function saveState(){
   });
 
   // derive openingKO from radios
-  STATE.openingKO = elWeKO.checked ? "we" : (elOppKO.checked ? "opp" : null);
+  STATE.openingKO = (elWeKO?.checked) ? "we" : ((elOppKO?.checked) ? "opp" : null);
+
   // officials already in STATE via inputs
 
   const s={
@@ -647,10 +656,10 @@ function loadState(){
 
 
 // Officials text boxes (autosave + live display)
-[elHeadRef, elSideJudge].forEach(inp=>{
-  inp.addEventListener("input", ()=>{
-    STATE.officials.headRef  = elHeadRef.value.trim();
-    STATE.officials.sideJudge = elSideJudge.value.trim();
+[elHeadRef, elSideJudge].filter(Boolean).forEach(inp => {
+  inp.addEventListener('input', () => {
+    STATE.officials.headRef   = elHeadRef?.value.trim()   || "";
+    STATE.officials.sideJudge = elSideJudge?.value.trim() || "";
     renderOfficials();
     saveState();
   });
@@ -782,14 +791,15 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
     const btn = document.getElementById(id);
     if (!btn) return;
 
-    // Single tap / mouse click
     const fire = () => { useTO(side); if (navigator.vibrate) navigator.vibrate(20); };
+
+    // Single tap
     btn.addEventListener('click', fire);
 
-    // Prevent iOS callout on long-press
+    // Prevent iOS text callout on long-press
     btn.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // Long-press (pointer)
+    // Long-press
     let t = null;
     btn.addEventListener('pointerdown', () => {
       btn.classList.add('btn-pressing');
@@ -802,16 +812,13 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
       });
     });
 
-    // Keyboard accessibility
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); }
-    });
+    // Optional: dblclick as backup
+    btn.addEventListener('dblclick', fire);
   };
 
-  hook('useOurTO', 'our');
-  hook('useOppTO', 'opp');
+  hook('useOurTO','our');
+  hook('useOppTO','opp');
 })();
-
 
 // ===== 2-Point Decision (after TD) =====
 (function twoPointModule(){
