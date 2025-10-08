@@ -137,6 +137,9 @@ main {
   font-weight: 900;
 }
 
+.to-diff { font-weight: 800; text-align: center; margin-top: 8px; }
+.to-diff.pos { color: var(--success-color); } /* green */
+.to-diff.neg { color: var(--danger-color); }  /* red   */
 
 
 /* Stack on small screens */
