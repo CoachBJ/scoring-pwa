@@ -43,10 +43,6 @@ main {
 /* Ensure the turnovers card grows to fit content */
 .sticky-officials .card-lite { height: auto; }
 
-/* Slightly wider numbers and bigger buttons for game stress */
-.turnovers .val { min-width: 2ch; }          /* was 1.5ch */
-.turnovers .mini { padding: 8px 12px; }      /* a bit larger touch target */
-
 
 /* --- App Header --- */
 /* New top banner with center title + logos */
@@ -93,12 +89,7 @@ main {
 
 /* Two side-by-side columns for turnovers */
 /* Two side-by-side columns for turnovers */
-.turnovers .to-2col{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px 8px;
-  align-items:start;
-}
+
 
 .turnovers .col{
   border: 1px solid var(--border-color);
@@ -125,23 +116,43 @@ main {
   margin-bottom: 6px;
 }
 
-/* Second row: controls */
+
+
+
+  
+
+
+
+/* Team cards next to each other; stack on small screens */
+.turnovers .to-2col{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+/* Trio row wraps gracefully on narrow screens */
 .turnovers .ctrls{
   display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(3, minmax(90px,1fr));
+  gap: 6px;
 }
+
+.turnovers .mini{
+  padding: 10px 14px;     /* larger tap area */
+}
+
+.turnovers .val{
+  min-width: 2.2ch;       /* slightly wider numerals */
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+}
+
+
 .turnovers .trio{
   display:grid;
   grid-template-columns: auto 1fr auto;
   align-items:center;
   justify-items:center;
   gap: 6px;
-}
-.turnovers .val{
-  min-width: 1.5ch;
-  text-align: center;
-  font-weight: 900;
 }
 
 .to-diff { font-weight: 800; text-align: center; margin-top: 8px; }
