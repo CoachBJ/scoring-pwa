@@ -72,7 +72,7 @@ main {
 .turnovers .to-2col{
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6x 8px;
+  gap: 6px 8px;
   align-items:start;
 }
 
@@ -127,6 +127,29 @@ main {
 
 /* Keep existing .to-diff styles you already have */
 
+/* --- Touch Counter --- */
+.touch-counter { display: grid; gap: 10px; }
+.touch-counter .tc-head{
+  display:flex; align-items:center; justify-content:space-between;
+}
+.touch-counter .tc-title{ font-weight:800; }
+
+.touch-counter .tc-list{
+  display:grid; gap: 6px;
+  grid-template-columns: 1fr;
+}
+.touch-counter .tc-row{
+  display:grid; align-items:center;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px; padding: 6px 8px; background:#fff;
+}
+.touch-counter .tc-name{ font-weight:700; }
+.touch-counter .tc-val{ min-width: 2ch; text-align:center; font-weight:800; }
+.touch-counter .tc-btn{ padding: 6px 10px; border:1px solid var(--border-color); border-radius:6px; background:#fff; cursor:pointer; }
+.touch-counter .tc-btn:active{ transform: scale(.98); }
+.touch-counter .tc-footer{ display:flex; justify-content:flex-end; font-weight:700; }
 
 
 /* --- 2-Point box --- */
