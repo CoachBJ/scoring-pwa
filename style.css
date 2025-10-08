@@ -22,10 +22,25 @@ body {
   color: var(--text-color);
 }
 main {
-  padding: 16px;
-  max-width: 1200px;
+  padding: clamp(8px, 1.5vw, 16px);
+  max-width: 100%;       /* was 1200px; remove the cap */
   margin: 0 auto;
 }
+
+
+/* Base (phones): single column stack */
+.layout{
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "side"
+    "score"
+    "clock"
+    "output";
+  gap: 16px;
+}
+
+
 /* --- App Header --- */
 /* New top banner with center title + logos */
 .appbar{
@@ -45,10 +60,12 @@ main {
   font-size: clamp(1.1rem, 2.2vw + 0.6rem, 1.8rem);
 }
 .app-logo{
-  width:150px; height:150px;
-  object-fit:contain;
-  border-radius:10px; /* remove if you don’t want rounded logos */
+  width: clamp(56px, 10vw, 120px);
+  height: clamp(56px, 10vw, 120px);
+  object-fit: contain;
+  border-radius: 10px;
 }
+
 .toolbar{
   display:flex;
   justify-content:flex-end;
@@ -120,6 +137,20 @@ main {
   font-weight: 900;
 }
 
+
+/* Base (phones): single column stack */
+.layout{
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "side"
+    "score"
+    "clock"
+    "output";
+  gap: 16px;
+}
+
+
 /* Stack on small screens */
 @media (max-width: 700px){
   .turnovers .to-2col{ grid-template-columns: 1fr; }
@@ -188,10 +219,6 @@ main {
 }
 
 
-@media (min-width: 900px) {
-  .timeouts-bar { position: sticky; top: 8px; z-index: 4; }
-}
-
 
 .timeouts-line {
   font-weight: 600;
@@ -225,17 +252,34 @@ main {
   color: var(--muted-color);
 }
 /* --- Main Layout --- */
-.layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas:
-    "score clock"
-    "output output";
-  gap: 16px;
+/* Make the app use the full screen on iPad/desktop */
+
+/* iPad & desktop: 3 columns across */
+@media (min-width: 768px){
+  .layout{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "side  score clock"
+      "output output output";
+  }
 }
-.area-score {
-  grid-area: score;
-}
+
+/* Name each region */
+.area-side  { grid-area: side;  }
+.area-score { grid-area: score; }
+.area-clock { grid-area: clock; }
+.area-output{ grid-area: output; }
+
+/* Let cards stretch to column height (nice on big screens) */
+.layout > *        { align-self: stretch; }
+.card, .card-lite  { height: 100%; display: flex; flex-direction: column; }
+
+/* Optional: avoid overflow jitter on very wide displays */
+html, body { width: 100%; overflow-x: hidden; }
+
+/* Optional perf: only paint heavy sections when needed */
+.area-side, .area-score, .area-clock, .area-output { content-visibility: auto; contain-intrinsic-size: 600px; }
+
 /* Put title + Reset on one line, keep it pinned */
 .area-clock .section-head {
   display: flex;
@@ -808,20 +852,6 @@ details.panel .row {
 }
 
 
-
-/* --- 3-column layout with left sidebar --- */
-.layout {
-  display: grid;
-  grid-template-columns: 280px 1fr 1fr;
-  grid-template-areas:
-    "side score clock"
-    "side output output";
-  gap: 16px;
-}
-
-.area-side   { grid-area: side; }
-.area-score  { grid-area: score; } /* already exists */
-.area-output { grid-area: output; } /* already exists */
 
 /* Responsive: collapse sidebar on small screens */
 @media (max-width: 900px){
