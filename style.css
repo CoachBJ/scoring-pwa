@@ -806,3 +806,70 @@ details.panel .row {
   -webkit-touch-callout: none;
   touch-action: manipulation;
 }
+
+
+
+/* --- 3-column layout with left sidebar --- */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 1fr;
+  grid-template-areas:
+    "side score clock"
+    "side output output";
+  gap: 16px;
+}
+
+.area-side   { grid-area: side; }
+.area-score  { grid-area: score; } /* already exists */
+.area-output { grid-area: output; } /* already exists */
+
+/* Responsive: collapse sidebar on small screens */
+@media (max-width: 900px){
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "score"
+      "clock"
+      "side"
+      "output";
+  }
+}
+
+/* --- Collapsible playlists --- */
+.playlist {
+  display: grid;
+  gap: 6px;
+  max-height: 50vh;
+  overflow: auto;
+  padding: 8px 12px 4px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.play-row {
+  display: grid;
+  grid-template-columns: 2.2ch 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.play-row .idx {
+  text-align: right;
+  font-weight: 800;
+  opacity: .85;
+}
+
+.play-row input[type="text"]{
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.playlist-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
