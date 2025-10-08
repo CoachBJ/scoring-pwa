@@ -59,7 +59,7 @@ main {
 @media (max-width:480px){
   .app-logo{ width:44px; height:44px; }
   .app-title{ font-size: clamp(1rem, 4.5vw, 1.4rem); }
-
+ }
 
 .brand {
   display: flex;
@@ -167,8 +167,7 @@ main {
 
 @media (min-width: 900px) {
   .timeouts-bar { position: sticky; top: 8px; z-index: 4; }
-
-
+}
 
 
 .timeouts-line {
