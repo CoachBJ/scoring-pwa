@@ -18,6 +18,19 @@
 </header>
 
     <div class="layout">
+      <aside class="card area-side">
+  <details class="panel" id="defensePanel" open>
+    <summary>Defensive Calls (1–75)</summary>
+    <div id="defList" class="playlist"></div>
+    <div class="playlist-actions">
+      <button id="defClear" class="mini">Clear All</button>
+    </div>
+  </details>
+
+  <button id="exportPlays" class="btn btn-primary" aria-label="Export plays and touches as CSV">Export Plays CSV</button>
+
+</aside>
+
       <section class="card area-score">
         <h2 class="section-title">Scoreboard</h2>
 
@@ -326,6 +339,14 @@
 
   <div class="tc-footer">
     <div>Total touches: <b id="tcTotal">0</b></div>
+    <details class="panel" id="offensePanel">
+  <summary>Offensive Play Calls (1–75)</summary>
+  <div id="offList" class="playlist"></div>
+  <div class="playlist-actions">
+    <button id="offClear" class="mini">Clear All</button>
+  </div>
+</details>
+
   </div>
 </div>
 
