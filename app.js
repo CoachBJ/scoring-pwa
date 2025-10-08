@@ -1003,6 +1003,111 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+// ===== Playlists (Offense / Defense) =====
+const PLAY_ROWS = 75;
+
+// Keep in STATE so it saves/loads with everything else
+STATE.offPlays = STATE.offPlays || Array(PLAY_ROWS).fill("");
+STATE.defPlays = STATE.defPlays || Array(PLAY_ROWS).fill("");
+
+// Build rows once
+function renderPlaylists(){
+  const off = document.getElementById('offList');
+  const def = document.getElementById('defList');
+  if (!off && !def) return;
+
+  const makeRows = (arr, prefix) => {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < PLAY_ROWS; i++){
+      const wrap = document.createElement('div');
+      wrap.className = 'play-row';
+      wrap.innerHTML = `
+        <div class="idx">${i+1}</div>
+        <input id="${prefix}${i}" type="text" autocomplete="off" placeholder="Type call..." value="${arr[i] ?? ''}">
+      `;
+      frag.appendChild(wrap);
+    }
+    return frag;
+  };
+
+  if (off){
+    off.innerHTML = "";
+    off.appendChild(makeRows(STATE.offPlays, 'off_'));
+  }
+  if (def){
+    def.innerHTML = "";
+    def.appendChild(makeRows(STATE.defPlays, 'def_'));
+  }
+
+  // Wire input saving (event delegation)
+  const onInput = (e) => {
+    const t = e.target;
+    if (t.tagName !== 'INPUT') return;
+    if (t.id.startsWith('off_')){
+      const idx = Number(t.id.split('_')[1] || 0);
+      STATE.offPlays[idx] = t.value.trim();
+    } else if (t.id.startsWith('def_')){
+      const idx = Number(t.id.split('_')[1] || 0);
+      STATE.defPlays[idx] = t.value.trim();
+    }
+    saveState();
+  };
+  off?.addEventListener('input', onInput);
+  def?.addEventListener('input', onInput);
+
+  document.getElementById('offClear')?.addEventListener('click', ()=>{
+    if (!confirm('Clear ALL offensive plays?')) return;
+    STATE.offPlays = Array(PLAY_ROWS).fill("");
+    renderPlaylists(); saveState();
+  });
+  document.getElementById('defClear')?.addEventListener('click', ()=>{
+    if (!confirm('Clear ALL defensive calls?')) return;
+    STATE.defPlays = Array(PLAY_ROWS).fill("");
+    renderPlaylists(); saveState();
+  });
+}
+
+// Hook into your existing lifecycle
+const _origLoadState2 = loadState;
+loadState = function(){
+  _origLoadState2();
+  // ensure arrays exist if loading older state
+  STATE.offPlays = (Array.isArray(STATE.offPlays) && STATE.offPlays.length) ? STATE.offPlays : Array(PLAY_ROWS).fill("");
+  STATE.defPlays = (Array.isArray(STATE.defPlays) && STATE.defPlays.length) ? STATE.defPlays : Array(PLAY_ROWS).fill("");
+  renderPlaylists();
+};
+
+// Render on boot too
+document.addEventListener('DOMContentLoaded', renderPlaylists);
+
+// ===== Export CSV =====
+function exportPlaysCSV(){
+  const safe = (s)=> `"${String(s||'').replace(/"/g,'""')}"`;
+  // include touches summary too
+  const touches = STATE.touches ? Object.entries(STATE.touches).map(([k,v])=>`${k}:${v}`).join('; ') : '';
+
+  const lines = [];
+  lines.push('Section,Index,Call');
+  for (let i=0;i<PLAY_ROWS;i++){
+    lines.push(`Offense,${i+1},${safe(STATE.offPlays[i])}`);
+  }
+  for (let i=0;i<PLAY_ROWS;i++){
+    lines.push(`Defense,${i+1},${safe(STATE.defPlays[i])}`);
+  }
+  lines.push('');
+  lines.push(`Summary,,Touches = ${safe(touches)}`);
+
+  const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const ts = new Date().toISOString().replace(/[:.]/g,'-');
+  a.download = `CCS_Game_Plays_${ts}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+document.getElementById('exportPlays')?.addEventListener('click', exportPlaysCSV);
 
 
 
