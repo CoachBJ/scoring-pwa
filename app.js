@@ -987,50 +987,22 @@ function bumpTouch(name, delta) {
   if (navigator.vibrate) navigator.vibrate(10);
 }
 
--// --- integrate with existing lifecycle ---
--const _origLoadState = loadState;
--loadState = function() {
--  _origLoadState();
--  ensureTouchState();
--  renderTouchCounter();
--};
--
--// Hook into your existing lifecycle
--const _origLoadState2 = loadState;
--loadState = function(){
--  _origLoadState2();
--  // ensure arrays exist if loading older state
--  STATE.offPlays = (Array.isArray(STATE.offPlays) && STATE.offPlays.length) ? STATE.offPlays : Array(PLAY_ROWS).fill("");
--  STATE.defPlays = (Array.isArray(STATE.defPlays) && STATE.defPlays.length) ? STATE.defPlays : Array(PLAY_ROWS).fill("");
--  renderPlaylists();
--};
-+// ---- compose loadState once (touch counter + playlists) ----
-+const __origLoadState = (typeof loadState === 'function') ? loadState : () => {};
-+loadState = function(){
-+  __origLoadState();
-+  // Touch Counter
-+  ensureTouchState();
-+  renderTouchCounter();
-+  // Playlists (ensure arrays if loading older state)
-+  STATE.offPlays = (Array.isArray(STATE.offPlays) && STATE.offPlays.length) ? STATE.offPlays : Array(PLAY_ROWS).fill("");
-+  STATE.defPlays = (Array.isArray(STATE.defPlays) && STATE.defPlays.length) ? STATE.defPlays : Array(PLAY_ROWS).fill("");
-+  renderPlaylists();
-+};
+// ---- compose loadState once (touch counter + playlists) ----
+const __origLoadState = (typeof loadState === 'function') ? loadState : () => {};
+loadState = function(){
+  __origLoadState();
+  ensureTouchState();
+  renderTouchCounter();
+  STATE.offPlays = (Array.isArray(STATE.offPlays) && STATE.offPlays.length) ? STATE.offPlays : Array(PLAY_ROWS).fill("");
+  STATE.defPlays = (Array.isArray(STATE.defPlays) && STATE.defPlays.length) ? STATE.defPlays : Array(PLAY_ROWS).fill("");
+  renderPlaylists();
+};
 
-
-
--document.addEventListener('DOMContentLoaded', () => {
--  ensureTouchState();
--  renderTouchCounter();
--});
--
--// Render on boot too
--document.addEventListener('DOMContentLoaded', renderPlaylists);
-+document.addEventListener('DOMContentLoaded', () => {
-+  ensureTouchState();
-+  renderTouchCounter();
-+  renderPlaylists();
-+});
+document.addEventListener('DOMContentLoaded', () => {
+  ensureTouchState();
+  renderTouchCounter();
+  renderPlaylists();
+});
 
 
 
