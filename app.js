@@ -906,6 +906,108 @@ document.querySelectorAll('.to-checks input[type="checkbox"]').forEach(checkbox 
 })();
 
 
+
+
+
+// ===== Offensive Touch Counter =====
+const DEFAULT_ROSTER = [
+  // Edit these ~20 names as you like
+  "RB1", "WR1", "WR2", "WR3", "TE1",
+  "QB1", "RB2", "WR4", "TE2", "Slot",
+  "FB", "H-Back", "Wing", "RB3", "WR5",
+  "KR/WR", "PR/WR", "Utility", "Motion", "Jet"
+];
+
+function ensureTouchState() {
+  if (!STATE.touchRoster || !Array.isArray(STATE.touchRoster) || STATE.touchRoster.length === 0) {
+    STATE.touchRoster = DEFAULT_ROSTER.slice();
+  }
+  if (!STATE.touches || typeof STATE.touches !== 'object') STATE.touches = {};
+  for (const name of STATE.touchRoster) {
+    if (typeof STATE.touches[name] !== 'number') STATE.touches[name] = 0;
+  }
+}
+
+function renderTouchCounter() {
+  const list = document.getElementById('tcList');
+  const totalEl = document.getElementById('tcTotal');
+  if (!list || !totalEl) return;
+
+  ensureTouchState();
+  list.innerHTML = '';
+
+  let total = 0;
+  for (const name of STATE.touchRoster) {
+    const val = STATE.touches[name] ?? 0;
+    total += val;
+
+    const row = document.createElement('div');
+    row.className = 'tc-row';
+    row.innerHTML = `
+      <div class="tc-name">${name}</div>
+      <button class="tc-btn" data-name="${name}" data-d="-1">−</button>
+      <div class="tc-val" id="tcVal-${cssSafe(name)}">${val}</div>
+      <button class="tc-btn" data-name="${name}" data-d="+1">+</button>
+    `;
+    list.appendChild(row);
+  }
+  totalEl.textContent = String(total);
+
+  // Wire +/−
+  list.querySelectorAll('.tc-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.getAttribute('data-name');
+      const d = Number(btn.getAttribute('data-d'));
+      bumpTouch(name, d);
+    });
+  });
+
+  // Reset button
+  document.getElementById('tcReset')?.addEventListener('click', () => {
+    if (!confirm('Reset all touch counts?')) return;
+    for (const n of STATE.touchRoster) STATE.touches[n] = 0;
+    saveState();
+    renderTouchCounter();
+  });
+}
+
+function cssSafe(s){ return String(s).replace(/[^a-z0-9_-]/gi,'_'); }
+
+function bumpTouch(name, delta) {
+  ensureTouchState();
+  const cur = Math.max(0, Number(STATE.touches[name] || 0));
+  STATE.touches[name] = Math.max(0, cur + delta);
+  const valEl = document.getElementById(`tcVal-${cssSafe(name)}`);
+  if (valEl) valEl.textContent = String(STATE.touches[name]);
+  saveState();
+  // update total quickly
+  const total = Object.values(STATE.touches).reduce((a,b)=>a + (Number(b)||0), 0);
+  const totalEl = document.getElementById('tcTotal');
+  if (totalEl) totalEl.textContent = String(total);
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+// --- integrate with existing lifecycle ---
+const _origLoadState = loadState;
+loadState = function() {
+  _origLoadState();
+  ensureTouchState();
+  renderTouchCounter();
+};
+
+// also render on first boot if loadState already ran
+document.addEventListener('DOMContentLoaded', () => {
+  ensureTouchState();
+  renderTouchCounter();
+});
+
+
+
+
+
+
+
+
 loadState();
 renderTimeoutsSummary();   // NEW
 updateClockHelper();
