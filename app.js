@@ -191,51 +191,75 @@ function getContrastColor(hex) {
     return (yiq >= 128) ? '#000000' : '#ffffff'; // Return black for light colors, white for dark
 }
 
-// --- Turnovers (game) ---
-const elOurTOv = document.getElementById('ourTOv');
-const elOppTOv = document.getElementById('oppTOv');
-const elOppNameTO = document.getElementById('oppNameTO');
-const elToDiff = document.getElementById('toDiff');
+// ===== Turnovers (per-type, both teams on one line) =====
 
-function renderTurnovers(){
-  if (!elOurTOv || !elOppTOv || !elToDiff) return;
-  const our = Math.max(0, Number(STATE.turnovers?.our || 0));
-  const opp = Math.max(0, Number(STATE.turnovers?.opp || 0));
-  elOurTOv.textContent = our;
-  elOppTOv.textContent = opp;
+// IDs map
+const TO_IDS = {
+  our: {
+    fumLost:   { plus: 'ourFLplus',  minus: 'ourFLminus',  val: 'ourFL'  },
+    fumRec:    { plus: 'ourFRplus',  minus: 'ourFRminus',  val: 'ourFR'  },
+    intThrown: { plus: 'ourINTplus', minus: 'ourINTminus', val: 'ourINT' }
+  },
+  opp: {
+    fumLost:   { plus: 'oppFLplus',  minus: 'oppFLminus',  val: 'oppFL'  },
+    fumRec:    { plus: 'oppFRplus',  minus: 'oppFRminus',  val: 'oppFR'  },
+    intThrown: { plus: 'oppINTplus', minus: 'oppINTminus', val: 'oppINT' }
+  }
+};
 
-  const margin = opp - our; // TO Margin = their giveaways minus ours (positive is good for us)
-  elToDiff.textContent = `TO Margin: ${margin > 0 ? '+' : ''}${margin}`;
-  elToDiff.classList.remove('pos', 'neg');
-  if (margin > 0) elToDiff.classList.add('pos');
-  if (margin < 0) elToDiff.classList.add('neg');
+function clampNonNeg(n){ n = Math.floor(Number(n)||0); return Math.max(0, Math.min(99, n)); }
+
+// Compute elite TO margin:  (our takeaways) − (our giveaways)
+// our takeaways   = our.fumRec + opp.intThrown
+// our giveaways   = our.fumLost + our.intThrown
+function computeTOMargin(){
+  const t = STATE.turnovers;
+  const ourTake  = clampNonNeg(t.our.fumRec) + clampNonNeg(t.opp.intThrown);
+  const ourGive  = clampNonNeg(t.our.fumLost) + clampNonNeg(t.our.intThrown);
+  return ourTake - ourGive;
 }
 
+function renderTurnovers(){
+  // push values into the UI
+  for (const side of ['our','opp']){
+    for (const key of ['fumLost','fumRec','intThrown']){
+      const id = TO_IDS[side][key].val;
+      const el = document.getElementById(id);
+      if (el) el.textContent = clampNonNeg(STATE.turnovers[side][key]);
+    }
+  }
+  // update margin chip
+  const diff = computeTOMargin();
+  const elDiff = document.getElementById('toDiff');
+  if (elDiff){
+    elDiff.textContent = `TO Margin: ${diff>0?'+':''}${diff}`;
+    elDiff.classList.remove('pos','neg');
+    if (diff>0) elDiff.classList.add('pos');
+    if (diff<0) elDiff.classList.add('neg');
+  }
+}
 
-// Turnover buttons
-(function wireTurnovers(){
-  const clampTO = v => Math.max(0, Math.min(99, v)); // keep sane bounds
-
-  const hook = (id, delta, side) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const fire = () => {
-      const cur = Number(STATE.turnovers[side] || 0);
-      STATE.turnovers[side] = clampTO(cur + delta);
-      renderTurnovers();
-      saveState();
-      if (navigator.vibrate) navigator.vibrate(10);
-    };
-    el.addEventListener('click', fire);
-    el.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); fire(); }});
+(function wireTurnoversPerType(){
+  const bump = (side, key, delta) => {
+    const cur = clampNonNeg(STATE.turnovers[side][key]);
+    STATE.turnovers[side][key] = clampNonNeg(cur + delta);
+    renderTurnovers();
+    saveState();
+    if (navigator.vibrate) navigator.vibrate(10);
   };
 
-  hook('ourTOvPlus',  +1, 'our');
-  hook('ourTOvMinus', -1, 'our');
-  hook('oppTOvPlus',  +1, 'opp');
-  hook('oppTOvMinus', -1, 'opp');
+  for (const side of ['our','opp']){
+    for (const key of ['fumLost','fumRec','intThrown']){
+      const ids = TO_IDS[side][key];
+      const plus  = document.getElementById(ids.plus);
+      const minus = document.getElementById(ids.minus);
+      if (plus)  plus.addEventListener('click',  ()=>bump(side, key, +1));
+      if (minus) minus.addEventListener('click',  ()=>bump(side, key, -1));
+      if (plus)  plus.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); bump(side,key,+1);} });
+      if (minus) minus.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); bump(side,key,-1);} });
+    }
+  }
 })();
-
 
 
 const fromMMSS = (txt) => {
@@ -709,7 +733,11 @@ updateSecondHalfInfo();
 if (elHeadRef)   elHeadRef.value   = "";
 if (elSideJudge) elSideJudge.value = "";
 STATE.officials = { headRef: "", sideJudge: "" };
-STATE.turnovers = { our: 0, opp: 0 };   // NEW
+STATE.turnovers = {
+  our: { fumLost: 0, fumRec: 0, intThrown: 0 },
+  opp: { fumLost: 0, fumRec: 0, intThrown: 0 }
+};
+ // NEW
 renderTurnovers();                      // NEW
 renderOfficials();
 saveState();
