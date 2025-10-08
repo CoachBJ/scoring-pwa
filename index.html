@@ -118,21 +118,53 @@
   <button type="button" id="clearOfficials" class="link-btn small">Clear officials</button>
   <!-- Turnovers (below Clear officials) -->
 <div class="turnovers card-lite" id="turnoversBox" aria-live="polite">
-  <div class="to-stat our">
-    <div class="to-label">Charlotte Christian Turnovers</div>
-    <div class="to-value" id="ourTOv">0</div>
-    <div class="tinyBtns">
-      <button class="mini" id="ourTOvPlus">+1</button>
-      <button class="mini" id="ourTOvMinus">-1</button>
+  <div class="team-line our">
+    <span class="team-name">Charlotte Christian:</span>
+
+    <div class="trio">
+      <span class="label">Fum. Lost</span>
+      <button class="mini" id="ourFLminus">−</button>
+      <span class="val" id="ourFL">0</span>
+      <button class="mini" id="ourFLplus">+</button>
+    </div>
+
+    <div class="trio">
+      <span class="label">Fum. Rec.</span>
+      <button class="mini" id="ourFRminus">−</button>
+      <span class="val" id="ourFR">0</span>
+      <button class="mini" id="ourFRplus">+</button>
+    </div>
+
+    <div class="trio">
+      <span class="label">INT</span>
+      <button class="mini" id="ourINTminus">−</button>
+      <span class="val" id="ourINT">0</span>
+      <button class="mini" id="ourINTplus">+</button>
     </div>
   </div>
 
-  <div class="to-stat opp">
-    <div class="to-label"><span id="oppNameTO">Opponent</span> Turnovers</div>
-    <div class="to-value" id="oppTOv">0</div>
-    <div class="tinyBtns">
-      <button class="mini opp" id="oppTOvPlus">+1</button>
-      <button class="mini opp" id="oppTOvMinus">-1</button>
+  <div class="team-line opp">
+    <span class="team-name"><span id="oppNameTO">Opponent</span>:</span>
+
+    <div class="trio">
+      <span class="label">Fum. Lost</span>
+      <button class="mini opp" id="oppFLminus">−</button>
+      <span class="val" id="oppFL">0</span>
+      <button class="mini opp" id="oppFLplus">+</button>
+    </div>
+
+    <div class="trio">
+      <span class="label">Fum. Rec.</span>
+      <button class="mini opp" id="oppFRminus">−</button>
+      <span class="val" id="oppFR">0</span>
+      <button class="mini opp" id="oppFRplus">+</button>
+    </div>
+
+    <div class="trio">
+      <span class="label">INT</span>
+      <button class="mini opp" id="oppINTminus">−</button>
+      <span class="val" id="oppINT">0</span>
+      <button class="mini opp" id="oppINTplus">+</button>
     </div>
   </div>
 
