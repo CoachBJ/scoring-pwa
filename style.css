@@ -146,6 +146,44 @@ main {
   margin-top: 12px;
 }
 
+/* Single-line per team */
+.turnovers .team-line{
+  display: grid;
+  grid-template-columns: auto repeat(3, max-content);
+  gap: 12px 14px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.turnovers .team-line.our{ border-left: 6px solid var(--primary-color); }
+.turnovers .team-line.opp{ border-left: 6px solid var(--opp); }
+
+.turnovers .team-name{
+  font-weight: 900;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.turnovers .trio{
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.turnovers .trio .label{ font-weight: 700; }
+.turnovers .trio .val{
+  min-width: 2ch;
+  text-align: center;
+  font-weight: 900;
+}
+
+/* Keep existing .to-diff styles you already have */
+
+
 
 /* --- 2-Point box --- */
 .card-lite { background:#fff; border:1px solid var(--border-color); border-radius:12px; padding:12px; margin-top:12px; }
