@@ -33,7 +33,7 @@ main {
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  margin-bottom:8px;
+  margin-bottom:4px;
 }
 .app-title{
   flex:1;
@@ -45,7 +45,7 @@ main {
   font-size: clamp(1.1rem, 2.2vw + 0.6rem, 1.8rem);
 }
 .app-logo{
-  width:100px; height:100px;
+  width:150px; height:150px;
   object-fit:contain;
   border-radius:10px; /* remove if you don’t want rounded logos */
 }
