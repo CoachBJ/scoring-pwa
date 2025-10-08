@@ -416,6 +416,8 @@ const elHalf1=document.getElementById("half1");
 const elHalf2=document.getElementById("half2");
 const elTimeInput=document.getElementById("timeInput");
 const elMiniBtns = document.querySelectorAll('.mini[data-dt]');
+const elOppNameTO = document.getElementById("oppNameTO"); // for the TO line label
+
 
 function getGroupEl(key){ return document.querySelector(`.to-card[data-key="${key}"] .to-checks`); }
 function setTOState(key, arr){
@@ -521,14 +523,18 @@ const elClockResult=document.getElementById("clockResult");
 
 
 // ----- State -----
-const STATE_KEY="ccs-gamemanager-state-v3"; // Incremented key to avoid old state issues
+const STATE_KEY = "ccs-gamemanager-state-v3";
 let STATE = {
   oppName: "Opponent",
   oppColor: "#9a9a9a",
   collapsedTO: {},
   openingKO: null,
   officials: { headRef: "", sideJudge: "" },
-  turnovers: { our: 0, opp: 0 }   // NEW
+  // FIX: object shape, not numbers
+  turnovers: {
+    our: { fumLost: 0, fumRec: 0, intThrown: 0 },
+    opp: { fumLost: 0, fumRec: 0, intThrown: 0 }
+  }
 };
 
 function saveState(){
@@ -630,13 +636,14 @@ function loadState(){
 
 
 // Opening KO radios
-[elWeKO, elOppKO].forEach(r=>{
-  r.addEventListener("change", ()=>{
-    STATE.openingKO = elWeKO.checked ? "we" : (elOppKO.checked ? "opp" : null);
+[elWeKO, elOppKO].filter(Boolean).forEach(r => {
+  r.addEventListener("change", () => {
+    STATE.openingKO = elWeKO?.checked ? "we" : (elOppKO?.checked ? "opp" : null);
     updateSecondHalfInfo();
     saveState();
   });
 });
+
 
 // Officials text boxes (autosave + live display)
 [elHeadRef, elSideJudge].forEach(inp=>{
