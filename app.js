@@ -240,26 +240,27 @@ function renderTurnovers(){
 }
 
 (function wireTurnoversPerType(){
+  const mirror = (side) => side === 'our' ? 'opp' : 'our';
+
   const bump = (side, key, delta) => {
     const cur = clampNonNeg(STATE.turnovers[side][key]);
     STATE.turnovers[side][key] = clampNonNeg(cur + delta);
+
+    // NEW: mirror fumbles lost -> opponent fumbles recovered
+    if (key === 'fumLost' && delta !== 0) {
+      const other = mirror(side);
+      const curRec = clampNonNeg(STATE.turnovers[other].fumRec);
+      STATE.turnovers[other].fumRec = clampNonNeg(curRec + delta);
+    }
+
     renderTurnovers();
     saveState();
     if (navigator.vibrate) navigator.vibrate(10);
   };
 
-  for (const side of ['our','opp']){
-    for (const key of ['fumLost','fumRec','intThrown']){
-      const ids = TO_IDS[side][key];
-      const plus  = document.getElementById(ids.plus);
-      const minus = document.getElementById(ids.minus);
-      if (plus)  plus.addEventListener('click',  ()=>bump(side, key, +1));
-      if (minus) minus.addEventListener('click',  ()=>bump(side, key, -1));
-      if (plus)  plus.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); bump(side,key,+1);} });
-      if (minus) minus.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); bump(side,key,-1);} });
-    }
-  }
+  // (keep your existing listeners below)
 })();
+
 
 
 const fromMMSS = (txt) => {
