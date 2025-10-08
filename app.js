@@ -533,51 +533,75 @@ function saveState(){
     turnovers: STATE.turnovers        // NEW
 
   };
-  localStorage.setItem(STATE_KEY, JSON.stringify(s));
+   localStorage.setItem(STATE_KEY, JSON.stringify(s));
 }
 
 
 function loadState(){
   try{
-    const s=JSON.parse(localStorage.getItem(STATE_KEY)||"{}");
-    elOur.value = s.our || 0;
-    elOpp.value = s.opp || 0;
-    (s.half===2?elHalf2:elHalf1).checked=true;
-    setTimeSecs(typeof s.time==="number"? s.time : MAX_TIME_SECS);
+    const s = JSON.parse(localStorage.getItem(STATE_KEY) || "{}");
 
-    if(s.to){ Object.keys(s.to).forEach(k=> setTOState(k, s.to[k])); }
-    else { ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true])); }
+    // score & half
+    if (elOur) elOur.value = s.our ?? 0;
+    if (elOpp) elOpp.value = s.opp ?? 0;
+    (s.half === 2 ? elHalf2 : elHalf1).checked = true;
+    setTimeSecs(typeof s.time === "number" ? s.time : MAX_TIME_SECS);
 
+    // timeouts
+    if (s.to) {
+      Object.keys(s.to).forEach(k => setTOState(k, s.to[k]));
+    } else {
+      ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k => setTOState(k,[true,true,true]));
+    }
+
+    // collapsed TO cards
     STATE.collapsedTO = s.collapsedTO || {};
     Object.keys(STATE.collapsedTO).forEach(key => {
       const card = document.querySelector(`.to-card[data-key="${key}"]`);
       if (card && STATE.collapsedTO[key]) card.classList.add('collapsed');
     });
 
-    STATE.oppName = s.oppName || "Opponent";
+    // opponent profile
+    STATE.oppName  = s.oppName  || "Opponent";
     STATE.oppColor = s.oppColor || "#9a9a9a";
     applyOpponentProfile();
 
-    // NEW: opening KO + officials
+    // opening KO + officials
     STATE.openingKO = s.openingKO || null;
-    elWeKO.checked  = STATE.openingKO === "we";
-    elOppKO.checked = STATE.openingKO === "opp";
+    if (typeof elWeKO  !== "undefined") elWeKO.checked  = STATE.openingKO === "we";
+    if (typeof elOppKO !== "undefined") elOppKO.checked = STATE.openingKO === "opp";
 
     STATE.officials = s.officials || { headRef: "", sideJudge: "" };
-    elHeadRef.value = STATE.officials.headRef || "";
-    elSideJudge.value = STATE.officials.sideJudge || "";
-    STATE.turnovers = s.turnovers || { our: 0, opp: 0 };   // NEW
-    renderTurnovers();                                     // NEW
+    if (elHeadRef)   elHeadRef.value   = STATE.officials.headRef   || "";
+    if (elSideJudge) elSideJudge.value = STATE.officials.sideJudge || "";
 
+    // --- turnovers migration ---
+    if (typeof s.turnovers === "number" || typeof (s.turnovers?.our) === "number") {
+      const ourNum = typeof s.turnovers === "number" ? s.turnovers : (s.turnovers?.our || 0);
+      const oppNum = typeof s.turnovers === "number" ? 0 : (s.turnovers?.opp || 0);
+      STATE.turnovers = {
+        our: { fumLost: ourNum, fumRec: 0, intThrown: 0 },
+        opp: { fumLost: oppNum, fumRec: 0, intThrown: 0 }
+      };
+    } else {
+      STATE.turnovers = s.turnovers || STATE.turnovers;
+    }
+
+    // render (keep these INSIDE the try)
+    renderTurnovers();
     updateSecondHalfInfo();
     renderOfficials();
 
-  }catch(e){
+  } catch(e){
     console.error("Failed to load state", e);
     setTimeSecs(MAX_TIME_SECS);
-    ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k=> setTOState(k,[true,true,true]));
+    ["our-h1","opp-h1","our-h2","opp-h2"].forEach(k => setTOState(k,[true,true,true]));
+    renderTurnovers();
+    updateSecondHalfInfo();
+    renderOfficials();
   }
 }
+
 
 
 
