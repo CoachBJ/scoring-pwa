@@ -1086,6 +1086,254 @@ function renderPlaylists(){
 
 
 
+// ===== Playlists (Offense / Defense) — multi-field with auto gain =====
+const PLAY_ROWS = 75;
+
+// Each row is an object; migrate old strings -> {call:""}
+const EMPTY_ROW = () => ({ yl: "", dn: "", dist: "", hash: "", call: "", gain: 0 });
+
+function migrateRows(arr) {
+  if (!Array.isArray(arr)) return Array(PLAY_ROWS).fill(0).map(EMPTY_ROW);
+  return arr.map(v => {
+    if (v && typeof v === 'object') {
+      return { yl: v.yl ?? "", dn: v.dn ?? "", dist: v.dist ?? "", hash: v.hash ?? "", call: v.call ?? "", gain: Number(v.gain||0) };
+    }
+    // legacy string
+    return { yl: "", dn: "", dist: "", hash: "", call: String(v||""), gain: 0 };
+  }).concat(Array(Math.max(0, PLAY_ROWS - arr.length)).fill(0).map(EMPTY_ROW)).slice(0, PLAY_ROWS);
+}
+
+// keep in STATE, migrate from your previous arrays
+STATE.offPlays = migrateRows(STATE.offPlays || Array(PLAY_ROWS).fill(""));
+STATE.defPlays = migrateRows(STATE.defPlays || Array(PLAY_ROWS).fill(""));
+
+// Parse helpers
+const toInt = (v) => {
+  const n = Number(String(v).replace(/[^0-9-]/g,"")); // allow simple numbers
+  return Number.isFinite(n) ? n : null;
+};
+
+// Gain = nextYL - curYL (offense perspective: + is good).
+// Defense row "gain" will show ALLOWED yards as positive for clarity, and we convert to "success" later.
+function recalcGains() {
+  const calc = (rows, isOffense) => {
+    for (let i = 0; i < rows.length; i++) {
+      const curYL = toInt(rows[i].yl);
+      const nxtYL = (i+1 < rows.length) ? toInt(rows[i+1].yl) : null;
+      let g = 0;
+      if (curYL != null && nxtYL != null) {
+        g = nxtYL - curYL; // + = ball moved toward opponent goal
+      } else {
+        g = 0;
+      }
+      // For defense list, store yards gained by offense as positive (allowed)
+      rows[i].gain = isOffense ? g : Math.max(0, g); 
+    }
+  };
+  calc(STATE.offPlays, true);
+  calc(STATE.defPlays, false);
+}
+
+function playHeadRow() {
+  const head = document.createElement('div');
+  head.className = 'play-head';
+  head.innerHTML = `
+    <div>#</div>
+    <div>YL</div>
+    <div>Dn</div>
+    <div>Dist</div>
+    <div>Hash</div>
+    <div>Play Call</div>
+    <div>Gain</div>
+  `;
+  return head;
+}
+
+function makeRows(arr, prefix) {
+  const frag = document.createDocumentFragment();
+  frag.appendChild(playHeadRow());
+  for (let i = 0; i < PLAY_ROWS; i++) {
+    const p = arr[i] ?? EMPTY_ROW();
+    const wrap = document.createElement('div');
+    wrap.className = 'play-row';
+    wrap.innerHTML = `
+      <div class="idx">${i+1}</div>
+      <input id="${prefix}yl_${i}"   class="play-yl"   type="number" inputmode="numeric" placeholder="e.g. 35" value="${p.yl}">
+      <input id="${prefix}dn_${i}"   class="play-dn"   type="number" inputmode="numeric" placeholder="1"      value="${p.dn}">
+      <input id="${prefix}ds_${i}"   class="play-dist" type="number" inputmode="numeric" placeholder="10"     value="${p.dist}">
+      <input id="${prefix}hs_${i}"   class="play-hash" type="text"   placeholder="L/M/R"                      value="${p.hash}">
+      <input id="${prefix}pc_${i}"   class="play-call" type="text"   placeholder="Type call..."               value="${p.call}">
+      <div  id="${prefix}gn_${i}"   class="gain">${Number(p.gain||0)}</div>
+    `;
+    frag.appendChild(wrap);
+  }
+  return frag;
+}
+
+function renderPlaylists() {
+  const off = document.getElementById('offList');
+  const def = document.getElementById('defList');
+  if (!off && !def) return;
+
+  recalcGains();
+
+  if (off) { off.innerHTML = ""; off.appendChild(makeRows(STATE.offPlays, 'off_')); }
+  if (def) { def.innerHTML = ""; def.appendChild(makeRows(STATE.defPlays, 'def_')); }
+
+  const onInput = (e) => {
+    const t = e.target;
+    if (t.tagName !== 'INPUT') return;
+
+    const [pre, key, idxStr] = t.id.split('_'); // e.g., off, yl, 0
+    const idx = Number(idxStr||0);
+    const isOff = pre === 'off';
+    const rows = isOff ? STATE.offPlays : STATE.defPlays;
+
+    if (!rows[idx]) rows[idx] = EMPTY_ROW();
+
+    if (key === 'yl')   rows[idx].yl   = t.value.trim();
+    if (key === 'dn')   rows[idx].dn   = t.value.trim();
+    if (key === 'ds')   rows[idx].dist = t.value.trim();
+    if (key === 'hs')   rows[idx].hash = t.value.trim();
+    if (key === 'pc')   rows[idx].call = t.value.trim();
+
+    recalcGains();
+    // refresh only the gain cells for perf
+    const gCell = document.getElementById(`${isOff ? 'off' : 'def'}_gn_${idx}`);
+    if (gCell) gCell.textContent = String(rows[idx].gain ?? 0);
+
+    // neighbor also changes (the previous row’s gain depends on our YL)
+    const prev = idx - 1;
+    if (prev >= 0) {
+      const gPrev = document.getElementById(`${isOff ? 'off' : 'def'}_gn_${prev}`);
+      if (gPrev) gPrev.textContent = String(rows[prev].gain ?? 0);
+    }
+
+    saveState();
+    // live analytics
+    queueAnalytics();
+  };
+
+  off?.addEventListener('input', onInput);
+  def?.addEventListener('input', onInput);
+
+  document.getElementById('offClear')?.addEventListener('click', ()=>{
+    if (!confirm('Clear ALL offensive plays?')) return;
+    STATE.offPlays = Array(PLAY_ROWS).fill(0).map(EMPTY_ROW);
+    renderPlaylists(); saveState(); queueAnalytics();
+  });
+  document.getElementById('defClear')?.addEventListener('click', ()=>{
+    if (!confirm('Clear ALL defensive calls?')) return;
+    STATE.defPlays = Array(PLAY_ROWS).fill(0).map(EMPTY_ROW);
+    renderPlaylists(); saveState(); queueAnalytics();
+  });
+}
+
+// ===== ADVANCED analytics: keyword success =====
+// Tokenize call into lowercase words (letters/numbers only)
+function words(s) { return String(s||'').toLowerCase().match(/[a-z0-9]+/g) || []; }
+
+function computeAnalytics() {
+  // Heuristics:
+  // Offense success: 
+  //   - 3rd/4th down: gain >= needed dist
+  //   - 1st/2nd down: gain >= 4
+  // Defense success:
+  //   - On 3rd/4th: yards allowed < needed dist
+  //   - On 1st/2nd: yards allowed < 4
+  const analyzeSide = (rows, side) => {
+    const byWord = new Map();
+    const isOff = (side === 'off');
+
+    for (const r of rows) {
+      const dn   = toInt(r.dn);
+      const dist = toInt(r.dist);
+      const gain = Number(r.gain || 0);
+
+      const lateDown = (dn === 3 || dn === 4);
+      const offSuccess = lateDown ? (gain >= (dist ?? 0)) : (gain >= 4);
+      const defSuccess = lateDown ? ((gain) < (dist ?? Infinity)) : (gain < 4);
+
+      const success = isOff ? offSuccess : defSuccess;
+      const gForAvg = isOff ? gain : (0 - gain); // defense: higher (less allowed) = better => invert
+
+      for (const w of words(r.call)) {
+        const cur = byWord.get(w) || { plays:0, success:0, totalGain:0 };
+        cur.plays += 1;
+        cur.success += success ? 1 : 0;
+        cur.totalGain += gForAvg;
+        byWord.set(w, cur);
+      }
+    }
+
+    const rowsOut = [];
+    for (const [w, v] of byWord) {
+      rowsOut.push({
+        word: w,
+        plays: v.plays,
+        succRate: v.plays ? (v.success / v.plays) : 0,
+        avgGain: v.plays ? (v.totalGain / v.plays) : 0
+      });
+    }
+    // filter for meaningful sample sizes
+    return rowsOut.filter(r => r.plays >= 2)
+                  .sort((a,b)=> b.succRate - a.succRate || b.avgGain - a.avgGain || a.word.localeCompare(b.word))
+                  .slice(0, 25);
+  };
+
+  return {
+    off: analyzeSide(STATE.offPlays, 'off'),
+    def: analyzeSide(STATE.defPlays, 'def')
+  };
+}
+
+// Render analytics to the Output card you already use
+let __analyticsTimer = null;
+function queueAnalytics() {
+  clearTimeout(__analyticsTimer);
+  __analyticsTimer = setTimeout(renderAnalytics, 120);
+}
+
+function renderAnalytics() {
+  const out = document.getElementById('output');
+  if (!out) return;
+
+  const data = computeAnalytics();
+  const makeTable = (rows, title) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+      <h2 class="section-title">${title}</h2>
+      <table class="table">
+        <thead><tr><th>Word</th><th>Plays</th><th>Success %</th><th>Avg Gain</th></tr></thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td>${r.word}</td>
+              <td>${r.plays}</td>
+              <td>${(r.succRate*100).toFixed(0)}%</td>
+              <td>${r.avgGain.toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    return div;
+  };
+
+  // clear and re-render below your existing “to tie/lead” sections
+  // (we append; if you want them always present, you can move this earlier)
+  out.appendChild(makeTable(data.off, 'Analytics — Offense keywords'));
+  out.appendChild(makeTable(data.def, 'Analytics — Defense keywords'));
+}
+
+// Re-render analytics after initial load and on changes
+document.addEventListener('DOMContentLoaded', queueAnalytics);
+
+
+
+
+
 // ===== Export CSV =====
 function exportPlaysCSV(){
   const safe = (s)=> `"${String(s||'').replace(/"/g,'""')}"`;
