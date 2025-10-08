@@ -40,6 +40,13 @@ main {
   gap: 16px;
 }
 
+/* Ensure the turnovers card grows to fit content */
+.sticky-officials .card-lite { height: auto; }
+
+/* Slightly wider numbers and bigger buttons for game stress */
+.turnovers .val { min-width: 2ch; }          /* was 1.5ch */
+.turnovers .mini { padding: 8px 12px; }      /* a bit larger touch target */
+
 
 /* --- App Header --- */
 /* New top banner with center title + logos */
