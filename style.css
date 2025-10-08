@@ -45,7 +45,7 @@ main {
   font-size: clamp(1.1rem, 2.2vw + 0.6rem, 1.8rem);
 }
 .app-logo{
-  width:72px; height:72px;
+  width:100px; height:100px;
   object-fit:contain;
   border-radius:10px; /* remove if you don’t want rounded logos */
 }
@@ -72,7 +72,7 @@ main {
 .turnovers .to-2col{
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
+  gap: 6x 8px;
   align-items:start;
 }
 
@@ -80,7 +80,7 @@ main {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   background:#fff;
-  padding: 8px 10px;
+  padding: 6px 8px;
 }
 .turnovers .col.our{ border-left:6px solid var(--primary-color); }
 .turnovers .col.opp{ border-left:6px solid var(--opp); }
@@ -648,9 +648,9 @@ input[type="number"] {
 }
 
 #useOurTO, #useOppTO {
-  font-size: 1.25rem;          /* large text */
+  font-size: 1.00rem;          /* large text */
   font-weight: 800;
-  padding: 14px 16px;          /* big hit area */
+  padding: 8px 12px;          /* big hit area */
   min-height: 56px;            /* ~Apple HIG 44px+ */
   border-radius: 12px;
   border: none;
@@ -728,18 +728,18 @@ details.panel .row {
 
 /* ===== Bigger, clearer Half (1st/2nd) radios ===== */
 .area-clock .row.toggles label{
-  font-size: 1.25rem;
+  font-size: 1.0rem;
   font-weight: 800;
-  padding: 10px 12px;
-  border-radius: 12px;
+  padding: 5px 7px;
+  border-radius: 8px;
   background: #f1f3f5;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 .area-clock .row.toggles input[type="radio"]{
-  width: 22px;
-  height: 22px;
+  width: 15px;
+  height: 15px;
   accent-color: var(--primary-color);
 }
 .area-clock .row.toggles label:has(input:checked){
@@ -750,7 +750,7 @@ details.panel .row {
 
 /* ===== Bigger, clearer Possession radios ===== */
 #possessionRow label{
-  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  font-size: clamp(0.875rem, 2vw, 0.95rem);
   font-weight: 900;
   padding: 12px 14px;
   border-radius: 14px;
@@ -760,8 +760,8 @@ details.panel .row {
   border: 2px solid var(--border-color);
 }
 #possessionRow input[type="radio"]{
-  width: 26px;
-  height: 26px;
+  width: 15px;
+  height: 15px;
   accent-color: currentColor;
 }
 
