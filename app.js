@@ -2,6 +2,77 @@
 // Charlotte Christian Game Manager (Streamlined)
 // =======================
 
+// ===== Formation & Play dictionaries =====
+const FORMATION_LIST = [
+  "Bird Rt. Travel","Bird. Lt. Travel","Trips Rt. Travel","Trips Lt. Travel",
+  "Bird Rt. 2 On","Bird Lt. 2 On","Dunkin","Taco","Wendy","Biggie","Chop",
+  "Trips Rt. Up Travel","Trips Lt. Up Travel","Doubles Rt. DBL Up","Doubles Lt. DBL Up",
+  "Trips Lt. Up","Trips Rt. Up","Split Rt. Up","Split Lt. Up","Wing Rt. Split","Wing Lt. Split",
+  "King Rt. 4a","King Rt. 4x","King Rt. 4z","King Lt. 4a","King Lt. 4z",
+  "Trips Rt. 4a","Trips Rt. 4b","Trips Rt. 4c","Trips Rt. 4x","Trips Rt. 4y","Trips Rt. 4z",
+  "Trips Lt. 4a","Trips Lt. 4b","Trips Lt. 4c","Trips Lt. 4x","Trips Lt. 4y","Trips Lt. 4z",
+  "Doubles Rt. 4a","Doubles Rt. 4b","Doubles Rt. 4c","Doubles Rt. 4x","Doubles Rt. 4y","Doubles Rt. 4z",
+  "Mill","Doubles Rt. On","Doubles Lt. On","Split Rt. Up","Split Lt. Up","Split",
+  "Doubles Rt. up","Doubles Lt. Up","Doubles Rt. On","Doubles Lt. On",
+  "Trips Rt. up","Trips Lt. Up","Trips Rt. On","Trips Lt. On",
+  "Doubles RT. DBL On","Doubles Lt. DBL On","DBL RT DBL On","DBL LT DBL On",
+  "Dbls Lt. DBL On","Dbls Rt. DBL On","Dbls Rt. DBL Up","Dbls Lt. Dbl Up","Dbls Rt Dbl Up","Dbls Lt Dbl ON",
+  "Doubles","Wing","King","Bird","Trips","Doubles","Doubles","Wing","King","Bird",
+  "Frostie","Campbell","PATRIOT","PATRIOT PUMP","Queen","HAWK","Knight","Potter","Brush","Bunch",
+  "Swamp","Feather","Knockout",
+  "Wing Rt. Double Travel","Wing Rt. DBL Travel","Wing Lt. Double Travel","Wing Lt. DBL Travel"
+];
+
+const PLAY_LIST = [
+  "CAROLINA","PANTHERS","CHARLOTTE","HORNET","FLORIDA","GATORS","MIAMI","DOLPHIN",
+  "MUHAMMAD","ALI","CONNOR","MCGREGOR","PEYTON","MANNING","SPEED","FAST","carolina",
+  "TOP","TOM","TRUMP","NONE","Thunder","Lightning","Back","Flat","Buttcrack",
+  "Snag","Stick","Tree","Sauce","Slam","Gamer","Hitches","Go","Wide Go","Chains",
+  "Curl","Flood","Smash","Holy","Cross","Heel","Michigan","Wolverine","Colt","Colt Corner",
+  "Cougar","Carolina","Sword","Ball","Grip","Tinder","Flash","Twitter","Netflix","Tinder Go",
+  "Pump Flash","Bluff","Cable","Poker"
+];
+
+// --- Normalizers (strip punctuation, case, unify abbreviations) ---
+const _norm = s => String(s||'')
+  .toLowerCase()
+  .replace(/\./g,'')                     // remove periods
+  .replace(/\s+rt\b/g,' right')          // "rt" -> "right"
+  .replace(/\s+lt\b/g,' left')           // "lt" -> "left"
+  .replace(/\b dbl\b/gi,' double')       // "dbl" -> "double"
+  .replace(/\b on\b/gi,' on')            // keep "on"
+  .replace(/[^a-z0-9 ]+/g,' ')           // strip misc
+  .replace(/\s+/g,' ')
+  .trim();
+
+// Precompute normalized keys
+const _FORM_KEYS = FORMATION_LIST.map(f => ({ raw:f, norm:_norm(f) }));
+const _PLAY_KEYS  = PLAY_LIST.map(p => ({ raw:p, norm:_norm(p) }));
+
+function detectFormation(call){
+  const nc = _norm(call);
+  // pick FIRST best match (longest norm first for specificity)
+  let best = null;
+  for (const f of _FORM_KEYS.sort((a,b)=>b.norm.length-a.norm.length)){
+    if (nc.includes(f.norm)){ best = f.raw; break; }
+  }
+  return best || null;
+}
+function detectPlays(call){
+  const nc = _norm(call);
+  const hits = [];
+  for (const p of _PLAY_KEYS){
+    if (nc.includes(p.norm)) hits.push(p.raw);
+  }
+  // de-dup and cap (avoid overly long rows)
+  return [...new Set(hits)].slice(0,3);
+}
+
+
+
+
+
+
 const TEAM_NAME = "Charlotte Christian";
 const MAX_RESULTS = 200;
 const MAX_TIME_SECS = 12 * 60; // 12 minute maximum for the clock
@@ -1126,57 +1197,110 @@ function renderPlaylists(){
 }
 
 // ===== ADVANCED analytics by play-call words =====
-function words(s){ return String(s||'').toLowerCase().match(/[a-z0-9]+/g) || []; }
 function computeAnalytics(){
-  const analyze = (rows, isOff) => {
+  const summarize = (rows, isOff) => {
     const byWord = new Map();
-    for (const r of rows){
-      const dn = toInt(r.dn), dist = toInt(r.dist), gain = Number(r.gain||0);
-      const late = (dn===3 || dn===4);
-      const offOK = late ? (gain >= (dist ?? 0)) : (gain >= 4);
-      const defOK = late ? (gain <  (dist ?? Infinity)) : (gain < 4);
-      const success = isOff ? offOK : defOK;
-      const gForAvg = isOff ? gain : (0 - gain); // defense: less allowed is better
+    const byForm = new Map();
+    const byPlay = new Map();
 
+    for (const r of rows){
+      const dn   = toInt(r.dn);
+      const dist = toInt(r.dist);
+      const gain = Number(r.gain||0);
+
+      const late   = (dn===3 || dn===4);
+      const offOK  = late ? (gain >= (dist ?? 0)) : (gain >= 4);
+      const defOK  = late ? (gain <  (dist ?? Infinity)) : (gain < 4);
+      const success= isOff ? offOK : defOK;
+      const gForAvg= isOff ? gain : (0 - gain); // defense: less allowed is better
+
+      // --- keywords (existing behavior)
       for (const w of words(r.call)){
-        const cur = byWord.get(w) || { plays:0, success:0, totalGain:0 };
-        cur.plays++; cur.success += success?1:0; cur.totalGain += gForAvg;
-        byWord.set(w, cur);
+        const v = byWord.get(w) || { plays:0, success:0, totalGain:0 };
+        v.plays++; if (success) v.success++; v.totalGain += gForAvg;
+        byWord.set(w, v);
+      }
+
+      // --- formation
+      const f = detectFormation(r.call);
+      if (f){
+        const v = byForm.get(f) || { plays:0, success:0, totalGain:0 };
+        v.plays++; if (success) v.success++; v.totalGain += gForAvg;
+        byForm.set(f, v);
+      }
+
+      // --- play names (can be multiple)
+      for (const p of detectPlays(r.call)){
+        const v = byPlay.get(p) || { plays:0, success:0, totalGain:0 };
+        v.plays++; if (success) v.success++; v.totalGain += gForAvg;
+        byPlay.set(p, v);
       }
     }
-    return [...byWord.entries()]
-      .map(([word, v]) => ({ word, plays:v.plays, succRate:v.success/(v.plays||1), avgGain: v.totalGain/(v.plays||1) }))
+
+    const finish = (m) => [...m.entries()]
+      .map(([label, v]) => ({
+        label,
+        plays: v.plays,
+        succRate: v.success/(v.plays||1),
+        avgGain: v.totalGain/(v.plays||1)
+      }))
       .filter(r => r.plays >= 1)
-      .sort((a,b)=> b.succRate - a.succRate || b.avgGain - a.avgGain || a.word.localeCompare(b.word))
+      .sort((a,b)=> b.succRate - a.succRate || b.avgGain - a.avgGain || a.label.localeCompare(b.label))
       .slice(0,25);
+
+    return {
+      words: finish(byWord),
+      forms: finish(byForm),
+      plays: finish(byPlay)
+    };
   };
-  return { off: analyze(STATE.offPlays, true), def: analyze(STATE.defPlays, false) };
+
+  return {
+    off: summarize(STATE.offPlays, true),
+    def: summarize(STATE.defPlays, false)
+  };
 }
 
-let __analyticsTimer=null;
 function queueAnalytics(){ clearTimeout(__analyticsTimer); __analyticsTimer=setTimeout(renderAnalytics,120); }
-
 
 function renderAnalytics(){
   const out = document.getElementById('output');
   if (!out) return;
-    out.querySelectorAll('.analytics-card').forEach(c => c.remove());
 
-  // ...then build cards as you do now
+  // clear old cards
+  out.querySelectorAll('.analytics-card').forEach(c => c.remove());
+
   const data = computeAnalytics();
-  const mk = (rows, title) => {
-    const card = document.createElement('div'); card.className='card';
-    card.innerHTML = `<h2 class="section-title">${title}</h2>
-      <table class="table"><thead><tr><th>Word</th><th>Plays</th><th>Success %</th><th>Avg Gain</th></tr></thead>
-      <tbody>${rows.map(r=>`<tr><td>${r.word}</td><td>${r.plays}</td><td>${(r.succRate*100).toFixed(0)}%</td><td>${r.avgGain.toFixed(2)}</td></tr>`).join('')}</tbody></table>`;
-    return card;
-  };
-  // append to Output (keeps scoreboard above)
-  out.appendChild(mk(data.off, 'Analytics — Offense keywords'));
-  out.appendChild(mk(data.def, 'Analytics — Defense keywords'));
-}
-document.addEventListener('DOMContentLoaded', queueAnalytics);
+  const mkTable = (rows, col0) => `
+    <table class="table">
+      <thead><tr><th>${col0}</th><th>Plays</th><th>Success %</th><th>Avg Gain</th></tr></thead>
+      <tbody>${
+        rows.map(r=>`<tr>
+          <td>${r.label ?? r.word}</td>
+          <td>${r.plays}</td>
+          <td>${(r.succRate*100).toFixed(0)}%</td>
+          <td>${r.avgGain.toFixed(2)}</td>
+        </tr>`).join('')
+      }</tbody>
+    </table>`;
 
+  const card = (title, html) => {
+    const c = document.createElement('div');
+    c.className = 'card analytics-card';
+    c.innerHTML = `<h2 class="section-title">${title}</h2>${html}`;
+    return c;
+  };
+
+  // OFFENSE
+  out.appendChild(card('Offense — By Formation', mkTable(data.off.forms, 'Formation')));
+  out.appendChild(card('Offense — By Play',       mkTable(data.off.plays, 'Play')));
+  out.appendChild(card('Offense — Keywords',      mkTable(data.off.words.map(x=>({ ...x, label:x.word })), 'Word')));
+
+  // DEFENSE
+  out.appendChild(card('Defense — By Formation',  mkTable(data.def.forms, 'Formation')));
+  out.appendChild(card('Defense — By Play',       mkTable(data.def.plays, 'Play')));
+  out.appendChild(card('Defense — Keywords',      mkTable(data.def.words.map(x=>({ ...x, label:x.word })), 'Word')));
+}
 
 
 
@@ -1185,23 +1309,63 @@ document.addEventListener('DOMContentLoaded', queueAnalytics);
 function exportPlaysCSV(){
   const safe = (s) => `"${String(s ?? '').replace(/"/g,'""')}"`;
 
+  // Fallbacks in case detectFormation/detectPlays aren't defined yet
+  const hasDF = (typeof detectFormation === 'function');
+  const hasDP = (typeof detectPlays === 'function');
+  const _norm = s => String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+
+  function successFlag(isOff, dn, dist, gain){
+    const d = Number(dist ?? 0);
+    const g = Number(gain ?? 0);
+    if (dn === 3 || dn === 4) {
+      return isOff ? (g >= d) : (g < d);
+    }
+    // 1st/2nd down heuristic: 4+ is a win for O, <4 is a win for D
+    return isOff ? (g >= 4) : (g < 4);
+  }
+
+  function toCSVRow(side, idx, r, isOff){
+    const f = hasDF ? (detectFormation(r.call) || '') : '';
+    const ps = hasDP ? (detectPlays(r.call).join(' | ')) : '';
+    const succ = successFlag(isOff, Number(r.dn||0), r.dist, r.gain) ? 'Y' : 'N';
+
+    return [
+      side,
+      idx,
+      safe(r.yl),
+      safe(r.dn),
+      safe(r.dist),
+      safe(r.hash),
+      safe(r.call),
+      (r.gain ?? 0),
+      safe(f),
+      safe(ps),
+      succ
+    ].join(',');
+  }
+
   const lines = [];
-  lines.push('Side,Index,YardLine,Down,Dist,Hash,PlayCall,Gain');
+  lines.push('Side,Index,YardLine,Down,Dist,Hash,PlayCall,Gain,Formation,PlayNames,Success');
 
   for (let i = 0; i < PLAY_ROWS; i++){
     const r = STATE.offPlays[i] || {};
-    lines.push([
-      'Offense', i+1, safe(r.yl), safe(r.dn), safe(r.dist),
-      safe(r.hash), safe(r.call), r.gain ?? 0
-    ].join(','));
+    lines.push(toCSVRow('Offense', i+1, r, true));
   }
   for (let i = 0; i < PLAY_ROWS; i++){
     const r = STATE.defPlays[i] || {};
-    lines.push([
-      'Defense', i+1, safe(r.yl), safe(r.dn), safe(r.dist),
-      safe(r.hash), safe(r.call), r.gain ?? 0
-    ].join(','));
+    lines.push(toCSVRow('Defense', i+1, r, false));
   }
+
+  // Touches summary as a final comment row (kept)
+  const touches = STATE.touches ? Object.entries(STATE.touches).map(([k,v])=>`${k}:${v}`).join('; ') : '';
+  lines.push(`# Touches: ${touches}`);
+
+  const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `CCS_Game_Plays_${new Date().toISOString().replace(/[:.]/g,'-')}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+}
 
   // Optional: touches summary as a final comment row
   const touches = STATE.touches ? Object.entries(STATE.touches).map(([k,v])=>`${k}:${v}`).join('; ') : '';
