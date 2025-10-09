@@ -63,7 +63,33 @@ const words = (s) => {
 };
 
 
+// ===== Add this entire block after the detectFormation function =====
 
+// Pre-sort play keys by length (longest first)
+const PLAY_KEYS_BY_LEN = [..._PLAY_KEYS].sort((a,b)=>b.norm.length - a.norm.length);
+
+/**
+ * Detects one or more known plays from a raw play call string.
+ * @param {string} call The raw play call text.
+ * @returns {string[]} An array of matched play names.
+ */
+function detectPlays(call){
+  let remainingCall = _norm(call);
+  const found = [];
+  if (!remainingCall) return found;
+
+  for (const p of PLAY_KEYS_BY_LEN){
+    if (remainingCall.includes(p.norm)){
+      found.push(p.raw);
+      // "Consume" the found play by replacing it with spaces.
+      // This prevents a longer play like "Tinder Go" from also matching the shorter play "Go".
+      remainingCall = remainingCall.replace(p.norm, ' '.repeat(p.norm.length));
+    }
+  }
+  return found;
+}
+
+// =================================================================
 
 
 
