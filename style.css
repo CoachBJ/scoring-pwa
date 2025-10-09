@@ -291,7 +291,6 @@ main {
 }
 @media (min-width:640px){ .area-clock .to-quick{ grid-template-columns:1fr 1fr; } }
 
-}
 
 .brand-mark {
   background-color: var(--primary-color);
@@ -331,7 +330,7 @@ main {
 .area-output{ grid-area: output; }
 
 /* Let cards stretch to column height (nice on big screens) */
-.layout > *        { align-self: stretch; }
+.layout > * { align-self: stretch; }
 .card, .card-lite  { height: 100%; display: flex; flex-direction: column; }
 
 /* Optional: avoid overflow jitter on very wide displays */
@@ -536,7 +535,6 @@ input[type="number"] {
 }
 .chip.opp{ text-shadow: 0 1px 0 rgba(0,0,0,.25); }
 
-}
 .quick-row {
   display: flex;
   gap: 6px;
@@ -1014,4 +1012,3 @@ details.panel .row {
     overflow-x: auto;
     width: 100%;
 }
-
