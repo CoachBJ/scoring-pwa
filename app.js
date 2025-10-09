@@ -100,26 +100,6 @@ function detectFormation(call){
 
 
 
-function detectFormation(call){
-  const nc = _norm(call);
-  // pick FIRST best match (longest norm first for specificity)
-  let best = null;
-  for (const f of _FORM_KEYS.sort((a,b)=>b.norm.length-a.norm.length)){
-    if (nc.includes(f.norm)){ best = f.raw; break; }
-  }
-  return best || null;
-}
-function detectPlays(call){
-  const nc = _norm(call);
-  const hits = [];
-  for (const p of _PLAY_KEYS){
-    if (nc.includes(p.norm)) hits.push(p.raw);
-  }
-  // de-dup and cap (avoid overly long rows)
-  return [...new Set(hits)].slice(0,3);
-}
-
-
 
 
 
