@@ -63,34 +63,33 @@ const words = (s) => {
 };
 
 
-// ===== Add this entire block after the detectFormation function =====
 
-// Pre-sort play keys by length (longest first)
-const PLAY_KEYS_BY_LEN = [..._PLAY_KEYS].sort((a,b)=>b.norm.length - a.norm.length);
 
-/**
- * Detects one or more known plays from a raw play call string.
- * @param {string} call The raw play call text.
- * @returns {string[]} An array of matched play names.
- */
+
+
+// Pre-sort play keys longest-first (you already have _PLAY_KEYS and _norm)
+const PLAY_KEYS_BY_LEN = [..._PLAY_KEYS].sort((a,b)=> b.norm.length - a.norm.length);
+
 function detectPlays(call){
-  let remainingCall = _norm(call);
-  const found = [];
-  if (!remainingCall) return found;
-
+  const nc = _norm(call);
+  const hits = [];
   for (const p of PLAY_KEYS_BY_LEN){
-    if (remainingCall.includes(p.norm)){
-      found.push(p.raw);
-      // "Consume" the found play by replacing it with spaces.
-      // This prevents a longer play like "Tinder Go" from also matching the shorter play "Go".
-      remainingCall = remainingCall.replace(p.norm, ' '.repeat(p.norm.length));
-    }
+    if (nc.includes(p.norm)) hits.push(p.raw);
   }
+  return hits; // may contain multiple matches
+}
+
   return found;
 }
 
 // =================================================================
 
+const plays = (typeof detectPlays === 'function') ? detectPlays(r.call) : [];
+for (const p of plays) {
+  const v = byPlay.get(p) || { plays:0, success:0, totalGain:0 };
+  v.plays++; if (success) v.success++; v.totalGain += gForAvg;
+  byPlay.set(p, v);
+}
 
 
 
