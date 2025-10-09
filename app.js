@@ -88,6 +88,8 @@ function detectPlays(call){
 const TEAM_NAME = "Charlotte Christian";
 const MAX_RESULTS = 200;
 const MAX_TIME_SECS = 12 * 60; // 12 minute maximum for the clock
+const EXPLOSIVE_PLAY_THRESHOLD = 12; // Yards for an explosive play
+
 const elOurTOLeft = document.getElementById("ourTOLeft");
 const elOppTOLeft = document.getElementById("oppTOLeft");
 const elOppTOName = document.getElementById("oppTOName");
@@ -1032,7 +1034,7 @@ function renderPlaylists(){
   });
 }
 
-// ===== Analytics =====
+// ===== Analytics (UPGRADED) =====
 const toInt = (v) => {
   const n = Number(String(v).replace(/[^0-9-]/g,""));
   return Number.isFinite(n) ? n : null;
@@ -1040,36 +1042,64 @@ const toInt = (v) => {
 
 function computeAnalytics(){
   const summarize = (rows, isOff) => {
-    const byWord = new Map(), byForm = new Map(), byPlay = new Map();
+    const byWord = new Map(), byForm = new Map(), byPlay = new Map(), byCombo = new Map();
+
     for (const r of rows){
       const dn = toInt(r.dn), dist = toInt(r.dist), gain = Number(r.gain||0);
-      if (!r.call) continue; // Skip empty rows
+      if (!r.call) continue;
+
       const late = (dn===3 || dn===4);
       const offOK = late ? (gain >= (dist ?? 0)) : (gain >= 4);
       const defOK = late ? (gain <  (dist ?? Infinity)) : (gain < 4);
       const success = isOff ? offOK : defOK;
+      const isExplosive = gain >= EXPLOSIVE_PLAY_THRESHOLD;
 
+      // --- Keywords
       for (const w of words(r.call)){
-        const v = byWord.get(w) || { plays:0, success:0, totalGain:0 };
-        v.plays++; if (success) v.success++; v.totalGain += gain; byWord.set(w, v);
+        const v = byWord.get(w) || { plays:0, success:0, totalGain:0, explosive:0 };
+        v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain; byWord.set(w, v);
       }
+      
       const f = detectFormation(r.call);
+      const ps = detectPlays(r.call);
+
+      // --- Formation
       if (f){
-        const v = byForm.get(f) || { plays:0, success:0, totalGain:0 };
-        v.plays++; if (success) v.success++; v.totalGain += gain; byForm.set(f, v);
+        const v = byForm.get(f) || { plays:0, success:0, totalGain:0, explosive:0 };
+        v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain; byForm.set(f, v);
       }
-      for (const p of detectPlays(r.call)){
-        const v = byPlay.get(p) || { plays:0, success:0, totalGain:0 };
-        v.plays++; if (success) v.success++; v.totalGain += gain; byPlay.set(p, v);
+      
+      // --- Play
+      for (const p of ps){
+        const v = byPlay.get(p) || { plays:0, success:0, totalGain:0, explosive:0 };
+        v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain; byPlay.set(p, v);
+      }
+
+      // --- Formation & Play Combo (Offense only)
+      if (isOff && f && ps.length > 0) {
+          for (const p of ps) {
+            const comboKey = `${f} • ${p}`;
+            const v = byCombo.get(comboKey) || { plays:0, success:0, totalGain:0, explosive:0 };
+            v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain; byCombo.set(comboKey, v);
+          }
       }
     }
+
     const finish = (m) => [...m.entries()]
-      .map(([label, v]) => ({ label, plays: v.plays, succRate: v.success/(v.plays||1), avgGain: v.totalGain/(v.plays||1) }))
+      .map(([label, v]) => ({ 
+          label, 
+          plays: v.plays, 
+          succRate: v.success / (v.plays||1), 
+          avgGain: v.totalGain / (v.plays||1),
+          explosiveRate: v.explosive / (v.plays||1)
+      }))
       .filter(r => r.plays >= 1)
-      .sort((a,b)=> b.succRate - a.succRate || b.avgGain - a.avgGain || b.plays - b.plays || a.label.localeCompare(b.label))
+      .sort((a,b)=> b.succRate - a.succRate || b.explosiveRate - a.explosiveRate || b.avgGain - a.avgGain || b.plays - b.plays || a.label.localeCompare(b.label))
       .slice(0,25);
-    return { words: finish(byWord), forms: finish(byForm), plays: finish(byPlay) };
+      
+    return { words: finish(byWord), forms: finish(byForm), plays: finish(byPlay), combos: finish(byCombo) };
   };
+  
   return { off: summarize(STATE.offPlays, true), def: summarize(STATE.defPlays, false) };
 }
 
@@ -1079,32 +1109,44 @@ function renderAnalytics(){
   const out = document.getElementById('output');
   if (!out) return;
   out.querySelectorAll('.analytics-card').forEach(c => c.remove());
+  
   const data = computeAnalytics();
+  
   const mkTable = (rows, col0) => rows.length === 0 ? '<p class="muted">No data yet.</p>' : `
     <div class="table-wrapper"><table class="table">
-      <thead><tr><th>${col0}</th><th>Plays</th><th>Success %</th><th>Avg Gain</th></tr></thead>
+      <thead><tr><th>${col0}</th><th>Plays</th><th>Success %</th><th>Avg Gain</th><th>Explosive %</th></tr></thead>
       <tbody>${
         rows.map(r=>`<tr>
-          <td>${r.label ?? r.word}</td>
+          <td>${r.label}</td>
           <td>${r.plays}</td>
           <td>${(r.succRate*100).toFixed(0)}%</td>
           <td>${r.avgGain.toFixed(1)}</td>
+          <td>${(r.explosiveRate*100).toFixed(0)}%</td>
         </tr>`).join('')
       }</tbody>
     </table></div>`;
+
   const card = (title, html) => {
     const c = document.createElement('div');
     c.className = 'card analytics-card';
     c.innerHTML = `<h2 class="section-title">${title}</h2>${html}`;
     return c;
   };
+
+  // OFFENSE
+  if (data.off.combos.length > 0) {
+      out.appendChild(card('Offense — By Formation & Play Combo', mkTable(data.off.combos, 'Combination')));
+  }
   out.appendChild(card('Offense — By Formation', mkTable(data.off.forms, 'Formation')));
   out.appendChild(card('Offense — By Play', mkTable(data.off.plays, 'Play')));
   out.appendChild(card('Offense — By Keywords', mkTable(data.off.words, 'Word')));
-  out.appendChild(card('Defense — By Formation', mkTable(data.def.forms, 'Formation')));
-  out.appendChild(card('Defense — By Play', mkTable(data.def.plays, 'Play')));
-  out.appendChild(card('Defense — By Keywords', mkTable(data.def.words, 'Word')));
+
+  // DEFENSE
+  out.appendChild(card('Defense — By Formation',  mkTable(data.def.forms, 'Formation')));
+  out.appendChild(card('Defense — By Play',       mkTable(data.def.plays, 'Play')));
+  out.appendChild(card('Defense — By Keywords',  mkTable(data.def.words, 'Word')));
 }
+
 
 // ===== Export CSV =====
 function exportPlaysCSV(){
