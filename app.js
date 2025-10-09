@@ -1008,6 +1008,43 @@ function renderPlaylists(){
       rows[idx][propMap[key]] = t.value.trim();
     }
 
+    // ===== NEW: Auto-fill logic for next Down & Distance =====
+    const currentPlay = rows[idx];
+    const nextPlayIndex = idx + 1;
+
+    if (nextPlayIndex < PLAY_ROWS) {
+        const nextPlay = rows[nextPlayIndex] || EMPTY_ROW();
+        const nextDownInput = document.getElementById(`${pre}_dn_${nextPlayIndex}`);
+        const nextDistInput = document.getElementById(`${pre}_ds_${nextPlayIndex}`);
+
+        // Only auto-fill if the next row is not a new drive.
+        if (!nextPlay.isNewDrive && nextDownInput && nextDistInput) {
+            const dn = parseInt(currentPlay.dn, 10);
+            const dist = parseInt(currentPlay.dist, 10);
+            const gain = currentPlay.gain; // This is already a number
+
+            if (!isNaN(dn) && !isNaN(dist) && typeof gain === 'number') {
+                if (dn >= 4 && gain < dist) {
+                    // Turnover on downs: do nothing to the next row
+                } else if (gain >= dist) {
+                    // First down
+                    nextPlay.dn = '1';
+                    nextPlay.dist = '10';
+                    nextDownInput.value = '1';
+                    nextDistInput.value = '10';
+                } else {
+                    // Not a first down, advance the down
+                    const nextDn = dn + 1;
+                    const nextDist = dist - gain;
+                    nextPlay.dn = String(nextDn);
+                    nextPlay.dist = String(nextDist);
+                    nextDownInput.value = nextDn;
+                    nextDistInput.value = nextDist;
+                }
+            }
+        }
+    }
+
     if (needsRecalc) {
       recalcGains();
       for(let i = 0; i < rows.length; i++) {
@@ -1042,7 +1079,7 @@ const toInt = (v) => {
 
 function computeAnalytics(){
   const summarize = (rows, isOff) => {
-    const byWord = new Map(), byForm = new Map(), byPlay = new Map(), byCombo = new Map();
+    const byWord = new Map(), byForm = new Map(), byPlay = new Map(), byCombo = new Map(), byDown = new Map();
 
     for (const r of rows){
       const dn = toInt(r.dn), dist = toInt(r.dist), gain = Number(r.gain||0);
@@ -1062,6 +1099,14 @@ function computeAnalytics(){
       
       const f = detectFormation(r.call);
       const ps = detectPlays(r.call);
+      
+      // ===== NEW: By Down analytics =====
+      if (dn && dn >= 1 && dn <= 4) {
+          const downKey = `${dn}${dn===1?'st':dn===2?'nd':dn===3?'rd':'th'} Down`;
+          const v = byDown.get(downKey) || { plays:0, success:0, totalGain:0, explosive:0 };
+          v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain;
+          byDown.set(downKey, v);
+      }
 
       // --- Formation
       if (f){
@@ -1084,8 +1129,14 @@ function computeAnalytics(){
           }
       }
     }
+    
+    // Sort downs by 1st, 2nd, 3rd, 4th
+    const downSorter = (a, b) => a.label.localeCompare(b.label);
+    
+    // Default sort by success rate, explosive rate, etc.
+    const defaultSorter = (a,b)=> b.succRate - a.succRate || b.explosiveRate - a.explosiveRate || b.avgGain - a.avgGain || b.plays - b.plays || a.label.localeCompare(b.label);
 
-    const finish = (m) => [...m.entries()]
+    const finish = (m, sorter = defaultSorter) => [...m.entries()]
       .map(([label, v]) => ({ 
           label, 
           plays: v.plays, 
@@ -1094,10 +1145,10 @@ function computeAnalytics(){
           explosiveRate: v.explosive / (v.plays||1)
       }))
       .filter(r => r.plays >= 1)
-      .sort((a,b)=> b.succRate - a.succRate || b.explosiveRate - a.explosiveRate || b.avgGain - a.avgGain || b.plays - b.plays || a.label.localeCompare(b.label))
+      .sort(sorter)
       .slice(0,25);
       
-    return { words: finish(byWord), forms: finish(byForm), plays: finish(byPlay), combos: finish(byCombo) };
+    return { words: finish(byWord), forms: finish(byForm), plays: finish(byPlay), combos: finish(byCombo), down: finish(byDown, downSorter) };
   };
   
   return { off: summarize(STATE.offPlays, true), def: summarize(STATE.defPlays, false) };
@@ -1137,11 +1188,13 @@ function renderAnalytics(){
   if (data.off.combos.length > 0) {
       out.appendChild(card('Offense — By Formation & Play Combo', mkTable(data.off.combos, 'Combination')));
   }
+  out.appendChild(card('Offense — By Down', mkTable(data.off.down, 'Down')));
   out.appendChild(card('Offense — By Formation', mkTable(data.off.forms, 'Formation')));
   out.appendChild(card('Offense — By Play', mkTable(data.off.plays, 'Play')));
   out.appendChild(card('Offense — By Keywords', mkTable(data.off.words, 'Word')));
 
   // DEFENSE
+  out.appendChild(card('Defense — By Down', mkTable(data.def.down, 'Down')));
   out.appendChild(card('Defense — By Formation',  mkTable(data.def.forms, 'Formation')));
   out.appendChild(card('Defense — By Play',       mkTable(data.def.plays, 'Play')));
   out.appendChild(card('Defense — By Keywords',  mkTable(data.def.words, 'Word')));
