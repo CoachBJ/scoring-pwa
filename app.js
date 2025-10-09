@@ -68,16 +68,6 @@ const words = (s) => {
 
 
 
-// =================================================================
-
-const plays = (typeof detectPlays === 'function') ? detectPlays(r.call) : [];
-for (const p of plays) {
-  const v = byPlay.get(p) || { plays:0, success:0, totalGain:0 };
-  v.plays++; if (success) v.success++; v.totalGain += gForAvg;
-  byPlay.set(p, v);
-}
-
-
 
 // 2) Timer backing var (before queueAnalytics)
 let __analyticsTimer = null;
@@ -1162,7 +1152,7 @@ function recalcGains(){
       const nxt = (i+1<rows.length) ? toInt(rows[i+1].yl) : null;
       let g = 0;
       if (cur!=null && nxt!=null) g = nxt - cur;  // + = moved toward opponent goal
-      rows[i].gain = isOff ? g : Math.max(0, g);  // defense stores yards allowed as + for clarity
+      rows[i].gain = g;  
     }
   };
   calc(STATE.offPlays, true);
@@ -1353,11 +1343,15 @@ const PLAY_KEYS_BY_LEN = [..._PLAY_KEYS].sort((a,b)=> b.norm.length - a.norm.len
 
 function detectPlays(call){
   const nc = _norm(call);
+  const seen = new Set();
   const hits = [];
   for (const p of PLAY_KEYS_BY_LEN){
-    if (nc.includes(p.norm)) hits.push(p.raw);
+    if (nc.includes(p.norm) && !seen.has(p.norm)){
+      seen.add(p.norm);
+      hits.push(p.raw); // keep your preferred raw label
+    }
   }
-  return hits; // may be multiple
+  return hits;
 }
 
 
