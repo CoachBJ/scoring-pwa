@@ -1217,10 +1217,12 @@ document.getElementById('exportPlays')?.addEventListener('click', exportPlaysCSV
 
 
 loadState();
-renderTimeoutsSummary();   // NEW
+renderPlaylists();
+renderTouchCounter();
+renderTimeoutsSummary();
 updateClockHelper();
 run();
-
+queueAnalytics();
 
 
 
