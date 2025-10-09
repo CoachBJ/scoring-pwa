@@ -71,8 +71,6 @@ const words = (s) => {
 // 2) Timer backing var (before queueAnalytics)
 let __analyticsTimer = null;
 
-// 3) saveState half guard (replace line)
-half: elHalf2?.checked ? 2 : 1,
 
 // 4) Hardened applyOpponentProfile (replace whole function)
 
@@ -86,16 +84,6 @@ function detectFormation(call){
   }
   return null;
 }
-
-// 6) (optional) make fumRec read-only
-// inside wireTurnoversPerType() -> change bind():
-const bind = (side, key) => {
-  if (key === 'fumRec') return; // derived; no manual edits
-  const ids = TO_IDS[side][key];
-  document.getElementById(ids.plus)?.addEventListener('click',  () => bump(side, key, +1));
-  document.getElementById(ids.minus)?.addEventListener('click', () => bump(side, key, -1));
-};
-
 
 
 
@@ -370,15 +358,24 @@ function renderTurnovers(){
   const mirror = (side) => side === 'our' ? 'opp' : 'our';
 
   const bump = (side, key, delta) => {
+    if (!delta) return;
+
+    // 1) Apply the primary change
     const cur = clampNonNeg(STATE.turnovers[side][key]);
     STATE.turnovers[side][key] = clampNonNeg(cur + delta);
 
-    // Mirror fumbles lost <-> opponent fumbles recovered
-    if (key === 'fumLost' && delta !== 0) {
-      const other = mirror(side);
+    // 2) Mirror logic (no recursion — write STATE directly)
+    const other = mirror(side);
+    if (key === 'fumLost') {
+      // Lost on one side -> Recovery on the other
       const curRec = clampNonNeg(STATE.turnovers[other].fumRec);
       STATE.turnovers[other].fumRec = clampNonNeg(curRec + delta);
+    } else if (key === 'fumRec') {
+      // Recovery on one side -> Lost on the other
+      const curLost = clampNonNeg(STATE.turnovers[other].fumLost);
+      STATE.turnovers[other].fumLost = clampNonNeg(curLost + delta);
     }
+    // (No mirror for intThrown — it isn’t a 1:1 counterpart you asked for)
 
     renderTurnovers();
     saveState();
