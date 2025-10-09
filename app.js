@@ -388,7 +388,7 @@ function buildItems(target, cap){
 // ----- DOM refs -----
 const elOur = document.querySelector("#ourScore");
 const elOpp = document.querySelector("#oppScore");
-const elOut = document.querySelector("#output");
+const elScenarios = document.querySelector("#scoring-scenarios");
 const elStatus=document.querySelector("#status");
 const viewTable=document.querySelector("#view-table");
 const viewRow  =document.querySelector("#view-row");
@@ -415,7 +415,7 @@ function renderRow(list){
     it.txt.split(JOINER).forEach(seg=>{ const span=document.createElement("span"); span.className="segment"; span.textContent=seg; row.appendChild(span); });
     if(idx<list.length-1){ const sep=document.createElement("span"); sep.textContent="|"; sep.className="muted"; row.appendChild(sep); }
   });
-  card.appendChild(row); elOut.appendChild(card);
+  card.appendChild(row); elScenarios.appendChild(card);
 }
 function renderTable(list){
   const card=document.createElement("div"); card.className="card";
@@ -429,11 +429,11 @@ function renderTable(list){
     it.txt.split(JOINER).forEach(seg=>{ const s=document.createElement("span"); s.className="segment"; s.textContent=seg; tdB.appendChild(s); });
     tr.appendChild(tdA); tr.appendChild(tdB); tb.appendChild(tr);
   });
-  table.appendChild(tb); card.appendChild(table); elOut.appendChild(card);
+  table.appendChild(tb); card.appendChild(table); elScenarios.appendChild(card);
 }
 function renderSection(title, resultObj){
-  const header=document.createElement("h2"); header.className="section-title"; header.style.marginTop = '20px'; header.textContent = title; elOut.appendChild(header);
-  if(resultObj.msg){ const card=document.createElement("div"); card.className="card"; card.innerHTML=`<span class="muted">${resultObj.msg}</span>`; elOut.appendChild(card); }
+  const header=document.createElement("h2"); header.className="section-title"; header.style.marginTop = '20px'; header.textContent = title; elScenarios.appendChild(header);
+  if(resultObj.msg){ const card=document.createElement("div"); card.className="card"; card.innerHTML=`<span class="muted">${resultObj.msg}</span>`; elScenarios.appendChild(card); }
   else { (viewTable.checked?renderTable:renderRow)(resultObj.list); }
 }
 
@@ -747,10 +747,11 @@ function loadState(){
 }
 
 function run(){
-  elOut.innerHTML=""; elStatus.textContent="";
+  if (elScenarios) elScenarios.innerHTML=""; 
+  if (elStatus) elStatus.textContent="";
   const our=validateInt(elOur.value);
   const opp=validateInt(elOpp.value);
-  if(our==null || opp==null){ elStatus.textContent="Enter both scores."; return; }
+  if(our==null || opp==null){ if (elStatus) elStatus.textContent="Enter both scores."; return; }
 
   renderBanner(our, opp, STATE.oppName);
 
@@ -764,7 +765,7 @@ function run(){
     renderSection(`${teamLabel} to Tie`, tieRes);
     renderSection(`${teamLabel} to Take the Lead`, leadRes);
   } else {
-     elOut.innerHTML = "";
+     if (elScenarios) elScenarios.innerHTML = "";
   }
   if (window.__recalcTwoPointDecision) window.__recalcTwoPointDecision();
   saveState();
@@ -918,7 +919,7 @@ function migrateRows(arr){
   ).concat(Array(Math.max(0, PLAY_ROWS - arr.length)).fill(0).map(EMPTY_ROW)).slice(0, PLAY_ROWS);
 }
 
-// NEW: Yard line parser based on +/- system
+// Convert yard line string (e.g., "-25") to absolute distance from own goal (0-100)
 function parseYardLineToAbsolute(ylString) {
     const yl = parseInt(ylString, 10);
     if (isNaN(yl) || yl > 50 || yl < -50 || yl === 0) return null;
@@ -927,13 +928,23 @@ function parseYardLineToAbsolute(ylString) {
     return 50; // 50 yard line
 }
 
+// NEW: Convert absolute distance (0-100) back to yard line string
+function absoluteToYardLineString(abs) {
+    if (abs <= 0 || abs >= 100) return null; // Out of bounds (touchdown/touchback)
+    if (abs === 50) return "50";
+    if (abs < 50) return String(-abs); // Our side
+    if (abs > 50) return String(100 - abs); // Opponent's side
+    return null;
+}
+
+
 function recalcGains(){
   const calc = (rows) => {
     for (let i=0; i < rows.length; i++){
       const curRow = rows[i];
       const nextRow = (i + 1 < rows.length) ? rows[i+1] : null;
       if (!nextRow || nextRow.isNewDrive || !curRow.yl || !nextRow.yl) {
-        continue; // Cannot calculate gain if next play is a new drive or data is missing
+        continue;
       }
       const curAbs = parseYardLineToAbsolute(curRow.yl);
       const nxtAbs = parseYardLineToAbsolute(nextRow.yl);
@@ -1009,7 +1020,7 @@ function renderPlaylists(){
         rows[idx][propMap[key]] = t.value.trim();
     }
 
-    // 2. If yard line changed, recalculate gains *before* auto-fill
+    // 2. If yard line or 'new drive' changed, recalculate gains
     if (needsRecalc) {
         recalcGains();
         // Visually update all gain inputs that aren't being focused
@@ -1021,38 +1032,51 @@ function renderPlaylists(){
         }
     }
 
-    // 3. Now run the auto-fill logic with the updated state
+    // 3. Run auto-fill logic for the *next* row
     const currentPlay = rows[idx];
     const nextPlayIndex = idx + 1;
 
     if (nextPlayIndex < PLAY_ROWS) {
         const nextPlay = rows[nextPlayIndex];
-        const nextDownInput = document.getElementById(`${pre}_dn_${nextPlayIndex}`);
-        const nextDistInput = document.getElementById(`${pre}_ds_${nextPlayIndex}`);
+        // Only auto-fill if the next row exists and is not a new drive.
+        if (nextPlay && !nextPlay.isNewDrive) {
+            const nextYlInput = document.getElementById(`${pre}_yl_${nextPlayIndex}`);
+            const nextDownInput = document.getElementById(`${pre}_dn_${nextPlayIndex}`);
+            const nextDistInput = document.getElementById(`${pre}_ds_${nextPlayIndex}`);
 
-        // Only auto-fill if the next row is not a new drive.
-        if (nextPlay && !nextPlay.isNewDrive && nextDownInput && nextDistInput) {
+            // A) Auto-fill Yard Line
+            const startAbs = parseYardLineToAbsolute(currentPlay.yl);
+            if (startAbs !== null) {
+                const endAbs = startAbs + currentPlay.gain;
+                const nextYlString = absoluteToYardLineString(endAbs);
+                if (nextYlString !== null) {
+                    nextPlay.yl = nextYlString;
+                    if(nextYlInput) nextYlInput.value = nextYlString;
+                }
+            }
+            
+            // B) Auto-fill Down & Distance
             const dn = parseInt(currentPlay.dn, 10);
             const dist = parseInt(currentPlay.dist, 10);
-            const gain = currentPlay.gain; // This is a number from state
+            const gain = currentPlay.gain;
 
             if (!isNaN(dn) && !isNaN(dist) && typeof gain === 'number') {
                 if (dn >= 4 && gain < dist) {
-                    // Turnover on downs: do nothing to the next row
+                    // Turnover on downs: do nothing
                 } else if (gain >= dist) {
                     // First down
                     nextPlay.dn = '1';
                     nextPlay.dist = '10';
-                    nextDownInput.value = '1';
-                    nextDistInput.value = '10';
+                    if(nextDownInput) nextDownInput.value = '1';
+                    if(nextDistInput) nextDistInput.value = '10';
                 } else {
-                    // Not a first down, advance the down
+                    // Not a first down, advance
                     const nextDn = dn + 1;
                     const nextDist = dist - gain;
                     nextPlay.dn = String(nextDn);
                     nextPlay.dist = String(nextDist);
-                    nextDownInput.value = nextDn;
-                    nextDistInput.value = nextDist;
+                    if(nextDownInput) nextDownInput.value = nextDn;
+                    if(nextDistInput) nextDistInput.value = nextDist;
                 }
             }
         }
@@ -1105,7 +1129,7 @@ function computeAnalytics(){
       const f = detectFormation(r.call);
       const ps = detectPlays(r.call);
       
-      // ===== NEW: By Down analytics =====
+      // ===== By Down analytics =====
       if (dn && dn >= 1 && dn <= 4) {
           const downKey = `${dn}${dn===1?'st':dn===2?'nd':dn===3?'rd':'th'} Down`;
           const v = byDown.get(downKey) || { plays:0, success:0, totalGain:0, explosive:0 };
@@ -1135,10 +1159,7 @@ function computeAnalytics(){
       }
     }
     
-    // Sort downs by 1st, 2nd, 3rd, 4th
     const downSorter = (a, b) => a.label.localeCompare(b.label);
-    
-    // Default sort by success rate, explosive rate, etc.
     const defaultSorter = (a,b)=> b.succRate - a.succRate || b.explosiveRate - a.explosiveRate || b.avgGain - a.avgGain || b.plays - b.plays || a.label.localeCompare(b.label);
 
     const finish = (m, sorter = defaultSorter) => [...m.entries()]
@@ -1162,9 +1183,9 @@ function computeAnalytics(){
 function queueAnalytics(){ clearTimeout(__analyticsTimer); __analyticsTimer=setTimeout(renderAnalytics,250); }
 
 function renderAnalytics(){
-  const out = document.getElementById('output');
-  if (!out) return;
-  out.querySelectorAll('.analytics-card').forEach(c => c.remove());
+  const container = document.getElementById('analytics-container');
+  if (!container) return;
+  container.innerHTML = ""; // Clear only analytics
   
   const data = computeAnalytics();
   
@@ -1191,18 +1212,18 @@ function renderAnalytics(){
 
   // OFFENSE
   if (data.off.combos.length > 0) {
-      out.appendChild(card('Offense — By Formation & Play Combo', mkTable(data.off.combos, 'Combination')));
+      container.appendChild(card('Offense — By Formation & Play Combo', mkTable(data.off.combos, 'Combination')));
   }
-  out.appendChild(card('Offense — By Down', mkTable(data.off.down, 'Down')));
-  out.appendChild(card('Offense — By Formation', mkTable(data.off.forms, 'Formation')));
-  out.appendChild(card('Offense — By Play', mkTable(data.off.plays, 'Play')));
-  out.appendChild(card('Offense — By Keywords', mkTable(data.off.words, 'Word')));
+  container.appendChild(card('Offense — By Down', mkTable(data.off.down, 'Down')));
+  container.appendChild(card('Offense — By Formation', mkTable(data.off.forms, 'Formation')));
+  container.appendChild(card('Offense — By Play', mkTable(data.off.plays, 'Play')));
+  container.appendChild(card('Offense — By Keywords', mkTable(data.off.words, 'Word')));
 
   // DEFENSE
-  out.appendChild(card('Defense — By Down', mkTable(data.def.down, 'Down')));
-  out.appendChild(card('Defense — By Formation',  mkTable(data.def.forms, 'Formation')));
-  out.appendChild(card('Defense — By Play',       mkTable(data.def.plays, 'Play')));
-  out.appendChild(card('Defense — By Keywords',  mkTable(data.def.words, 'Word')));
+  container.appendChild(card('Defense — By Down', mkTable(data.def.down, 'Down')));
+  container.appendChild(card('Defense — By Formation',  mkTable(data.def.forms, 'Formation')));
+  container.appendChild(card('Defense — By Play',       mkTable(data.def.plays, 'Play')));
+  container.appendChild(card('Defense — By Keywords',  mkTable(data.def.words, 'Word')));
 }
 
 
