@@ -19,7 +19,6 @@
 
     <div class="layout">
     <aside class="card area-side">
-  <!-- Defensive Calls -->
   <details class="panel" id="defensePanel" open>
     <summary>Defensive Calls (1–75)</summary>
     <div id="defList" class="playlist"></div>
@@ -28,15 +27,13 @@
     </div>
   </details>
 
-  <!-- Offensive Calls (just under Defense) -->
-<details class="panel" id="offensePanel" open>
+  <details class="panel" id="offensePanel" open>
     <summary>Offensive Calls (1–75)</summary>
     <div id="offList" class="playlist"></div>
     <div class="playlist-actions">
       <button id="offClear" class="mini">Clear All</button>
     </div>
   </details>
-  <!-- Touch Chart (collapsible) -->
   <details class="panel" id="touchPanel">
     <summary>Offensive Touch Chart</summary>
     <div class="touch-counter">
@@ -51,13 +48,11 @@
     </div>
   </details>
 
-  <!-- Optional: export button lives fine in sidebar -->
   <button id="exportPlays" class="btn btn-primary" aria-label="Export plays and touches as CSV">
     Export Plays CSV
   </button>
 </aside>
 
-<!-- SCORE CARD (sibling #1) -->
 <section class="card area-score">
   <h2 class="section-title">Scoreboard</h2>
 
@@ -110,7 +105,6 @@
 
   <div id="banner"></div>
 
-  <!-- Game Settings -->
   <details class="panel" id="gameSettings">
     <summary>Game Settings</summary>
 
@@ -137,7 +131,6 @@
     </div>
   </details>
 
-  <!-- Always-visible info (below the panel) -->
   <div class="sticky-officials" id="stickyOfficials">
     <div id="secondHalfInfo" class="muted tiny-info">2nd-half kickoff: —</div>
     <div class="officials-display" id="officialsDisplay" style="display:none">
@@ -147,7 +140,6 @@
     <button type="button" id="clearOfficials" class="link-btn small">Clear officials</button>
   </div>
 
-  <!-- Turnovers (single, de-duplicated) -->
   <section class="card turnovers" id="turnoversCard">
     <h2 class="section-title">Turnovers</h2>
     <div class="to-2col">
@@ -202,7 +194,6 @@
   <p id="status" class="muted"></p>
 </section>
 
-<!-- CLOCK CARD (sibling #2) -->
 <section class="card area-clock">
   <div class="section-head">
     <h2 class="section-title">Game Clock & Timeouts</h2>
@@ -263,13 +254,11 @@
     </div>
   </div>
 
-  <!-- Possession -->
   <div class="row toggles compact" id="possessionRow">
     <label><input type="radio" name="ball" id="ballUs" checked> Charlotte Christian has ball</label>
     <label><input type="radio" name="ball" id="ballThem"><span id="ballThemName">Opponent</span> has ball</label>
   </div>
 
-  <!-- Clock Helper -->
   <details class="panel" id="clockPanel">
     <summary>Clock Helper</summary>
     <div class="row compact">
@@ -286,10 +275,8 @@
     </div>
   </details>
 
-  <!-- Result stays visible -->
   <div id="clockResult" class="muted"></div>
 
-  <!-- 2-Point Decision -->
   <div id="twoPtBox" class="two-pt card-lite">
     <div class="two-pt-head">2-Point Decision (after TD)</div>
     <div id="twoPtMath" class="two-pt-math"></div>
@@ -315,9 +302,10 @@
   </div>
 </section>
 
-
-
-      <section id="output" class="area-output"></section>
+      <section class="area-output">
+          <div id="scoring-scenarios"></div>
+          <div id="analytics-container"></div>
+      </section>
 
     </div>
 
