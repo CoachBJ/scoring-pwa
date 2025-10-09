@@ -49,6 +49,69 @@ const _norm = s => String(s||'')
 const _FORM_KEYS = FORMATION_LIST.map(f => ({ raw:f, norm:_norm(f) }));
 const _PLAY_KEYS  = PLAY_LIST.map(p => ({ raw:p, norm:_norm(p) }));
 
+// Add this near the top with your other helper functions
+
+const words = (s) => {
+  const normalized = String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!normalized) return [];
+  // Use a Set to get only unique words
+  return [...new Set(normalized.split(' '))];
+};
+
+
+
+
+
+
+
+// 2) Timer backing var (before queueAnalytics)
+let __analyticsTimer = null;
+
+// 3) saveState half guard (replace line)
+half: elHalf2?.checked ? 2 : 1,
+
+// 4) Hardened applyOpponentProfile (replace whole function)
+
+
+// 5) Pre-sort formation keys (add near dictionaries)
+const FORM_KEYS_BY_LEN = [..._FORM_KEYS].sort((a,b)=>b.norm.length - a.norm.length);
+function detectFormation(call){
+  const nc = _norm(call);
+  for (const f of FORM_KEYS_BY_LEN){
+    if (nc.includes(f.norm)) return f.raw;
+  }
+  return null;
+}
+
+// 6) (optional) make fumRec read-only
+// inside wireTurnoversPerType() -> change bind():
+const bind = (side, key) => {
+  if (key === 'fumRec') return; // derived; no manual edits
+  const ids = TO_IDS[side][key];
+  document.getElementById(ids.plus)?.addEventListener('click',  () => bump(side, key, +1));
+  document.getElementById(ids.minus)?.addEventListener('click', () => bump(side, key, -1));
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function detectFormation(call){
   const nc = _norm(call);
   // pick FIRST best match (longest norm first for specificity)
@@ -217,32 +280,25 @@ function updateTOHeadings() {
 
 // Opponent profile
 function applyOpponentProfile(){
-  elOppName.value = STATE.oppName;
-  elOppColor.value = STATE.oppColor;
+  if (elOppName)  elOppName.value  = STATE.oppName;
+  if (elOppColor) elOppColor.value = STATE.oppColor;
 
-  const oppTextColor = getContrastColor(STATE.oppColor);
+  const oppTextColor = getContrastColor(STATE.oppColor || '#9a9a9a');
   const root = document.documentElement;
-  root.style.setProperty('--opp', STATE.oppColor);
+  root.style.setProperty('--opp', STATE.oppColor || '#9a9a9a');
   root.style.setProperty('--opp-text', oppTextColor);
 
-  elOppLabel.textContent = STATE.oppName;
-  elOurLabel.textContent = TEAM_NAME;
+  if (elOppLabel) elOppLabel.textContent = STATE.oppName || 'Opponent';
+  if (elOurLabel) elOurLabel.textContent = TEAM_NAME;
 
-  // “Opponent has ball” dynamic label
   const elBallThemName = document.getElementById('ballThemName');
-  if (elBallThemName) elBallThemName.textContent = STATE.oppName || "Opponent";
-  if (elOppTOName) elOppTOName.textContent = STATE.oppName || "Opponent";
-  if (elOppNameTO) elOppNameTO.textContent = STATE.oppName || "Opponent";
+  if (elBallThemName) elBallThemName.textContent = STATE.oppName || 'Opponent';
+  if (elOppTOName) elOppTOName.textContent = STATE.oppName || 'Opponent';
+  if (elOppNameTO) elOppNameTO.textContent = STATE.oppName || 'Opponent';
+  if (elOppNameInline) elOppNameInline.textContent = STATE.oppName || 'Opponent';
 
-
-
-  // KO label inline name
-  if (elOppNameInline) elOppNameInline.textContent = STATE.oppName || "Opponent";
-
-  // Timeout headings
   updateTOHeadings();
 }
-
 
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -1309,7 +1365,7 @@ function renderAnalytics(){
 function exportPlaysCSV(){
   const safe = (s) => `"${String(s ?? '').replace(/"/g,'""')}"`;
 
-  // Fallbacks in case detectFormation/detectPlays aren't defined yet
+  // guard if helpers aren’t loaded yet
   const hasDF = (typeof detectFormation === 'function');
   const hasDP = (typeof detectPlays === 'function');
   const _norm = s => String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
@@ -1317,15 +1373,12 @@ function exportPlaysCSV(){
   function successFlag(isOff, dn, dist, gain){
     const d = Number(dist ?? 0);
     const g = Number(gain ?? 0);
-    if (dn === 3 || dn === 4) {
-      return isOff ? (g >= d) : (g < d);
-    }
-    // 1st/2nd down heuristic: 4+ is a win for O, <4 is a win for D
+    if (dn === 3 || dn === 4) return isOff ? (g >= d) : (g < d);
     return isOff ? (g >= 4) : (g < 4);
   }
 
   function toCSVRow(side, idx, r, isOff){
-    const f = hasDF ? (detectFormation(r.call) || '') : '';
+    const f  = hasDF ? (detectFormation(r.call) || '') : '';
     const ps = hasDP ? (detectPlays(r.call).join(' | ')) : '';
     const succ = successFlag(isOff, Number(r.dn||0), r.dist, r.gain) ? 'Y' : 'N';
 
@@ -1356,7 +1409,7 @@ function exportPlaysCSV(){
     lines.push(toCSVRow('Defense', i+1, r, false));
   }
 
-  // Touches summary as a final comment row (kept)
+  // Touches summary at end (comment line)
   const touches = STATE.touches ? Object.entries(STATE.touches).map(([k,v])=>`${k}:${v}`).join('; ') : '';
   lines.push(`# Touches: ${touches}`);
 
@@ -1367,16 +1420,6 @@ function exportPlaysCSV(){
   document.body.appendChild(a); a.click(); a.remove();
 }
 
-  // Optional: touches summary as a final comment row
-  const touches = STATE.touches ? Object.entries(STATE.touches).map(([k,v])=>`${k}:${v}`).join('; ') : '';
-  lines.push(`# Touches: ${touches}`);
-
-  const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `CCS_Game_Plays_${new Date().toISOString().replace(/[:.]/g,'-')}.csv`;
-  document.body.appendChild(a); a.click(); a.remove();
-}
 document.getElementById('exportPlays')?.addEventListener('click', exportPlaysCSV);
 
 
