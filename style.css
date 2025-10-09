@@ -950,3 +950,68 @@ details.panel .row {
   gap: 8px;
   margin-top: 8px;
 }
+
+
+/* --- Add these styles to your existing style.css file --- */
+
+/* --- Playlists: multi-field rows (UPDATED) --- */
+.playlist .play-head,
+.playlist .play-row {
+  display: grid;
+  grid-template-columns:
+    2.2ch   /* # */
+    3ch     /* New Drive */
+    7ch     /* YL */
+    4ch     /* Dn */
+    5ch     /* Dist */
+    6ch     /* Hash */
+    1fr     /* Play Call */
+    6ch;    /* Gain */
+  gap: 6px;
+  align-items: center;
+}
+
+.playlist .play-head {
+  font-weight: 700;
+  color: var(--muted-color);
+  position: sticky; top: 0;
+  background: var(--card-background);
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px 0;
+  z-index: 1;
+}
+.playlist .idx { text-align: right; font-weight: 800; opacity: .85; }
+.playlist input.play-yl,
+.playlist input.play-dn,
+.playlist input.play-dist,
+.playlist input.play-hash,
+.playlist input.gain { 
+    padding: 6px; 
+    text-align: center; 
+    width:100%; 
+    box-sizing: border-box; 
+    border: 1px solid var(--border-color); 
+    border-radius: 6px;
+}
+.playlist input.play-call { padding: 6px; width:100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px;}
+
+/* Style the new drive checkbox for better visibility */
+.playlist input.play-new-drive {
+    justify-self: center;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+}
+
+
+/* number input niceties */
+.playlist input[type="number"]::-webkit-outer-spin-button,
+.playlist input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.playlist input[type="number"] { -moz-appearance: textfield; }
+
+/* Wrapper for table to allow scrolling on small screens */
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
