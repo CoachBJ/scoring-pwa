@@ -620,7 +620,7 @@ function wireEventListeners() {
 }
 
 // ----- State -----
-const STATE_KEY = "ccs-gamemanager-state-v4"; // incremented version
+const STATE_KEY = "ccs-gamemanager-state-v5"; // Bumping version for new data model
 let STATE = {
   oppName: "Opponent",
   oppColor: "#9a9a9a",
@@ -909,12 +909,12 @@ function bumpTouch(name, delta) {
 
 // ===== Playlists (Offense / Defense) — NEW LOGIC =====
 const PLAY_ROWS = 75;
-const EMPTY_ROW = () => ({ yl:"", dn:"", dist:"", hash:"", call:"", gain:0, isNewDrive: false });
+const EMPTY_ROW = () => ({ yl:"", dn:"", dist:"", call:"", gain:0, isNewDrive: false });
 
 function migrateRows(arr){
   if (!Array.isArray(arr)) return Array(PLAY_ROWS).fill(0).map(EMPTY_ROW);
   return arr.map(v => (v && typeof v === 'object')
-    ? { yl:v.yl??"", dn:v.dn??"", dist:v.dist??"", hash:v.hash??"", call:v.call??"", gain:Number(v.gain||0), isNewDrive:!!v.isNewDrive }
+    ? { yl:v.yl??"", dn:v.dn??"", dist:v.dist??"", call:v.call??"", gain:v.gain||0, isNewDrive:!!v.isNewDrive }
     : { ...EMPTY_ROW(), call:String(v||"") }
   ).concat(Array(Math.max(0, PLAY_ROWS - arr.length)).fill(0).map(EMPTY_ROW)).slice(0, PLAY_ROWS);
 }
@@ -937,11 +937,12 @@ function absoluteToYardLineString(abs) {
     return null;
 }
 
-
 function recalcGains(){
   const calc = (rows) => {
     for (let i=0; i < rows.length; i++){
       const curRow = rows[i];
+      if (typeof curRow.gain === 'string') continue; // Skip TO/INT
+
       const nextRow = (i + 1 < rows.length) ? rows[i+1] : null;
       if (!nextRow || nextRow.isNewDrive || !curRow.yl || !nextRow.yl) {
         continue;
@@ -960,7 +961,7 @@ function recalcGains(){
 function playHeadRow(){
   const head = document.createElement('div');
   head.className = 'play-head';
-  head.innerHTML = `<div>#</div><div>New</div><div>YL</div><div>Dn</div><div>Dist</div><div>Hash</div><div>Play Call</div><div>Gain</div>`;
+  head.innerHTML = `<div>#</div><div>New</div><div>YL</div><div>Dn</div><div>Dist</div><div>Play Call</div><div>Result</div>`;
   return head;
 }
 
@@ -971,15 +972,15 @@ function makeRows(arr, prefix){
     const p = arr[i] || EMPTY_ROW();
     const wrap = document.createElement('div');
     wrap.className = 'play-row';
+    // Use 'text' type for gain to allow "INT" or "TO"
     wrap.innerHTML = `
       <div class="idx">${i+1}</div>
-      <input id="${prefix}nd_${i}"   class="play-new-drive" type="checkbox" ${p.isNewDrive ? 'checked' : ''} title="Check if this play starts a new drive">
-      <input id="${prefix}yl_${i}"   class="play-yl"   type="number" inputmode="numeric" placeholder="e.g. -25" value="${p.yl}">
-      <input id="${prefix}dn_${i}"   class="play-dn"   type="number" inputmode="numeric" placeholder="1"  value="${p.dn}">
-      <input id="${prefix}ds_${i}"   class="play-dist" type="number" inputmode="numeric" placeholder="10" value="${p.dist}">
-      <input id="${prefix}hs_${i}"   class="play-hash" type="text"   placeholder="L/M/R" value="${p.hash}">
-      <input id="${prefix}pc_${i}"   class="play-call" type="text"   placeholder="Type call..." value="${p.call}">
-      <input id="${prefix}gn_${i}"   class="gain" type="number" inputmode="numeric" value="${Number(p.gain||0)}">`;
+      <input id="${prefix}nd_${i}" class="play-new-drive" type="checkbox" ${p.isNewDrive ? 'checked' : ''} title="Check if this play starts a new drive">
+      <input id="${prefix}yl_${i}" class="play-yl"   type="number" inputmode="numeric" placeholder="-25" value="${p.yl}">
+      <input id="${prefix}dn_${i}" class="play-dn"   type="number" inputmode="numeric" placeholder="1"   value="${p.dn}">
+      <input id="${prefix}ds_${i}" class="play-dist" type="number" inputmode="numeric" placeholder="10"  value="${p.dist}">
+      <input id="${prefix}pc_${i}" class="play-call" type="text"   placeholder="Type call..." value="${p.call}">
+      <input id="${prefix}gn_${i}" class="gain"      type="text"   placeholder="Gain/TO" value="${p.gain}">`;
     frag.appendChild(wrap);
   }
   return frag;
@@ -1004,7 +1005,7 @@ function renderPlaylists(){
     const rows = isOff ? STATE.offPlays : STATE.defPlays;
     if (!rows[idx]) rows[idx] = EMPTY_ROW();
 
-    const propMap = { dn: 'dn', ds: 'dist', hs: 'hash', pc: 'call' };
+    const propMap = { dn: 'dn', ds: 'dist', pc: 'call' };
     let needsRecalc = false;
 
     // 1. Update state from the changed input
@@ -1013,9 +1014,22 @@ function renderPlaylists(){
         needsRecalc = true;
     } else if (key === 'nd') {
         rows[idx].isNewDrive = t.checked;
+        if (t.checked) { // If the box was just CHECKED, auto-fill DnD
+            rows[idx].dn = '1';
+            rows[idx].dist = '10';
+            const currentDownInput = document.getElementById(`${pre}_dn_${idx}`);
+            const currentDistInput = document.getElementById(`${pre}_ds_${idx}`);
+            if (currentDownInput) currentDownInput.value = '1';
+            if (currentDistInput) currentDistInput.value = '10';
+        }
         needsRecalc = true;
     } else if (key === 'gn') {
-        rows[idx].gain = Number(t.value);
+        const gainValue = t.value.trim().toUpperCase();
+        if (gainValue === 'INT' || gainValue === 'TO') {
+            rows[idx].gain = gainValue; // Store the string 'INT' or 'TO'
+        } else {
+            rows[idx].gain = Number(gainValue) || 0; // Keep original behavior for numbers
+        }
     } else if (propMap[key]) {
         rows[idx][propMap[key]] = t.value.trim();
     }
@@ -1023,7 +1037,6 @@ function renderPlaylists(){
     // 2. If yard line or 'new drive' changed, recalculate gains
     if (needsRecalc) {
         recalcGains();
-        // Visually update all gain inputs that aren't being focused
         for (let i = 0; i < rows.length; i++) {
             const gainInput = document.getElementById(`${isOff ? 'off' : 'def'}_gn_${i}`);
             if (gainInput && document.activeElement !== gainInput) {
@@ -1038,16 +1051,18 @@ function renderPlaylists(){
 
     if (nextPlayIndex < PLAY_ROWS) {
         const nextPlay = rows[nextPlayIndex];
-        // Only auto-fill if the next row exists and is not a new drive.
         if (nextPlay && !nextPlay.isNewDrive) {
             const nextYlInput = document.getElementById(`${pre}_yl_${nextPlayIndex}`);
             const nextDownInput = document.getElementById(`${pre}_dn_${nextPlayIndex}`);
             const nextDistInput = document.getElementById(`${pre}_ds_${nextPlayIndex}`);
+            
+            const isTurnover = typeof currentPlay.gain === 'string' && (currentPlay.gain === 'INT' || currentPlay.gain === 'TO');
 
             // A) Auto-fill Yard Line
             const startAbs = parseYardLineToAbsolute(currentPlay.yl);
-            if (startAbs !== null) {
-                const endAbs = startAbs + currentPlay.gain;
+            // Don't auto-fill YL on turnover, since possession changes
+            if (startAbs !== null && !isTurnover) {
+                const endAbs = startAbs + Number(currentPlay.gain);
                 const nextYlString = absoluteToYardLineString(endAbs);
                 if (nextYlString !== null) {
                     nextPlay.yl = nextYlString;
@@ -1056,27 +1071,38 @@ function renderPlaylists(){
             }
             
             // B) Auto-fill Down & Distance
-            const dn = parseInt(currentPlay.dn, 10);
-            const dist = parseInt(currentPlay.dist, 10);
-            const gain = currentPlay.gain;
+            if (isTurnover) {
+                // Turnover logic
+                nextPlay.dn = '1';
+                nextPlay.dist = '10';
+                if(nextDownInput) nextDownInput.value = '1';
+                if(nextDistInput) nextDistInput.value = '10';
+            } else {
+                // Standard D&D logic
+                const dn = parseInt(currentPlay.dn, 10);
+                const dist = parseInt(currentPlay.dist, 10);
+                const gain = Number(currentPlay.gain);
 
-            if (!isNaN(dn) && !isNaN(dist) && typeof gain === 'number') {
-                if (dn >= 4 && gain < dist) {
-                    // Turnover on downs: do nothing
-                } else if (gain >= dist) {
-                    // First down
-                    nextPlay.dn = '1';
-                    nextPlay.dist = '10';
-                    if(nextDownInput) nextDownInput.value = '1';
-                    if(nextDistInput) nextDistInput.value = '10';
-                } else {
-                    // Not a first down, advance
-                    const nextDn = dn + 1;
-                    const nextDist = dist - gain;
-                    nextPlay.dn = String(nextDn);
-                    nextPlay.dist = String(nextDist);
-                    if(nextDownInput) nextDownInput.value = nextDn;
-                    if(nextDistInput) nextDistInput.value = nextDist;
+                if (!isNaN(dn) && !isNaN(dist)) {
+                    if (dn >= 4 && gain < dist) {
+                        // Turnover on downs
+                        nextPlay.dn = '1'; nextPlay.dist = '10';
+                        if(nextDownInput) nextDownInput.value = '1';
+                        if(nextDistInput) nextDistInput.value = '10';
+                    } else if (gain >= dist) {
+                        // First down
+                        nextPlay.dn = '1'; nextPlay.dist = '10';
+                        if(nextDownInput) nextDownInput.value = '1';
+                        if(nextDistInput) nextDistInput.value = '10';
+                    } else {
+                        // Not a first down, advance
+                        const nextDn = dn + 1;
+                        const nextDist = dist - gain;
+                        nextPlay.dn = String(nextDn);
+                        nextPlay.dist = String(nextDist);
+                        if(nextDownInput) nextDownInput.value = nextDn;
+                        if(nextDistInput) nextDistInput.value = nextDist;
+                    }
                 }
             }
         }
@@ -1111,12 +1137,20 @@ function computeAnalytics(){
     const byWord = new Map(), byForm = new Map(), byPlay = new Map(), byCombo = new Map(), byDown = new Map();
 
     for (const r of rows){
-      const dn = toInt(r.dn), dist = toInt(r.dist), gain = Number(r.gain||0);
+      const dn = toInt(r.dn), dist = toInt(r.dist);
       if (!r.call) continue;
+      
+      let gain = 0;
+      let isTurnover = false;
+      if (typeof r.gain === 'string') {
+        isTurnover = true;
+      } else {
+        gain = Number(r.gain || 0);
+      }
 
       const late = (dn===3 || dn===4);
-      const offOK = late ? (gain >= (dist ?? 0)) : (gain >= 4);
-      const defOK = late ? (gain <  (dist ?? Infinity)) : (gain < 4);
+      const offOK = isTurnover ? false : late ? (gain >= (dist ?? 0)) : (gain >= 4);
+      const defOK = isTurnover ? true : late ? (gain <  (dist ?? Infinity)) : (gain < 4);
       const success = isOff ? offOK : defOK;
       const isExplosive = gain >= EXPLOSIVE_PLAY_THRESHOLD;
 
@@ -1226,14 +1260,18 @@ function renderAnalytics(){
   container.appendChild(card('Defense — By Keywords',  mkTable(data.def.words, 'Word')));
 }
 
-
 // ===== Export CSV =====
 function exportPlaysCSV(){
   const safe = (s) => `"${String(s ?? '').replace(/"/g,'""')}"`;
   const hasDF = (typeof detectFormation === 'function');
   const hasDP = (typeof detectPlays === 'function');
   function successFlag(isOff, dn, dist, gain){
-    const d = Number(dist ?? 0); const g = Number(gain ?? 0);
+    const d = Number(dist ?? 0); 
+    const isTurnover = typeof gain === 'string';
+    const g = isTurnover ? 0 : Number(gain ?? 0);
+
+    if (isTurnover) return isOff ? false : true;
+
     if (dn === 3 || dn === 4) return isOff ? (g >= d) : (g < d);
     return isOff ? (g >= 4) : (g < 4);
   }
@@ -1242,9 +1280,9 @@ function exportPlaysCSV(){
     const f  = hasDF ? (detectFormation(r.call) || '') : '';
     const ps = hasDP ? (detectPlays(r.call).join(' | ')) : '';
     const succ = successFlag(isOff, Number(r.dn||0), r.dist, r.gain) ? 'Y' : 'N';
-    return [side, idx, r.isNewDrive ? 'Y' : 'N', safe(r.yl), safe(r.dn), safe(r.dist), safe(r.hash), safe(r.call), (r.gain ?? 0), safe(f), safe(ps), succ].join(',');
+    return [side, idx, r.isNewDrive ? 'Y' : 'N', safe(r.yl), safe(r.dn), safe(r.dist), safe(r.call), safe(r.gain), safe(f), safe(ps), succ].join(',');
   }
-  const lines = ['Side,Index,NewDrive,YardLine,Down,Dist,Hash,PlayCall,Gain,Formation,PlayNames,Success'];
+  const lines = ['Side,Index,NewDrive,YardLine,Down,Dist,PlayCall,Result,Formation,PlayNames,Success'];
   STATE.offPlays.forEach((r, i) => { const row = toCSVRow('Offense', i+1, r, true); if (row) lines.push(row); });
   STATE.defPlays.forEach((r, i) => { const row = toCSVRow('Defense', i+1, r, false); if (row) lines.push(row); });
   const touches = STATE.touches ? Object.entries(STATE.touches).map(([k,v])=>`${k}:${v}`).join('; ') : '';
