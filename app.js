@@ -988,40 +988,53 @@ function renderPlaylists(){
     if (t.tagName !== 'INPUT') return;
 
     const [pre, key, idxStr] = t.id.split('_');
-    const idx = Number(idxStr||0);
+    const idx = Number(idxStr || 0);
     const isOff = pre === 'off';
     const rows = isOff ? STATE.offPlays : STATE.defPlays;
     if (!rows[idx]) rows[idx] = EMPTY_ROW();
 
-    let needsRecalc = false;
     const propMap = { dn: 'dn', ds: 'dist', hs: 'hash', pc: 'call' };
+    let needsRecalc = false;
 
+    // 1. Update state from the changed input
     if (key === 'yl') {
-      rows[idx].yl = t.value.trim();
-      needsRecalc = true;
+        rows[idx].yl = t.value.trim();
+        needsRecalc = true;
     } else if (key === 'nd') {
-      rows[idx].isNewDrive = t.checked;
-      needsRecalc = true;
+        rows[idx].isNewDrive = t.checked;
+        needsRecalc = true;
     } else if (key === 'gn') {
-      rows[idx].gain = Number(t.value);
+        rows[idx].gain = Number(t.value);
     } else if (propMap[key]) {
-      rows[idx][propMap[key]] = t.value.trim();
+        rows[idx][propMap[key]] = t.value.trim();
     }
 
-    // ===== NEW: Auto-fill logic for next Down & Distance =====
+    // 2. If yard line changed, recalculate gains *before* auto-fill
+    if (needsRecalc) {
+        recalcGains();
+        // Visually update all gain inputs that aren't being focused
+        for (let i = 0; i < rows.length; i++) {
+            const gainInput = document.getElementById(`${isOff ? 'off' : 'def'}_gn_${i}`);
+            if (gainInput && document.activeElement !== gainInput) {
+                gainInput.value = String(rows[i].gain ?? 0);
+            }
+        }
+    }
+
+    // 3. Now run the auto-fill logic with the updated state
     const currentPlay = rows[idx];
     const nextPlayIndex = idx + 1;
 
     if (nextPlayIndex < PLAY_ROWS) {
-        const nextPlay = rows[nextPlayIndex] || EMPTY_ROW();
+        const nextPlay = rows[nextPlayIndex];
         const nextDownInput = document.getElementById(`${pre}_dn_${nextPlayIndex}`);
         const nextDistInput = document.getElementById(`${pre}_ds_${nextPlayIndex}`);
 
         // Only auto-fill if the next row is not a new drive.
-        if (!nextPlay.isNewDrive && nextDownInput && nextDistInput) {
+        if (nextPlay && !nextPlay.isNewDrive && nextDownInput && nextDistInput) {
             const dn = parseInt(currentPlay.dn, 10);
             const dist = parseInt(currentPlay.dist, 10);
-            const gain = currentPlay.gain; // This is already a number
+            const gain = currentPlay.gain; // This is a number from state
 
             if (!isNaN(dn) && !isNaN(dist) && typeof gain === 'number') {
                 if (dn >= 4 && gain < dist) {
@@ -1044,16 +1057,8 @@ function renderPlaylists(){
             }
         }
     }
-
-    if (needsRecalc) {
-      recalcGains();
-      for(let i = 0; i < rows.length; i++) {
-        const gainInput = document.getElementById(`${isOff ? 'off' : 'def'}_gn_${i}`);
-        if (gainInput && document.activeElement !== gainInput) { // Don't overwrite if user is typing in it
-            gainInput.value = String(rows[i].gain ?? 0);
-        }
-      }
-    }
+    
+    // 4. Save and update analytics
     saveState();
     queueAnalytics();
   };
