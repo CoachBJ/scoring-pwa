@@ -735,6 +735,7 @@ function run(){
   }
   if (window.__recalcTwoPointDecision) window.__recalcTwoPointDecision();
   saveState();
+  queueAnalytics(); // <— add this
 }
 
 // ----- Init -----
@@ -1145,7 +1146,7 @@ function computeAnalytics(){
     }
     return [...byWord.entries()]
       .map(([word, v]) => ({ word, plays:v.plays, succRate:v.success/(v.plays||1), avgGain: v.totalGain/(v.plays||1) }))
-      .filter(r => r.plays >= 2)
+      .filter(r => r.plays >= 1)
       .sort((a,b)=> b.succRate - a.succRate || b.avgGain - a.avgGain || a.word.localeCompare(b.word))
       .slice(0,25);
   };
@@ -1159,8 +1160,8 @@ function queueAnalytics(){ clearTimeout(__analyticsTimer); __analyticsTimer=setT
 function renderAnalytics(){
   const out = document.getElementById('output');
   if (!out) return;
-  out.querySelectorAll('.card .section-title')
-     .forEach(h => h.closest('.card')?.remove()); // clear old analytics
+    out.querySelectorAll('.analytics-card').forEach(c => c.remove());
+
   // ...then build cards as you do now
   const data = computeAnalytics();
   const mk = (rows, title) => {
