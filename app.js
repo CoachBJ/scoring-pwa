@@ -1016,68 +1016,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// ===== Playlists (Offense / Defense) =====
-
-// Keep in STATE so it saves/loads with everything else
-STATE.offPlays = STATE.offPlays || Array(PLAY_ROWS).fill("");
-STATE.defPlays = STATE.defPlays || Array(PLAY_ROWS).fill("");
-
-// Build rows once
-function renderPlaylists(){
-  const off = document.getElementById('offList');
-  const def = document.getElementById('defList');
-  if (!off && !def) return;
-
-  const makeRows = (arr, prefix) => {
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < PLAY_ROWS; i++){
-      const wrap = document.createElement('div');
-      wrap.className = 'play-row';
-      wrap.innerHTML = `
-        <div class="idx">${i+1}</div>
-        <input id="${prefix}${i}" type="text" autocomplete="off" placeholder="Type call..." value="${arr[i] ?? ''}">
-      `;
-      frag.appendChild(wrap);
-    }
-    return frag;
-  };
-
-  if (off){
-    off.innerHTML = "";
-    off.appendChild(makeRows(STATE.offPlays, 'off_'));
-  }
-  if (def){
-    def.innerHTML = "";
-    def.appendChild(makeRows(STATE.defPlays, 'def_'));
-  }
-
-  // Wire input saving (event delegation)
-  const onInput = (e) => {
-    const t = e.target;
-    if (t.tagName !== 'INPUT') return;
-    if (t.id.startsWith('off_')){
-      const idx = Number(t.id.split('_')[1] || 0);
-      STATE.offPlays[idx] = t.value.trim();
-    } else if (t.id.startsWith('def_')){
-      const idx = Number(t.id.split('_')[1] || 0);
-      STATE.defPlays[idx] = t.value.trim();
-    }
-    saveState();
-  };
-  off?.addEventListener('input', onInput);
-  def?.addEventListener('input', onInput);
-
-  document.getElementById('offClear')?.addEventListener('click', ()=>{
-    if (!confirm('Clear ALL offensive plays?')) return;
-    STATE.offPlays = Array(PLAY_ROWS).fill("");
-    renderPlaylists(); saveState();
-  });
-  document.getElementById('defClear')?.addEventListener('click', ()=>{
-    if (!confirm('Clear ALL defensive calls?')) return;
-    STATE.defPlays = Array(PLAY_ROWS).fill("");
-    renderPlaylists(); saveState();
-  });
-}
 
 
 
@@ -1217,9 +1155,13 @@ function computeAnalytics(){
 let __analyticsTimer=null;
 function queueAnalytics(){ clearTimeout(__analyticsTimer); __analyticsTimer=setTimeout(renderAnalytics,120); }
 
+
 function renderAnalytics(){
   const out = document.getElementById('output');
   if (!out) return;
+  out.querySelectorAll('.card .section-title')
+     .forEach(h => h.closest('.card')?.remove()); // clear old analytics
+  // ...then build cards as you do now
   const data = computeAnalytics();
   const mk = (rows, title) => {
     const card = document.createElement('div'); card.className='card';
