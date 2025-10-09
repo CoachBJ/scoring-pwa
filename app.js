@@ -67,20 +67,6 @@ const words = (s) => {
 
 
 
-// Pre-sort play keys longest-first (you already have _PLAY_KEYS and _norm)
-const PLAY_KEYS_BY_LEN = [..._PLAY_KEYS].sort((a,b)=> b.norm.length - a.norm.length);
-
-function detectPlays(call){
-  const nc = _norm(call);
-  const hits = [];
-  for (const p of PLAY_KEYS_BY_LEN){
-    if (nc.includes(p.norm)) hits.push(p.raw);
-  }
-  return hits; // may contain multiple matches
-}
-
-  return found;
-}
 
 // =================================================================
 
@@ -1352,15 +1338,27 @@ function renderAnalytics(){
   // OFFENSE
   out.appendChild(card('Offense — By Formation', mkTable(data.off.forms, 'Formation')));
   out.appendChild(card('Offense — By Play',       mkTable(data.off.plays, 'Play')));
-  out.appendChild(card('Offense — Keywords',      mkTable(data.off.words.map(x=>({ ...x, label:x.word })), 'Word')));
+  out.appendChild(card('Offense — Keywords',  mkTable(data.off.words, 'Word')));
 
   // DEFENSE
   out.appendChild(card('Defense — By Formation',  mkTable(data.def.forms, 'Formation')));
   out.appendChild(card('Defense — By Play',       mkTable(data.def.plays, 'Play')));
-  out.appendChild(card('Defense — Keywords',      mkTable(data.def.words.map(x=>({ ...x, label:x.word })), 'Word')));
+  out.appendChild(card('Defense — Keywords',  mkTable(data.def.words, 'Word')));
+
 }
 
 
+// Pre-sort play keys (avoid partial word collisions: match longest first)
+const PLAY_KEYS_BY_LEN = [..._PLAY_KEYS].sort((a,b)=> b.norm.length - a.norm.length);
+
+function detectPlays(call){
+  const nc = _norm(call);
+  const hits = [];
+  for (const p of PLAY_KEYS_BY_LEN){
+    if (nc.includes(p.norm)) hits.push(p.raw);
+  }
+  return hits; // may be multiple
+}
 
 
 // ===== Export CSV (multi-field rows) =====
