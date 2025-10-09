@@ -1238,20 +1238,31 @@ document.addEventListener('DOMContentLoaded', queueAnalytics);
 
 
 
-// ===== Export CSV =====
+// ===== Export CSV (multi-field rows) =====
 function exportPlaysCSV(){
-  const safe = s => `"${String(s||'').replace(/"/g,'""')}"`;
-  const lines = [];
-  lines.push('Section,Index,YL,Dn,Dist,Hash,Play Call,Gain');
+  const safe = (s) => `"${String(s ?? '').replace(/"/g,'""')}"`;
 
-  for (let i=0;i<PLAY_ROWS;i++){
-    const p = STATE.offPlays[i] || {};
-    lines.push(`Offense,${i+1},${safe(p.yl)},${safe(p.dn)},${safe(p.dist)},${safe(p.hash)},${safe(p.call)},${Number(p.gain||0)}`);
+  const lines = [];
+  lines.push('Side,Index,YardLine,Down,Dist,Hash,PlayCall,Gain');
+
+  for (let i = 0; i < PLAY_ROWS; i++){
+    const r = STATE.offPlays[i] || {};
+    lines.push([
+      'Offense', i+1, safe(r.yl), safe(r.dn), safe(r.dist),
+      safe(r.hash), safe(r.call), r.gain ?? 0
+    ].join(','));
   }
-  for (let i=0;i<PLAY_ROWS;i++){
-    const p = STATE.defPlays[i] || {};
-    lines.push(`Defense,${i+1},${safe(p.yl)},${safe(p.dn)},${safe(p.dist)},${safe(p.hash)},${safe(p.call)},${Number(p.gain||0)}`);
+  for (let i = 0; i < PLAY_ROWS; i++){
+    const r = STATE.defPlays[i] || {};
+    lines.push([
+      'Defense', i+1, safe(r.yl), safe(r.dn), safe(r.dist),
+      safe(r.hash), safe(r.call), r.gain ?? 0
+    ].join(','));
   }
+
+  // Optional: touches summary as a final comment row
+  const touches = STATE.touches ? Object.entries(STATE.touches).map(([k,v])=>`${k}:${v}`).join('; ') : '';
+  lines.push(`# Touches: ${touches}`);
 
   const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
@@ -1259,8 +1270,7 @@ function exportPlaysCSV(){
   a.download = `CCS_Game_Plays_${new Date().toISOString().replace(/[:.]/g,'-')}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
 }
-
-
+document.getElementById('exportPlays')?.addEventListener('click', exportPlaysCSV);
 
 
 
