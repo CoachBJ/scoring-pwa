@@ -1144,7 +1144,29 @@ const toInt = (v) => {
 
 function computeAnalytics(){
   const summarize = (rows, isOff) => {
-    const byWord = new Map(), byForm = new Map(), byPlay = new Map(), byCombo = new Map(), byDown = new Map();
+    const byWord = new Map(), byForm = new Map(), byPlay = new Map(), byCombo = new Map(), byDown = new Map(), byDownDist = new Map(), byFieldZone = new Map();
+    let firstDownPlays = 0, efficientFirstDowns = 0;
+
+    // Helper to categorize D&D
+    const getDownDistKey = (dn, dist) => {
+      if (!dn || !dist || dn < 1 || dn > 4) return null;
+      const dnSuffix = {1:'st', 2:'nd', 3:'rd', 4:'th'}[dn];
+      let distCat;
+      if (dist <= 3) distCat = "Short (1-3)";
+      else if (dist <= 6) distCat = "Med (4-6)";
+      else if (dist <= 9) distCat = "Long (7-9)";
+      else distCat = "XL (10+)";
+      return `${dn}${dnSuffix} & ${distCat}`;
+    };
+
+    // Helper for Field Zone
+    const getFieldZoneKey = (ylString) => {
+        const abs = parseYardLineToAbsolute(ylString);
+        if (abs === null) return null;
+        if (abs <= 20) return "Backed Up (-1 to -20)";
+        if (abs >= 80) return "Red Zone (+20 to +1)";
+        return "Open Field (-21 to +21)";
+    };
 
     for (const r of rows){
       const dn = toInt(r.dn), dist = toInt(r.dist);
@@ -1164,7 +1186,19 @@ function computeAnalytics(){
       const success = isOff ? offOK : defOK;
       const isExplosive = gain >= EXPLOSIVE_PLAY_THRESHOLD;
 
-      // --- Keywords
+      // --- Compute all metrics ---
+      const zoneKey = getFieldZoneKey(r.yl);
+      if (zoneKey) {
+        const v = byFieldZone.get(zoneKey) || { plays:0, success:0, totalGain:0, explosive:0 };
+        v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain;
+        byFieldZone.set(zoneKey, v);
+      }
+
+      if (dn === 1) {
+        firstDownPlays++;
+        if (success) efficientFirstDowns++;
+      }
+      
       for (const w of words(r.call)){
         const v = byWord.get(w) || { plays:0, success:0, totalGain:0, explosive:0 };
         v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain; byWord.set(w, v);
@@ -1173,7 +1207,6 @@ function computeAnalytics(){
       const f = detectFormation(r.call);
       const ps = detectPlays(r.call);
       
-      // ===== By Down analytics =====
       if (dn && dn >= 1 && dn <= 4) {
           const downKey = `${dn}${dn===1?'st':dn===2?'nd':dn===3?'rd':'th'} Down`;
           const v = byDown.get(downKey) || { plays:0, success:0, totalGain:0, explosive:0 };
@@ -1181,19 +1214,23 @@ function computeAnalytics(){
           byDown.set(downKey, v);
       }
 
-      // --- Formation
+      const ddKey = getDownDistKey(dn, dist);
+      if (ddKey) {
+        const v = byDownDist.get(ddKey) || { plays:0, success:0, totalGain:0, explosive:0 };
+        v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain;
+        byDownDist.set(ddKey, v);
+      }
+
       if (f){
         const v = byForm.get(f) || { plays:0, success:0, totalGain:0, explosive:0 };
         v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain; byForm.set(f, v);
       }
       
-      // --- Play
       for (const p of ps){
         const v = byPlay.get(p) || { plays:0, success:0, totalGain:0, explosive:0 };
         v.plays++; if (success) v.success++; if (isExplosive) v.explosive++; v.totalGain += gain; byPlay.set(p, v);
       }
 
-      // --- Formation & Play Combo (Offense only)
       if (isOff && f && ps.length > 0) {
           for (const p of ps) {
             const comboKey = `${f} • ${p}`;
@@ -1203,8 +1240,25 @@ function computeAnalytics(){
       }
     }
     
+    // --- Sorters ---
     const downSorter = (a, b) => a.label.localeCompare(b.label);
-    const defaultSorter = (a,b)=> b.succRate - a.succRate || b.explosiveRate - a.explosiveRate || b.avgGain - a.avgGain || b.plays - b.plays || a.label.localeCompare(b.label);
+    const zoneSorter = (a, b) => {
+        const order = { "Red Zone": 1, "Open Field": 2, "Backed Up": 3 };
+        return (order[a.label] || 9) - (order[b.label] || 9);
+    };
+    const downDistSorter = (a, b) => {
+        const getOrder = (label) => {
+            const parts = String(label).match(/(\d+).+?(Short|Med|Long|XL)/);
+            if (!parts) return [9, 9];
+            const down = parseInt(parts[1], 10);
+            const distOrder = { 'Short': 1, 'Med': 2, 'Long': 3, 'XL': 4 }[parts[2]];
+            return [down, distOrder || 9];
+        };
+        const [aDown, aDist] = getOrder(a.label);
+        const [bDown, bDist] = getOrder(b.label);
+        return aDown - bDown || aDist - bDist;
+    };
+    const defaultSorter = (a,b)=> b.succRate - a.succRate || b.explosiveRate - a.explosiveRate || b.avgGain - a.avgGain || b.plays - a.plays || a.label.localeCompare(b.label);
 
     const finish = (m, sorter = defaultSorter) => [...m.entries()]
       .map(([label, v]) => ({ 
@@ -1218,7 +1272,17 @@ function computeAnalytics(){
       .sort(sorter)
       .slice(0,25);
       
-    return { words: finish(byWord), forms: finish(byForm), plays: finish(byPlay), combos: finish(byCombo), down: finish(byDown, downSorter) };
+    return { 
+        words: finish(byWord), forms: finish(byForm), plays: finish(byPlay), 
+        combos: finish(byCombo), down: finish(byDown, downSorter), 
+        downDist: finish(byDownDist, downDistSorter),
+        fieldZone: finish(byFieldZone, zoneSorter),
+        firstDownStats: {
+            plays: firstDownPlays,
+            success: efficientFirstDowns,
+            rate: efficientFirstDowns / (firstDownPlays || 1)
+        }
+    };
   };
   
   return { off: summarize(STATE.offPlays, true), def: summarize(STATE.defPlays, false) };
@@ -1254,21 +1318,44 @@ function renderAnalytics(){
     return c;
   };
 
-  // OFFENSE
+  // ===== OFFENSE =====
+  const offFDS = data.off.firstDownStats;
+  if (offFDS.plays > 0) {
+    const html = `<div class="metric-display">
+        <div class="metric-value">${(offFDS.rate * 100).toFixed(0)}%</div>
+        <div class="metric-label">Success on ${offFDS.plays} plays</div>
+      </div>`;
+    container.appendChild(card('Offense — 1st Down Efficiency (>=4 yds)', html));
+  }
+  
   if (data.off.combos.length > 0) {
       container.appendChild(card('Offense — By Formation & Play Combo', mkTable(data.off.combos, 'Combination')));
   }
+  container.appendChild(card('Offense — By Field Zone', mkTable(data.off.fieldZone, 'Zone')));
+  container.appendChild(card('Offense — By Down & Distance', mkTable(data.off.downDist, 'Situation')));
   container.appendChild(card('Offense — By Down', mkTable(data.off.down, 'Down')));
   container.appendChild(card('Offense — By Formation', mkTable(data.off.forms, 'Formation')));
   container.appendChild(card('Offense — By Play', mkTable(data.off.plays, 'Play')));
   container.appendChild(card('Offense — By Keywords', mkTable(data.off.words, 'Word')));
 
-  // DEFENSE
+  // ===== DEFENSE =====
+  const defFDS = data.def.firstDownStats;
+  if (defFDS.plays > 0) {
+    const html = `<div class="metric-display">
+        <div class="metric-value">${(defFDS.rate * 100).toFixed(0)}%</div>
+        <div class="metric-label">Success on ${defFDS.plays} plays</div>
+      </div>`;
+    container.appendChild(card('Defense — 1st Down Efficiency (<4 yds)', html));
+  }
+
+  container.appendChild(card('Defense — By Field Zone', mkTable(data.def.fieldZone, 'Zone')));
+  container.appendChild(card('Defense — By Down & Distance', mkTable(data.def.downDist, 'Situation')));
   container.appendChild(card('Defense — By Down', mkTable(data.def.down, 'Down')));
   container.appendChild(card('Defense — By Formation',  mkTable(data.def.forms, 'Formation')));
   container.appendChild(card('Defense — By Play',       mkTable(data.def.plays, 'Play')));
   container.appendChild(card('Defense — By Keywords',  mkTable(data.def.words, 'Word')));
 }
+
 
 // ===== Export CSV =====
 function exportPlaysCSV(){
