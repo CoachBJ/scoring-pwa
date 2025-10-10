@@ -27,17 +27,59 @@ main {
   margin: 0 auto;
 }
 
-.layout{
+/* --- Main Layout --- */
+.layout {
   display: grid;
   grid-template-columns: 1fr;
+  gap: 16px;
+  /* MOBILE LAYOUT */
   grid-template-areas:
-    "side"
+    "setup"
     "score"
     "clock"
+    "side"
     "output";
-  gap: 16px;
 }
 
+.area-setup { grid-area: setup; }
+.area-side  { grid-area: side; }
+.area-score { grid-area: score; }
+.area-clock { grid-area: clock; }
+.area-output{ grid-area: output; display: grid; grid-template-columns: 1fr; gap: 16px; }
+
+/* TABLET LAYOUT */
+@media (min-width: 768px) {
+  .layout {
+    grid-template-columns: 2fr 1.2fr;
+    grid-template-areas:
+      "setup     setup"
+      "score     side"
+      "clock     side"
+      "output    output";
+    gap: 20px;
+  }
+}
+
+/* DESKTOP LAYOUT */
+@media (min-width: 1200px){
+  .layout{
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas:
+      "setup  setup  setup"
+      "side   score  clock"
+      "output output output";
+  }
+}
+
+.layout > * { align-self: start; }
+html, body { width: 100%; overflow-x: hidden; }
+/* This class is new and needed for the setup panel */
+details.area-setup {
+  background-color: var(--card-background);
+  box-shadow: var(--shadow);
+  margin: 0; /* Override default margin from .panel */
+}
+/* The rest of your styles are fine */
 .sticky-officials .card-lite { height: auto; }
 
 
@@ -119,35 +161,6 @@ main {
 .two-pt-list { margin:6px 0 0 18px; }
 .two-pt-math{ font-size:.95rem; line-height:1.3; color: var(--muted-color); text-align:center; }
 .two-pt-math b{ color: var(--text-color); }
-
-
-/* --- Main Layout --- */
-@media (min-width: 901px){
-  .layout{
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-areas:
-      "side  score clock"
-      "output output output";
-  }
-}
-@media (max-width: 900px){
-  .layout {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "score"
-      "clock"
-      "side"
-      "output";
-  }
-}
-
-.area-side  { grid-area: side; }
-.area-score { grid-area: score; }
-.area-clock { grid-area: clock; }
-.area-output{ grid-area: output; display: grid; grid-template-columns: 1fr; gap: 16px; }
-.layout > * { align-self: start; }
-html, body { width: 100%; overflow-x: hidden; }
-.area-side, .area-score, .area-clock, .area-output { content-visibility: auto; contain-intrinsic-size: 600px; }
 
 
 /* --- Card Styling --- */
