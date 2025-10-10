@@ -30,7 +30,11 @@ const PLAY_LIST = [
   "Snag","Stick","Tree","Sauce","Slam","Gamer","Hitches","Go","Wide Go","Chains",
   "Curl","Flood","Smash","Holy","Cross","Heel","Michigan","Wolverine","Colt","Colt Corner",
   "Cougar","Carolina","Sword","Ball","Grip","Tinder","Flash","Twitter","Netflix","Tinder Go",
-  "Pump Flash","Bluff","Cable","Poker", "Pablo", "Pablo Pump", "#Twitter Offer", "Trail", "Juke", "FB Slice",  "FB Smash", 
+  "Pump Flash","Bluff","Cable","Poker", "Pablo", "Pablo Pump", "#Twitter Offer", "Trail", "Juke", "FB Slice",  "FB Smash", "John", "John Trap", "Cena", "Cena Trap", "Search", "Olsen", "Kuechly", "Luke", "LK", "Kuechly", "Bluff", "FB Carolina", "Rail", "Culdesac", "Culdesack", "Crush", "Cinco", "#RollTide", "#Kryptonite", "#K", "Babber", "Lazy Smash", "Satern", "FB Satern", "SB", "FB", "SB Saturn", "Tri-Rail", "Trirail", "Pickle" "Rip Pickle", "Rip 3 Cable", "Trail", 
+
+
+  // Defensive Calls
+  "Cover 3", "Cover 2", "Man Free", "Man", "Storm", "Twist", "Peel", "Spike", "Brown", "G", "Brown", "Silver", "Orange", "Purple", "Philly", "Cheese", "Panther", "Bama", "Auburn", "Money", "Texas", "Cat", "Read", "George", 
 ];
 
 // --- Normalizers (strip punctuation, case, unify abbreviations) ---
