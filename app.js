@@ -965,7 +965,8 @@ function recalcGains(){
 function playHeadRow(){
   const head = document.createElement('div');
   head.className = 'play-head';
-  head.innerHTML = `<div>#</div><div>New</div><div>YL</div><div>Dn</div><div>Dist</div><div>Play Call</div><div>Result</div>`;
+  // Added an empty div for the clear button column header
+  head.innerHTML = `<div>#</div><div></div><div>New</div><div>YL</div><div>Dn</div><div>Dist</div><div>Play Call</div><div>Result</div>`;
   return head;
 }
 
@@ -979,6 +980,7 @@ function makeRows(arr, prefix){
     // Use 'text' type for gain to allow "INT" or "TO"
     wrap.innerHTML = `
       <div class="idx">${i+1}</div>
+      <button class="play-clear-btn" data-prefix="${prefix}" data-idx="${i}" title="Clear row ${i+1}">C</button>
       <input id="${prefix}nd_${i}" class="play-new-drive" type="checkbox" ${p.isNewDrive ? 'checked' : ''} title="Check if this play starts a new drive">
       <input id="${prefix}yl_${i}" class="play-yl"   type="number" inputmode="numeric" placeholder="-25" value="${p.yl}">
       <input id="${prefix}dn_${i}" class="play-dn"   type="number" inputmode="numeric" placeholder="1"   value="${p.dn}">
@@ -989,7 +991,6 @@ function makeRows(arr, prefix){
   }
   return frag;
 }
-
 function renderPlaylists(){
   const off = document.getElementById('offList');
   const def = document.getElementById('defList');
