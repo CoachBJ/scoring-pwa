@@ -1,5 +1,5 @@
 // sw.js
-const CACHE = 'scoring-v116';
+const CACHE = 'scoring-v117';
 const ASSETS = [
   './',
   './index.html',
