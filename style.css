@@ -271,6 +271,7 @@ details.panel .row, details.panel > .touch-counter, details.panel > .playlist { 
   display: grid;
   grid-template-columns:
     2.2ch   /* # */
+    3.5ch   /* Clear Btn */
     3ch     /* New Drive */
     7ch     /* YL */
     4ch     /* Dn */
