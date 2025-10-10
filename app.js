@@ -1116,6 +1116,16 @@ function renderPlaylists(){
   off?.addEventListener('input', onInput);
   def?.addEventListener('input', onInput);
 
+    const onFocus = (e) => {
+    if (e.target.tagName === 'INPUT') {
+      e.target.select();
+    }
+  };
+
+  off?.addEventListener('focusin', onFocus);
+  def?.addEventListener('focusin', onFocus);
+  // --- 👆 END OF NEW CODE 👆 ---
+
   document.getElementById('offClear')?.addEventListener('click', ()=>{
     if (!confirm('Clear ALL offensive plays?')) return;
     STATE.offPlays = Array(PLAY_ROWS).fill(0).map(EMPTY_ROW); renderPlaylists(); saveState(); queueAnalytics();
