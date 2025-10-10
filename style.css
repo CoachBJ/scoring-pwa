@@ -300,3 +300,26 @@ details.panel .row, details.panel > .touch-counter, details.panel > .playlist { 
 }
 .playlist input.play-yl, .playlist input.play-dn, .playlist input.play-dist, .playlist input.gain { text-align: center; }
 .playlist input.play-new-drive { justify-self: center; width: 18px; height: 18px; accent-color: var(--primary-color); }
+
+
+
+
+/* --- Analytics Metrics --- */
+.metric-display {
+  text-align: center;
+  padding: 10px 0;
+}
+.metric-value {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--primary-color);
+}
+.analytics-card:nth-of-type(n+8) .metric-value { /* Targets defense cards */
+  color: var(--opp);
+}
+.metric-label {
+  font-size: 1rem;
+  color: var(--muted-color);
+  font-weight: 600;
+}
