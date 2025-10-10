@@ -999,6 +999,29 @@ function renderPlaylists(){
   if (off){ off.innerHTML=""; off.appendChild(makeRows(STATE.offPlays, 'off_')); }
   if (def){ def.innerHTML=""; def.appendChild(makeRows(STATE.defPlays, 'def_')); }
 
+  const handlePlaylistClick = (e) => {
+    const btn = e.target.closest('.play-clear-btn');
+    if (!btn) return; // Exit if a clear button wasn't clicked
+
+    const prefix = btn.dataset.prefix;
+    const idx = Number(btn.dataset.idx);
+    const isOff = prefix === 'off_';
+    const rows = isOff ? STATE.offPlays : STATE.defPlays;
+    
+    // Clear the data in the state
+    rows[idx] = EMPTY_ROW();
+
+    // Manually clear the inputs in the HTML for an instant visual update
+    const rowElement = btn.closest('.play-row');
+    if (rowElement) {
+      rowElement.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => inp.value = '');
+      rowElement.querySelectorAll('input[type="checkbox"]').forEach(inp => inp.checked = false);
+    }
+    
+    saveState();
+    queueAnalytics();
+  };
+
   const onInput = (e) => {
     const t = e.target;
     if (t.tagName !== 'INPUT') return;
@@ -1067,7 +1090,7 @@ function renderPlaylists(){
             // Don't auto-fill YL on turnover, since possession changes
             if (startAbs !== null && !isTurnover) {
                 const endAbs = startAbs + Number(currentPlay.gain);
-                const nextYlString = absoluteToYardLineString(endAbs);
+                const nextYlString = absoluteToYardLineToAbsolute(endAbs);
                 if (nextYlString !== null) {
                     nextPlay.yl = nextYlString;
                     if(nextYlInput) nextYlInput.value = nextYlString;
@@ -1119,8 +1142,11 @@ function renderPlaylists(){
 
   off?.addEventListener('input', onInput);
   def?.addEventListener('input', onInput);
+  off?.addEventListener('click', handlePlaylistClick);
+  def?.addEventListener('click', handlePlaylistClick);
 
-    const onFocus = (e) => {
+
+  const onFocus = (e) => {
     if (e.target.tagName === 'INPUT') {
       e.target.select();
     }
@@ -1128,7 +1154,6 @@ function renderPlaylists(){
 
   off?.addEventListener('focusin', onFocus);
   def?.addEventListener('focusin', onFocus);
-  // --- 👆 END OF NEW CODE 👆 ---
 
   document.getElementById('offClear')?.addEventListener('click', ()=>{
     if (!confirm('Clear ALL offensive plays?')) return;
@@ -1139,7 +1164,6 @@ function renderPlaylists(){
     STATE.defPlays = Array(PLAY_ROWS).fill(0).map(EMPTY_ROW); renderPlaylists(); saveState(); queueAnalytics();
   });
 }
-
 // ===== Analytics (UPGRADED) =====
 const toInt = (v) => {
   const n = Number(String(v).replace(/[^0-9-]/g,""));
