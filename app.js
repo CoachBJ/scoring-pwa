@@ -20,17 +20,17 @@ const FORMATION_LIST = [
   "Doubles","Wing","King","Bird","Trips","Doubles","Doubles","Wing","King","Bird",
   "Frostie","Campbell","PATRIOT","PATRIOT PUMP","Queen","HAWK","Knight","Potter","Brush","Bunch",
   "Swamp","Feather","Knockout",
-  "Wing Rt. Double Travel","Wing Rt. DBL Travel","Wing Lt. Double Travel","Wing Lt. DBL Travel"
+  "Wing Rt. Double Travel","Wing Rt. DBL Travel","Wing Lt. Double Travel","Wing Lt. DBL Travel, Daffy Rt, Daffy Lt, Trips Rt. Billy, Billy, Doubles Lt. Up Squeeze"
 ];
 
 const PLAY_LIST = [
-  "CAROLINA","PANTHERS","CHARLOTTE","HORNET","FLORIDA","GATORS","MIAMI","DOLPHIN",
-  "MUHAMMAD","ALI","CONNOR","MCGREGOR","PEYTON","MANNING","SPEED","FAST","carolina",
-  "TOP","TOM","TRUMP","NONE","Thunder","Lightning","Back","Flat","Buttcrack",
+  "CAROLINA","PANTHERS","CHARLOTTE","HORNET","FLORIDA","GATORS","MIAMI","HURRICANE",
+  "MUHAMMAD","ALI","CONNOR","MCGREGOR","PEYTON","MANNING","SPEED","FAST","JOHN", "CENA", 
+  "TOP","TOM","TRUMP","Thunder","Lightning","Back","Flat","Buttcrack",
   "Snag","Stick","Tree","Sauce","Slam","Gamer","Hitches","Go","Wide Go","Chains",
   "Curl","Flood","Smash","Holy","Cross","Heel","Michigan","Wolverine","Colt","Colt Corner",
   "Cougar","Carolina","Sword","Ball","Grip","Tinder","Flash","Twitter","Netflix","Tinder Go",
-  "Pump Flash","Bluff","Cable","Poker"
+  "Pump Flash","Bluff","Cable","Poker", "Pablo", "Pablo Pump", "#Twitter Offer", "Trail", "Juke", "FB Slice",  "FB Smash", 
 ];
 
 // --- Normalizers (strip punctuation, case, unify abbreviations) ---
