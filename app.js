@@ -1091,7 +1091,8 @@ function renderPlaylists(){
             // Don't auto-fill YL on turnover, since possession changes
             if (startAbs !== null && !isTurnover) {
                 const endAbs = startAbs + Number(currentPlay.gain);
-                const nextYlString = absoluteToYardLineToAbsolute(endAbs);
+                const nextYlString = absoluteToYardLineString(endAbs);
+
                 if (nextYlString !== null) {
                     nextPlay.yl = nextYlString;
                     if(nextYlInput) nextYlInput.value = nextYlString;
